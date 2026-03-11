@@ -8,8 +8,8 @@ function App() {
     <Router>
       <Header />
       <Routes>
+        <Route path="/" element={<div style={{ paddingTop: '80px', paddingLeft: '2rem', paddingRight: '2rem' }}><h1>Página Principal</h1></div>} />
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<div style={{ padding: '2rem' }}>Página Principal</div>} />
       </Routes>
     </Router>
   );
