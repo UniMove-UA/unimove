@@ -37,23 +37,22 @@ return new class extends Migration
             $table->tinyInteger('friday');
             $table->tinyInteger('saturday');
             $table->tinyInteger('sunday');
-            $table->string('start_date', 8);
-            $table->string('end_date', 8);
+            $table->string('start_date', 12);
+            $table->string('end_date', 12);
         });
 
         Schema::connection('gtfs')->create('calendar_dates', function (Blueprint $table) {
             $table->string('service_id', 50);
-            $table->string('date', 8);
+            $table->string('date', 12);
             $table->integer('exception_type');
             $table->index('service_id');
         });
 
-        // 5. ROUTES
         Schema::connection('gtfs')->create('routes', function (Blueprint $table) {
             $table->string('route_id', 50)->primary();
-            $table->string('agency_id', 50);
-            $table->string('route_short_name', 50)->nullable();
-            $table->string('route_long_name')->nullable();
+            $table->string('agency_id', 50)->nullable();
+            $table->string('route_short_name', 100)->nullable();
+            $table->string('route_long_name', 255)->nullable();
             $table->integer('route_type');
             $table->string('route_url')->nullable();
             $table->string('route_color', 10)->nullable();
@@ -73,22 +72,21 @@ return new class extends Migration
         Schema::connection('gtfs')->create('stops', function (Blueprint $table) {
             $table->string('stop_id', 50)->primary();
             $table->string('stop_code', 50)->nullable();
-            $table->string('stop_name');
+            $table->string('stop_name', 255);
             $table->double('stop_lat', 10, 6);
             $table->double('stop_lon', 10, 6);
             $table->string('zone_id', 50)->nullable();
-            $table->integer('wheelchair_boarding')->nullable(); // ¡NUEVO RENFE!
+            $table->integer('wheelchair_boarding')->nullable();
         });
 
-        // 8. TRIPS (Actualizado con accesibilidad y bloques Renfe)
         Schema::connection('gtfs')->create('trips', function (Blueprint $table) {
             $table->string('trip_id', 50)->primary();
             $table->string('route_id', 50);
             $table->string('service_id', 50);
             $table->string('trip_headsign')->nullable();
             $table->string('shape_id', 50)->nullable();
-            $table->integer('wheelchair_accessible')->nullable(); // ¡NUEVO RENFE!
-            $table->string('block_id', 50)->nullable(); // ¡NUEVO RENFE!
+            $table->integer('wheelchair_accessible')->nullable();
+            $table->string('block_id', 50)->nullable();
 
             $table->index('route_id');
             $table->index('service_id');
@@ -106,14 +104,13 @@ return new class extends Migration
             $table->index('stop_id');
         });
 
-        // 10. TRANSFERS (Actualizado con transbordos detallados Renfe)
         Schema::connection('gtfs')->create('transfers', function (Blueprint $table) {
             $table->string('from_stop_id', 50);
             $table->string('to_stop_id', 50);
-            $table->string('from_route_id', 50)->nullable(); // ¡NUEVO RENFE!
-            $table->string('to_route_id', 50)->nullable();   // ¡NUEVO RENFE!
-            $table->string('from_trip_id', 50)->nullable();  // ¡NUEVO RENFE!
-            $table->string('to_trip_id', 50)->nullable();    // ¡NUEVO RENFE!
+            $table->string('from_route_id', 50)->nullable();
+            $table->string('to_route_id', 50)->nullable();
+            $table->string('from_trip_id', 50)->nullable();
+            $table->string('to_trip_id', 50)->nullable();
             $table->integer('transfer_type');
             $table->integer('min_transfer_time')->nullable();
         });
