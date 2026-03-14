@@ -9,9 +9,12 @@ use App\Models\Trip;
 use App\Models\Vehicle;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;   
-use Illuminate\Support\Facades\Hash; 
-use Carbon\Carbon;                   
+use Illuminate\Support\Facades\DB;
+
+use Illuminate\Support\Facades\Hash;
+
+use Carbon\Carbon;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -27,6 +30,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Admin',
                 'email' => 'admin',
+                'correo_institucional' => 'admin@alu.ua.es',
                 'password' => Hash::make('admin123'),
                 'role' => 'admin',
                 'is_university_member' => true,
@@ -35,6 +39,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Carlos Conductor',
                 'email' => 'carlos@alu.ua.es',
+                'correo_institucional' => 'carlos@alu.ua.es',
                 'password' => Hash::make('carlos123'),
                 'role' => 'student',
                 'is_university_member' => true,
@@ -43,6 +48,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Lucia',
                 'email' => 'lucia@alu.ua.es',
+                'correo_institucional' => 'lucia@alu.ua.es',
                 'password' => Hash::make('lucia123'),
                 'role' => 'student',
                 'is_university_member' => true,
