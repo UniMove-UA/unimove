@@ -14,6 +14,9 @@ Route::delete('/profile', [ProfileController::class, 'destroy']);
 //ruta para el registro de usuario
 Route::post('/registro', [AuthController::class, 'registro']);
 
+//ruta para inicio de sesión
+Route::post('/login', [AuthController::class, 'login']);
+
 //ruta creada por laravel
 Route::get('/user', function (Request $request) {
     return $request->user();

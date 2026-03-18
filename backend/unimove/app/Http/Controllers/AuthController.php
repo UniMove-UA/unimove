@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -38,5 +39,38 @@ class AuthController extends Controller
             'access_token' => $token,
             'token_type' => 'Bearer', //esto es para utilizar la auteticacion de Sanctum
         ], 201);
+    }
+
+    public function login(Request $request)
+    {
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+
+        $credentials = [
+            $loginField => $request->login,
+            'password' => $request->password,
+        ];
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Credenciales incorrectas'
+            ], 401);
+        }
+
+        $user = User::where($loginField, $request->login)->firstOrFail();
+
+        // generar el token
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Inicio de sesión exitoso',
+            'user' => $user,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+        ]);
     }
 }
