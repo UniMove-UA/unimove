@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    /** @use HasFactory<\Database\Factories\UserFactory> */
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = ['name', 'email', 'correo_institucional', 'password', 'phone', 'rating_avg'];
 
@@ -19,21 +21,21 @@ class User extends Authenticatable
 
     public function tripsAsDriver()
     {
-        return $this->hasMany(Trip::class , 'driver_id');
+        return $this->hasMany(Trip::class, 'driver_id');
     }
 
     public function bookings()
     {
-        return $this->hasMany(Booking::class , 'passenger_id');
+        return $this->hasMany(Booking::class, 'passenger_id');
     }
 
     public function reviewsReceived()
     {
-        return $this->hasMany(Review::class , 'reviewee_id');
+        return $this->hasMany(Review::class, 'reviewee_id');
     }
 
     public function reviewsGiven()
     {
-        return $this->hasMany(Review::class , 'reviewer_id');
+        return $this->hasMany(Review::class, 'reviewer_id');
     }
 }
