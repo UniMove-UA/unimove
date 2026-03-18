@@ -33,7 +33,7 @@
     right: 0;
     bottom: 0;
     /* Very subtle overlay using the primary button's green */
-    background: rgba(49, 164, 123, 0.2);
+    background: rgba(49, 164, 123, 0.17);
     z-index: 1;
 }
 
