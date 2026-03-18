@@ -47,7 +47,7 @@ const UpdateProfile = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative">
+    <div className="login-page min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative">
       <video autoPlay loop muted playsInline className="fixed inset-0 w-full h-full object-cover -z-10">
         <source src="/login-bg.mp4" type="video/mp4" />
       </video>
@@ -99,9 +99,8 @@ const UpdateProfile = () => {
                 <Mail size={14} strokeWidth={3} /> Email Institucional
               </label>
               <div
-                className={`w-full px-0 py-2 bg-transparent border-b-2 border-[#7ba696]/30 outline-none transition-all cursor-not-allowed ${
-                  formData.correo_institucional ? 'text-gray-800' : 'text-gray-400'
-                }`}
+                className={`w-full px-0 py-2 bg-transparent border-b-2 border-[#7ba696]/30 outline-none transition-all cursor-not-allowed ${formData.correo_institucional ? 'text-gray-800' : 'text-gray-400'
+                  }`}
               >
                 {formData.correo_institucional || 'No vinculado'}
               </div>
