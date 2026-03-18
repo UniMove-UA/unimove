@@ -18,7 +18,10 @@ const UpdateProfile = () => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/profile');
+        const token = localStorage.getItem('auth_token');
+        const response = await axios.get('http://127.0.0.1:8000/api/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         const user = response.data;
         setFormData({
           name: user.name || '',
@@ -38,7 +41,10 @@ const UpdateProfile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios.put('http://127.0.0.1:8000/api/profile', formData);
+      const token = localStorage.getItem('auth_token');
+      await axios.put('http://127.0.0.1:8000/api/profile', formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
     } catch (error) {
       alert("Error al guardar");
     } finally {

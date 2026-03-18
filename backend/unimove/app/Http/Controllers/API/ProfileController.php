@@ -13,7 +13,7 @@ class ProfileController extends Controller
         // Traemos el usuario autenticado
         // Si tienes relación con vehículos: $user = $request->user()->load('vehicle');
         //return response()->json($request->user());
-        $user = \App\Models\User::first(); 
+        $user = $request->user();
 
         return response()->json($user);
     }
@@ -27,7 +27,7 @@ class ProfileController extends Controller
         }
 
         $validated = $request->validate([
-            'name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'phone' => 'nullable|string',
             'email' => 'required|string'
         ]);
@@ -43,7 +43,7 @@ class ProfileController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'  => 'required|string|max:255',
+            'name' => 'required|string|max:255',
             'phone' => 'nullable|string',
             'email' => 'required|string|unique:users,email',
             'password' => 'required|string|min:8',

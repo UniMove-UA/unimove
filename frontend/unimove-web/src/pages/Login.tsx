@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../styles/Login.css';
 
 const Login = () => {
@@ -32,7 +32,7 @@ const Login = () => {
 
             if (response.ok) {
                 localStorage.setItem('auth_token', data.access_token); //Guardar el token en localStorage
-                navigate('/modificar-datos'); //Redirige a la pagina principal
+                navigate('/'); //Redirige a la pagina principal
             } else {
                 setError(data.message || 'Error al iniciar sesión. Comprueba tus credenciales.');
             }
@@ -87,7 +87,7 @@ const Login = () => {
 
                     <div className="signup-link">
                         <span>¿No tienes cuenta? </span>
-                        <a href="#">Regístrate</a>
+                        <Link to="/register">Regístrate</Link>
                     </div>
                 </form>
             </div>
