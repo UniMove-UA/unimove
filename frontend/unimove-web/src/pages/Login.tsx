@@ -31,10 +31,8 @@ const Login = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Save token optionally to localStorage
-                localStorage.setItem('auth_token', data.access_token);
-                // Redirect on success
-                navigate('/modificar-datos');
+                localStorage.setItem('auth_token', data.access_token); //Guardar el token en localStorage
+                navigate('/modificar-datos'); //Redirige a la pagina principal
             } else {
                 setError(data.message || 'Error al iniciar sesión. Comprueba tus credenciales.');
             }
