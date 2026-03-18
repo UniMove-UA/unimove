@@ -1,0 +1,38 @@
+#map {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/*
+¿Deshabilitar sólo en teléfonos móviles?
+
+.leaflet-control-container {
+   display: none;
+}
+*/
+
+.marker {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    filter: drop-shadow(0px 2px 6px rgba(0, 0, 0, 0.2));
+    transform: scale(1.3);
+    transition: all 0.5s ease-in-out;
+}
+
+
+.marker-base {
+    position: absolute;
+}
+
+.marker-badge {
+    position: absolute;
+    filter: drop-shadow(0px 2px 6px rgba(0, 0, 0, 0.2));
+    top: -9px;
+    width: 14px;
+    height: 14px;
+    left: 13px;
+}
