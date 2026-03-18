@@ -32,8 +32,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    /* Very subtle overlay using the primary button's green */
-    background: rgba(49, 164, 123, 0.17);
+    /* Capa verde de color */
+    background: rgba(37, 155, 114, 0.1);
     z-index: 1;
 }
 
