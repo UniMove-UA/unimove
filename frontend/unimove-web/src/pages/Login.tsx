@@ -80,7 +80,7 @@ const Login = () => {
                     </div>
 
                     <div className="social-login">
-                        <button type="button" className="btn-social">
+                        <button type="button" className="btn-social" onClick={() => navigate('/auth-universidad')}>
                             Accede a tu universidad
                         </button>
                     </div>

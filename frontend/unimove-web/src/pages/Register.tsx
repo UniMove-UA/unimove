@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/Login.css'; // Importamos el CSS de tu compañero
+import '../styles/Login.css';
 
 const Register = () => {
 

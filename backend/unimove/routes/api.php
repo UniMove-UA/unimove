@@ -18,6 +18,9 @@ Route::post('/registro', [AuthController::class, 'registro']);
 //ruta para inicio de sesión
 Route::post('/login', [AuthController::class, 'login']);
 
+//ruta para la autenticacion con correo institucional
+Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
+
 //ruta creada por laravel
 Route::get('/user', function (Request $request) {
     return $request->user();
