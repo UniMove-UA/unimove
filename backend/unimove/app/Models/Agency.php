@@ -14,8 +14,4 @@ class Agency extends Model
     public $timestamps = false;
     protected $guarded = [];
 
-    public function rutas()
-    {
-        return $this->hasMany(Route::class, 'agency_id', 'agency_id');
-    }
 }

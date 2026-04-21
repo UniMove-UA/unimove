@@ -4,14 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Stop extends Model
+class Shape extends Model
 {
     protected $connection = 'gtfs';
-    protected $table = 'stops';
-    protected $primaryKey = 'stop_id';
+    protected $table = 'shapes';
+    public $primaryKey = null;
     public $incrementing = false;
-    protected $keyType = 'string';
     public $timestamps = false;
     protected $guarded = [];
-
 }

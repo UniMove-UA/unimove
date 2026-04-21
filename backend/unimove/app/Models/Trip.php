@@ -19,8 +19,13 @@ class Trip extends Model
         return $this->belongsTo(Route::class, 'route_id', 'route_id');
     }
 
-    public function tiemposParada()
+    public function calendario()
     {
-        return $this->hasMany(StopTime::class, 'trip_id', 'trip_id')->orderBy('stop_sequence');
+        return $this->belongsTo(Calendar::class, 'service_id', 'service_id');
+    }
+
+    public function forma()
+    {
+        return $this->belongsTo(Shape::class, 'shape_id', 'shape_id');
     }
 }

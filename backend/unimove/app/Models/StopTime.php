@@ -10,6 +10,7 @@ class StopTime extends Model
     protected $table = 'stop_times';
     public $incrementing = false;
     public $timestamps = false;
+    public $primaryKey = null;
     protected $guarded = [];
 
     public function trayecto()

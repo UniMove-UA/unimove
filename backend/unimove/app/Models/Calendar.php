@@ -4,19 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Route extends Model
+class Calendar extends Model
 {
     protected $connection = 'gtfs';
-    protected $table = 'routes';
-    protected $primaryKey = 'route_id';
+    protected $table = 'calendar';
+    protected $primaryKey = 'service_id';
     public $incrementing = false;
     protected $keyType = 'string';
     public $timestamps = false;
     protected $guarded = [];
-
-    public function agencia()
-    {
-        return $this->belongsTo(Agency::class, 'agency_id', 'agency_id');
-    }
     
 }
