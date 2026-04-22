@@ -7,10 +7,22 @@ use Illuminate\Http\Request;
 
 class ShapeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $shapes = Shape::all();
-        return view('shape.index', compact('shapes'));
+        $sortable = ['shape_id', 'shape_pt_sequence', 'shape_pt_lat', 'shape_pt_lon', 'shape_dist_traveled'];
+        $sort= in_array($request->sort, $sortable) ? $request->sort : 'shape_id';
+        $dir= $request->dir === 'desc' ? 'desc' : 'asc';
+        $search= $request->search;
+
+        $shapes = Shape::query()
+            ->when($search, fn($q) => $q
+                ->where('shape_id', 'like', "%$search%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(25)
+            ->withQueryString();
+
+        return view('shape.index', compact('shapes', 'sort', 'dir', 'search'));
     }
 
     public function show(Request $request)
@@ -29,11 +41,11 @@ class ShapeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'shape_id'           => 'required|string|max:50',
-            'shape_pt_lat'       => 'required|numeric|between:-90,90',
-            'shape_pt_lon'       => 'required|numeric|between:-180,180',
-            'shape_pt_sequence'  => 'required|integer',
-            'shape_dist_traveled'=> 'nullable|numeric',
+            'shape_id'=> 'required|string|max:50',
+            'shape_pt_lat'=> 'required|numeric|between:-90,90',
+            'shape_pt_lon'=> 'required|numeric|between:-180,180',
+            'shape_pt_sequence'=> 'required|integer',
+            'shape_dist_traveled' => 'nullable|numeric',
         ]);
 
         Shape::create($request->all());
@@ -52,10 +64,10 @@ class ShapeController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'shape_pt_lat'       => 'required|numeric|between:-90,90',
-            'shape_pt_lon'       => 'required|numeric|between:-180,180',
-            'shape_pt_sequence'  => 'required|integer',
-            'shape_dist_traveled'=> 'nullable|numeric',
+            'shape_pt_lat'=> 'required|numeric|between:-90,90',
+            'shape_pt_lon'=> 'required|numeric|between:-180,180',
+            'shape_pt_sequence'=> 'required|integer',
+            'shape_dist_traveled' => 'nullable|numeric',
         ]);
 
         $shape = Shape::where('shape_id', $request->shape_id)

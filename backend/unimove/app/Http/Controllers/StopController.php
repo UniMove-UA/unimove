@@ -7,10 +7,25 @@ use Illuminate\Http\Request;
 
 class StopController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $stops = Stop::all();
-        return view('stop.index', compact('stops'));
+        $sortable = ['stop_id', 'stop_name', 'stop_lat', 'stop_lon', 'zone_id', 'wheelchair_boarding'];
+        $sort= in_array($request->sort, $sortable) ? $request->sort : 'stop_id';
+        $dir= $request->dir === 'desc' ? 'desc' : 'asc';
+        $search= $request->search;
+
+        $stops = Stop::query()
+            ->when($search, fn($q) => $q
+                ->where('stop_id',   'like', "%$search%")
+                ->orWhere('stop_name', 'like', "%$search%")
+                ->orWhere('stop_code', 'like', "%$search%")
+                ->orWhere('zone_id',   'like', "%$search%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('stop.index', compact('stops', 'sort', 'dir', 'search'));
     }
 
     public function show(string $id)
@@ -27,12 +42,12 @@ class StopController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'stop_id'             => 'required|string|max:50|unique:gtfs.stops,stop_id',
-            'stop_code'           => 'nullable|string|max:50',
-            'stop_name'           => 'required|string|max:255',
-            'stop_lat'            => 'required|numeric|between:-90,90',
-            'stop_lon'            => 'required|numeric|between:-180,180',
-            'zone_id'             => 'nullable|string|max:50',
+            'stop_id'=> 'required|string|max:50|unique:gtfs.stops,stop_id',
+            'stop_code'=> 'nullable|string|max:50',
+            'stop_name'=> 'required|string|max:255',
+            'stop_lat'=> 'required|numeric|between:-90,90',
+            'stop_lon'=> 'required|numeric|between:-180,180',
+            'zone_id'=> 'nullable|string|max:50',
             'wheelchair_boarding' => 'nullable|integer|in:0,1,2',
         ]);
 
@@ -50,11 +65,11 @@ class StopController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'stop_code'           => 'nullable|string|max:50',
-            'stop_name'           => 'required|string|max:255',
-            'stop_lat'            => 'required|numeric|between:-90,90',
-            'stop_lon'            => 'required|numeric|between:-180,180',
-            'zone_id'             => 'nullable|string|max:50',
+            'stop_code'=> 'nullable|string|max:50',
+            'stop_name'=> 'required|string|max:255',
+            'stop_lat'=> 'required|numeric|between:-90,90',
+            'stop_lon'=> 'required|numeric|between:-180,180',
+            'zone_id'=> 'nullable|string|max:50',
             'wheelchair_boarding' => 'nullable|integer|in:0,1,2',
         ]);
 
