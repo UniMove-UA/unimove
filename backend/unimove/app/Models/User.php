@@ -2,56 +2,47 @@
 
 namespace App\Models;
 
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
-
-    protected $fillable = ['name', 'email', 'correo_institucional', 'password', 'phone', 'rating_avg'];
-
-    public function vehicles()
-    {
-        return $this->hasMany(Vehicle::class);
-    }
-
-    public function tripsAsDriver()
-    {
-        return $this->hasMany(Trip::class, 'driver_id');
-    }
-
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class, 'passenger_id');
-    }
-
-    public function reviewsReceived()
-    {
-        return $this->hasMany(Review::class, 'reviewee_id');
-    }
-
-    public function reviewsGiven()
-    {
-        return $this->hasMany(Review::class, 'reviewer_id');
-    }
+    use HasFactory, Notifiable;
 
     /**
-     * Rides created by the user (as a driver).
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
      */
-    public function viajes()
-    {
-        return $this->hasMany(Ride::class, 'driver_id');
-    }
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
 
     /**
-     * Bookings made by the user (as a passenger).
+     * The attributes that should be hidden for serialization.
+     *
+     * @var list<string>
      */
-    public function reservas()
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return $this->hasMany(Booking::class, 'passenger_id');
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
 }
