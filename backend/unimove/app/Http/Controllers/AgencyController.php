@@ -7,10 +7,25 @@ use Illuminate\Http\Request;
 
 class AgencyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $agencies = Agency::all();
-        return view('agency.index', compact('agencies'));
+        $sortable = ['agency_id', 'agency_name', 'agency_timezone', 'agency_lang'];
+        $sort= in_array($request->sort, $sortable) ? $request->sort : 'agency_id';
+        $dir= $request->dir === 'desc' ? 'desc' : 'asc';
+        $search= $request->search;
+
+        $agencies = Agency::query()
+            ->when($search, fn($q) => $q
+                ->where('agency_id',   'like', "%$search%")
+                ->orWhere('agency_name', 'like', "%$search%")
+                ->orWhere('agency_timezone', 'like', "%$search%")
+                ->orWhere('agency_lang', 'like', "%$search%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('agency.index', compact('agencies', 'sort', 'dir', 'search'));
     }
 
     public function show(string $id)
@@ -27,14 +42,14 @@ class AgencyController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'agency_id'       => 'required|string|max:50|unique:gtfs.agency,agency_id',
-            'agency_name'     => 'required|string',
-            'agency_url'      => 'required|string',
+            'agency_id'=> 'required|string|max:50|unique:gtfs.agency,agency_id',
+            'agency_name'=> 'required|string',
+            'agency_url'=> 'required|string',
             'agency_timezone' => 'required|string|max:50',
-            'agency_lang'     => 'nullable|string|max:10',
-            'agency_phone'    => 'nullable|string|max:50',
+            'agency_lang'=> 'nullable|string|max:10',
+            'agency_phone'=> 'nullable|string|max:50',
             'agency_fare_url' => 'nullable|string',
-            'agency_email'    => 'nullable|email',
+            'agency_email'=> 'nullable|email',
         ]);
 
         Agency::create($request->all());
@@ -51,13 +66,13 @@ class AgencyController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'agency_name'     => 'required|string',
-            'agency_url'      => 'required|string',
+            'agency_name'=> 'required|string',
+            'agency_url'=> 'required|string',
             'agency_timezone' => 'required|string|max:50',
-            'agency_lang'     => 'nullable|string|max:10',
-            'agency_phone'    => 'nullable|string|max:50',
+            'agency_lang'=> 'nullable|string|max:10',
+            'agency_phone'=> 'nullable|string|max:50',
             'agency_fare_url' => 'nullable|string',
-            'agency_email'    => 'nullable|email',
+            'agency_email'=> 'nullable|email',
         ]);
 
         $agency = Agency::findOrFail($id);

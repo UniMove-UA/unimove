@@ -7,10 +7,25 @@ use Illuminate\Http\Request;
 
 class CalendarController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $calendars = Calendar::all();
-        return view('calendar.index', compact('calendars'));
+        $sortable = ['service_id', 'start_date', 'end_date',
+            'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        $sort= in_array($request->sort, $sortable) ? $request->sort : 'service_id';
+        $dir= $request->dir === 'desc' ? 'desc' : 'asc';
+        $search= $request->search;
+
+        $calendars = Calendar::query()
+            ->when($search, fn($q) => $q
+                ->where('service_id',  'like', "%$search%")
+                ->orWhere('start_date', 'like', "%$search%")
+                ->orWhere('end_date',   'like', "%$search%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('calendar.index', compact('calendars', 'sort', 'dir', 'search'));
     }
 
     public function show(string $id)
@@ -28,15 +43,15 @@ class CalendarController extends Controller
     {
         $request->validate([
             'service_id' => 'required|string|max:50|unique:gtfs.calendar,service_id',
-            'monday'     => 'required|boolean',
-            'tuesday'    => 'required|boolean',
-            'wednesday'  => 'required|boolean',
-            'thursday'   => 'required|boolean',
-            'friday'     => 'required|boolean',
-            'saturday'   => 'required|boolean',
-            'sunday'     => 'required|boolean',
+            'monday'=> 'required|boolean',
+            'tuesday'=> 'required|boolean',
+            'wednesday'=> 'required|boolean',
+            'thursday'=> 'required|boolean',
+            'friday'=> 'required|boolean',
+            'saturday'=> 'required|boolean',
+            'sunday'=> 'required|boolean',
             'start_date' => 'required|string|max:12',
-            'end_date'   => 'required|string|max:12',
+            'end_date'=> 'required|string|max:12',
         ]);
 
         Calendar::create($request->all());
@@ -53,15 +68,15 @@ class CalendarController extends Controller
     public function update(Request $request, string $id)
     {
         $request->validate([
-            'monday'     => 'required|boolean',
-            'tuesday'    => 'required|boolean',
-            'wednesday'  => 'required|boolean',
-            'thursday'   => 'required|boolean',
-            'friday'     => 'required|boolean',
-            'saturday'   => 'required|boolean',
-            'sunday'     => 'required|boolean',
+            'monday'=> 'required|boolean',
+            'tuesday'=> 'required|boolean',
+            'wednesday'=> 'required|boolean',
+            'thursday'=> 'required|boolean',
+            'friday'=> 'required|boolean',
+            'saturday'=> 'required|boolean',
+            'sunday'=> 'required|boolean',
             'start_date' => 'required|string|max:12',
-            'end_date'   => 'required|string|max:12',
+            'end_date'=> 'required|string|max:12',
         ]);
 
         $calendar = Calendar::findOrFail($id);

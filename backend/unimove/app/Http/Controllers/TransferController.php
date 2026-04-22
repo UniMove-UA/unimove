@@ -10,10 +10,28 @@ use Illuminate\Http\Request;
 
 class TransferController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $transfers = Transfer::with(['paradaOrigen', 'paradaDestino'])->get();
-        return view('transfer.index', compact('transfers'));
+        $sortable = ['from_stop_id', 'to_stop_id', 'transfer_type', 'min_transfer_time',
+            'from_route_id', 'to_route_id'];
+        $sort= in_array($request->sort, $sortable) ? $request->sort : 'from_stop_id';
+        $dir= $request->dir === 'desc' ? 'desc' : 'asc';
+        $search= $request->search;
+
+        $transfers = Transfer::with(['paradaOrigen', 'paradaDestino'])
+            ->when($search, fn($q) => $q
+                ->where('from_stop_id',  'like', "%$search%")
+                ->orWhere('to_stop_id',   'like', "%$search%")
+                ->orWhere('from_route_id', 'like', "%$search%")
+                ->orWhere('to_route_id',   'like', "%$search%")
+                ->orWhere('from_trip_id',  'like', "%$search%")
+                ->orWhere('to_trip_id',    'like', "%$search%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('transfer.index', compact('transfers', 'sort', 'dir', 'search'));
     }
 
     public function show(Request $request)
@@ -26,22 +44,22 @@ class TransferController extends Controller
 
     public function create()
     {
-        $stops  = Stop::all();
-        $routes = Route::all();
-        $trips  = Trip::all();
+        $stops  = Stop::orderBy('stop_name')->get();
+        $routes = Route::orderBy('route_id')->get();
+        $trips  = Trip::orderBy('trip_id')->get();
         return view('transfer.create', compact('stops', 'routes', 'trips'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'from_stop_id'      => 'required|string|max:50|exists:gtfs.stops,stop_id',
-            'to_stop_id'        => 'required|string|max:50|exists:gtfs.stops,stop_id',
-            'from_route_id'     => 'nullable|string|max:50|exists:gtfs.routes,route_id',
-            'to_route_id'       => 'nullable|string|max:50|exists:gtfs.routes,route_id',
-            'from_trip_id'      => 'nullable|string|max:50|exists:gtfs.trips,trip_id',
-            'to_trip_id'        => 'nullable|string|max:50|exists:gtfs.trips,trip_id',
-            'transfer_type'     => 'required|integer|in:0,1,2,3',
+            'from_stop_id'=> 'required|string|max:50|exists:gtfs.stops,stop_id',
+            'to_stop_id'=> 'required|string|max:50|exists:gtfs.stops,stop_id',
+            'from_route_id'=> 'nullable|string|max:50|exists:gtfs.routes,route_id',
+            'to_route_id'=> 'nullable|string|max:50|exists:gtfs.routes,route_id',
+            'from_trip_id'=> 'nullable|string|max:50|exists:gtfs.trips,trip_id',
+            'to_trip_id'=> 'nullable|string|max:50|exists:gtfs.trips,trip_id',
+            'transfer_type'=> 'required|integer|in:0,1,2,3',
             'min_transfer_time' => 'nullable|integer|min:0',
         ]);
 
@@ -55,22 +73,22 @@ class TransferController extends Controller
         $transfer = Transfer::where('from_stop_id', $request->from_stop_id)
             ->where('to_stop_id', $request->to_stop_id)
             ->firstOrFail();
-        $stops  = Stop::all();
-        $routes = Route::all();
-        $trips  = Trip::all();
+        $stops  = Stop::orderBy('stop_name')->get();
+        $routes = Route::orderBy('route_id')->get();
+        $trips  = Trip::orderBy('trip_id')->get();
         return view('transfer.edit', compact('transfer', 'stops', 'routes', 'trips'));
     }
 
     public function update(Request $request)
     {
         $request->validate([
-            'from_stop_id'      => 'required|string|max:50|exists:gtfs.stops,stop_id',
-            'to_stop_id'        => 'required|string|max:50|exists:gtfs.stops,stop_id',
-            'from_route_id'     => 'nullable|string|max:50|exists:gtfs.routes,route_id',
-            'to_route_id'       => 'nullable|string|max:50|exists:gtfs.routes,route_id',
-            'from_trip_id'      => 'nullable|string|max:50|exists:gtfs.trips,trip_id',
-            'to_trip_id'        => 'nullable|string|max:50|exists:gtfs.trips,trip_id',
-            'transfer_type'     => 'required|integer|in:0,1,2,3',
+            'from_stop_id'=> 'required|string|max:50|exists:gtfs.stops,stop_id',
+            'to_stop_id'=> 'required|string|max:50|exists:gtfs.stops,stop_id',
+            'from_route_id'=> 'nullable|string|max:50|exists:gtfs.routes,route_id',
+            'to_route_id'=> 'nullable|string|max:50|exists:gtfs.routes,route_id',
+            'from_trip_id'=> 'nullable|string|max:50|exists:gtfs.trips,trip_id',
+            'to_trip_id'=> 'nullable|string|max:50|exists:gtfs.trips,trip_id',
+            'transfer_type'=> 'required|integer|in:0,1,2,3',
             'min_transfer_time' => 'nullable|integer|min:0',
         ]);
 
