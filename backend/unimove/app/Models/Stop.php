@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Stop extends Model
+{
+    protected $connection = 'gtfs';
+    protected $table = 'stops';
+    protected $primaryKey = 'stop_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    public $timestamps = false;
+    protected $guarded = [];
+
+}
