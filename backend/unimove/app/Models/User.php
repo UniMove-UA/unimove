@@ -45,20 +45,4 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-
-    /**
-     * Rides created by the user (as a driver).
-     */
-    public function viajes()
-    {
-        return $this->hasMany(Ride::class, 'driver_id');
-    }
-
-    /**
-     * Bookings made by the user (as a passenger).
-     */
-    public function reservas()
-    {
-        return $this->hasMany(Booking::class, 'passenger_id');
-    }
 }
