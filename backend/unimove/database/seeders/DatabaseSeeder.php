@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 3. VIAJES
-        DB::table('trips')->insert([
+        DB::table('travels')->insert([
             'driver_id' => 2,
             'vehicle_id' => 1,
             'origin' => 'Plaza Central',
@@ -81,7 +81,7 @@ class DatabaseSeeder extends Seeder
 
         // 4. RESERVAS
         DB::table('bookings')->insert([
-            'trip_id' => 1,
+            'travel_id' => 1,
             'passenger_id' => 3,
             'status' => 'confirmed',
             'created_at' => Carbon::now(),
