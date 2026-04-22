@@ -134,6 +134,7 @@ class TransferTest extends TestCase
 
     public function test_all_transfer_types_are_valid(): void
     {
+        $before = Transfer::count();
         $stops = [['2','3'], ['2','17'], ['3','17'], ['17','2']];
 
         foreach ([0, 1, 2, 3] as $i => $type) {
@@ -144,7 +145,7 @@ class TransferTest extends TestCase
             ]);
         }
 
-        $this->assertEquals(4, Transfer::count());
+        $this->assertEquals($before + 4, Transfer::count());
     }
 
     public function test_optional_fields_accept_null(): void

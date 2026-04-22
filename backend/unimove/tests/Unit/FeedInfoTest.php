@@ -120,6 +120,8 @@ class FeedInfoTest extends TestCase
 
     public function test_can_store_multiple_feed_info_rows(): void
     {
+        $before = FeedInfo::count();
+
         FeedInfo::create([
             'feed_publisher_name' => 'Tram Alicante',
             'feed_publisher_url'  => 'http://www.tramalicante.es',
@@ -132,6 +134,6 @@ class FeedInfoTest extends TestCase
             'feed_lang'           => 'es',
         ]);
 
-        $this->assertEquals(2, FeedInfo::count());
+        $this->assertEquals($before + 2, FeedInfo::count());
     }
 }
