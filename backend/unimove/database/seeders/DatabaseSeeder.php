@@ -81,14 +81,10 @@ class DatabaseSeeder extends Seeder
 
         // 4. RESERVAS
         DB::table('bookings')->insert([
-            'travels_id' => 1,
+            'travel_id' => 1,
             'passenger_id' => 3,
             'status' => 'confirmed',
             'created_at' => Carbon::now(),
         ]);
-
-
-        // 5. GTFS
-        $this->call(GtfsSeeder::class);
     }
 }
