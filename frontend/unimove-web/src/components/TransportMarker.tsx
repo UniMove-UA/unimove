@@ -1,5 +1,6 @@
-import {Marker} from 'react-leaflet';
+import {Marker, Popup} from 'react-leaflet';
 import {divIcon} from 'leaflet';
+import { useState } from 'react';
 
 const createTransportIcon = (type: string) => {
     return divIcon({
@@ -19,12 +20,17 @@ const createTransportIcon = (type: string) => {
 interface MarkerProps {
     type: string;
     position: [number, number];
+    name: string;
 }
 
-export default function TransportMarker({type, position}: MarkerProps) {
+export default function TransportMarker({type, position, name}: MarkerProps) {
     return (
-        <Marker position={position} icon={createTransportIcon(type)}>
-
+        <Marker 
+            position={position} 
+            icon={createTransportIcon(type)}>
+                <Popup>
+                    <span><strong>{name}</strong></span>
+                </Popup>
         </Marker>
     )
 }
