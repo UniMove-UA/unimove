@@ -43,7 +43,7 @@ class AuthController extends Controller
 
         // crear el usuario
         $user = User::create([
-            'name' => $request->name,
+            'name' => ucfirst($request->name),
             'email' => $request->email,
             'password' => Hash::make($request->password), //para no guardar la contraseña en la base de datos (se deberá comporobar con Hash::check())
             'role' => 'external',
