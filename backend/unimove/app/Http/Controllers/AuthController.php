@@ -100,8 +100,8 @@ class AuthController extends Controller
         $request->validate(['email' => 'required|email']);
 
         //comprobación de dominio
-        if (!str_ends_with($request->email, '@alu.ua.es')) {
-            return response()->json(['message' => 'Solo se admiten correos @alu.ua.es'], 403);
+        if (!str_ends_with($request->email, '@alu.ua.es') && !str_ends_with($request->email, '@ua.es')) {
+            return response()->json(['message' => 'Solo se admiten correos @alu.ua.es o @ua.es'], 403);
         }
 
         //buscamos al usuario por su correo institucional
@@ -114,7 +114,7 @@ class AuthController extends Controller
                 'email' => $request->email,
                 'correo_institucional' => $request->email,
                 'password' => Hash::make(Str::random(16)), //contraseña aleatoria que no usará
-                'role' => 'student',
+                'role' => str_ends_with($request->email, '@ua.es') ? 'staff' : 'student',
                 'is_university_member' => true,
             ]);
         }
