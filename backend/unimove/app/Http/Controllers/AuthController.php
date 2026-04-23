@@ -16,7 +16,24 @@ class AuthController extends Controller
         // validar los datos
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:users',
+                'email:rfc,dns',
+                function ($attribute, $value, $fail) {
+                    //las cuentas tanto de alumno como de profesor
+                    if (str_ends_with($value, '@alu.ua.es') || str_ends_with($value, '@ua.es')) {
+                        $fail('No se puede crear una cuenta con dominio universitario.');
+                    }
+                    //este mensaje de error es para dominios que no son validos, asi se crean cuentas solo con dominios validos
+                    $dominio = explode('@', $value)[1] ?? '';
+                    if (!checkdnsrr($dominio, 'MX')) {
+                        $fail('El dominio del correo no es válido');
+                    }
+                },
+            ],
             'password' => 'required|string|min:8',
         ]);
 
@@ -29,6 +46,8 @@ class AuthController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password), //para no guardar la contraseña en la base de datos (se deberá comporobar con Hash::check())
+            'role' => 'external',
+            'is_university_member' => false,
         ]);
 
         // generar el token, lo guarda en la tabla personal_access_tokens
