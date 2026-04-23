@@ -91,10 +91,12 @@ class AuthController extends Controller
         if (!$user) {
             // si el usuario no existe, lo creamos sin pedir contraseña
             $user = User::create([
-                'name' => explode('@', $request->email)[0], //nombre temporal
-                'email' => $request->email, 
+                'name' => ucfirst(explode('@', $request->email)[0]), //nombre temporal
+                'email' => $request->email,
                 'correo_institucional' => $request->email,
                 'password' => Hash::make(Str::random(16)), //contraseña aleatoria que no usará
+                'role' => 'student',
+                'is_university_member' => true,
             ]);
         }
 
