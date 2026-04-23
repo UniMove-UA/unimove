@@ -6,10 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Booking extends Model
 {
-    protected $fillable = ['trip_id', 'passenger_id', 'status'];
+    protected $fillable = ['travel_id', 'passenger_id', 'status'];
 
-    public function trip() {
-        return $this->belongsTo(Trip::class);
+    public function travel() {
+        return $this->belongsTo(Travel::class);
     }
 
     public function passenger() {
