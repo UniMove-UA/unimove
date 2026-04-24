@@ -1,4 +1,5 @@
 import '../styles/Chat.css';
+import {Link} from "react-router-dom";
 
 interface ChatButtonProps {
     username: string;
@@ -11,7 +12,7 @@ export default function ChatButton({username, fullname, last_message, img}: Chat
     const imageUrl = img || 'default_user.jpg';
 
     return (
-        <div className="chat-button">
+        <Link className="chat-button" to='/chat/content'>
             <img src={imageUrl} alt={fullname} className="chat-button__avatar" />
             <div className="chat-button__content">
                 <div className="chat-button__header">
@@ -20,6 +21,6 @@ export default function ChatButton({username, fullname, last_message, img}: Chat
                 </div>
                 <p className="chat-button__last-message">{last_message}</p>
             </div>
-        </div>
+        </Link>
     );
 }

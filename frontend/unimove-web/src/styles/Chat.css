@@ -111,3 +111,68 @@
     float: right;
     margin-left: 8px;
 }
+
+.chat-header {
+    position: sticky; /* O 'fixed' si prefieres que flote sobre todo */
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #f0f2f5; /* Color de fondo similar a WhatsApp */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+/* Botón de volver */
+.chat-header__back {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #008069; /* Verde WhatsApp */
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chat-header__back:hover {
+    background-color: rgba(0, 128, 105, 0.1);
+}
+
+.chat-header__info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    margin: 0 16px;
+}
+
+.chat-header__fullname {
+    font-weight: bold;
+    font-size: 16px;
+    color: #111b21;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-header__username {
+    font-size: 13px;
+    color: #667781;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-header__actions {
+    width: 40px;
+    display: flex;
+    justify-content: flex-end;
+}

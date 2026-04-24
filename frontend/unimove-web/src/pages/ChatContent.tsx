@@ -1,8 +1,14 @@
 import Page from "../components/Page";
 import ChatMessage, { type ChatMessageProps } from "../components/ChatMessage";
 import { useState, useRef } from "react";
+import ChatHeader from "../components/ChatHeader.tsx";
 
-export default function ChatContent() {
+interface ChatProps {
+    username: string;
+    fullname: string;
+}
+
+export default function ChatContent({username, fullname}: ChatProps) {
     const [inputValue, setInputValue] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -57,6 +63,7 @@ export default function ChatContent() {
 
     return (
         <Page name='mensajes'>
+            <ChatHeader fullname={fullname} username={username} />
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
