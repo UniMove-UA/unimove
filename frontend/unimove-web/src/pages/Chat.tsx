@@ -9,6 +9,8 @@ interface ChatProps {
 }
 
 export default function Chat() {
+
+    // Hacer un fetch a la API en /chats?
     const chats: ChatProps[] = [
         {
             username: "ana_dev",
