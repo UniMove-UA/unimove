@@ -1,0 +1,25 @@
+import '../styles/Chat.css';
+
+interface ChatButtonProps {
+    username: string;
+    fullname: string;
+    last_message: string;
+    img?: string;
+}
+
+export default function ChatButton({username, fullname, last_message, img}: ChatButtonProps) {
+    const imageUrl = img || 'default_user.jpg';
+
+    return (
+        <div className="chat-button">
+            <img src={imageUrl} alt={fullname} className="chat-button__avatar" />
+            <div className="chat-button__content">
+                <div className="chat-button__header">
+                    <span className="chat-button__fullname">{fullname}</span>
+                    <span className="chat-button__username">@{username}</span>
+                </div>
+                <p className="chat-button__last-message">{last_message}</p>
+            </div>
+        </div>
+    );
+}
