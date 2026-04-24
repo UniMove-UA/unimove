@@ -7,6 +7,7 @@ import Register from './pages/Register.tsx';
 import UpdateProfile from './pages/Update_profile.tsx';
 import UniversityAuth from "./pages/UniversityAuth.tsx";
 import Main from "./pages/Main.tsx";
+import ChatContent from "./pages/ChatContent.tsx";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path='/login' element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/auth-universidad' element={<UniversityAuth />} />
+        <Route path='/chat/content' element={<ChatContent/>} />
       </Routes>
     </>
   )

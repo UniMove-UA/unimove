@@ -8,8 +8,8 @@ interface ButtonProps {
 }
 
 export default function HeaderButton(props: ButtonProps){
-    return <a className={props.active ? 'active' : ''} href={props.href ?? ''} >
-        <img src={props.src} width={props.size} height={props.size} />
+    return <a className={props.active ? 'active' : ''} href={ props.href ? '/' + props.href : ''} >
+        <img src={'/' + props.src} width={props.size} height={props.size} />
         {props.name}
     </a>
 }

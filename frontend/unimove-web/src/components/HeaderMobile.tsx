@@ -19,7 +19,7 @@ export default function HeaderMobile(props: PageProps){
                     <div></div>
                     <p>UniMove</p>
                     <a style={{position: 'absolute', right: 30}}>
-                        <img src='bell.svg'/>
+                        <img src='/bell.svg'/>
                     </a>
                 </nav>
             </header>
