@@ -8,7 +8,7 @@ class Travel extends Model
 {
     protected $fillable = [
         'driver_id', 'vehicle_id', 'origin', 'destination',
-        'departure_time', 'available_seats', 'price', 'status'
+        'departure_time', 'available_seats', 'price', 'status', 'longitud', 'latitud'
     ];
 
     public function driver() {
