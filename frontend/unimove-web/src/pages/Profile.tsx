@@ -2,19 +2,23 @@ import { useState, useRef } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
 
-export default function Profile() {
+interface ProfileData {
+    fullName: string;
+    username: string;
+    email: string;
+    avatarUrl: string;
+}
+
+interface ProfileProps {
+    profileData: ProfileData;
+}
+
+export default function Profile({ profileData }: ProfileProps) {
     const [isEditing, setIsEditing] = useState(false);
-    const fileInputRef = useRef(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [profileData, setProfileData] = useState({
-        fullName: 'Alex García',
-        username: '@alexgarcia',
-        email: 'alex.garcia@ejemplo.com',
-        avatarUrl: 'https://via.placeholder.com/150'
-    });
-
-    const [tempData, setTempData] = useState({ ...profileData });
-    const [selectedFile, setSelectedFile] = useState(null);
+    const [tempData, setTempData] = useState<ProfileData>({ ...profileData });
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const handleAvatarClick = () => {
         if (isEditing && fileInputRef.current) {
@@ -22,8 +26,8 @@ export default function Profile() {
         }
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (file) {
             setSelectedFile(file);
             const objectUrl = URL.createObjectURL(file);
@@ -31,12 +35,12 @@ export default function Profile() {
         }
     };
 
-    const handleChange = (e) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         const formData = new FormData();
@@ -53,11 +57,7 @@ export default function Profile() {
         try {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            setProfileData({
-                ...tempData,
-                avatarUrl: selectedFile ? URL.createObjectURL(selectedFile) : tempData.avatarUrl
-            });
-
+            setTempData(profileData);
             setIsEditing(false);
             setSelectedFile(null);
             alert("Perfil actualizado correctamente");

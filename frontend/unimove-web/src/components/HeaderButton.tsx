@@ -1,3 +1,4 @@
+import {Link} from "react-router-dom";
 
 interface ButtonProps {
     active: boolean;
@@ -8,8 +9,8 @@ interface ButtonProps {
 }
 
 export default function HeaderButton(props: ButtonProps){
-    return <a className={props.active ? 'active' : ''} href={ props.href ? '/' + props.href : ''} >
+    return <Link className={props.active ? 'active' : ''} to={ props.href ? '/' + props.href : ''} >
         <img src={'/' + props.src} width={props.size} height={props.size} />
         {props.name}
-    </a>
+    </Link>
 }
