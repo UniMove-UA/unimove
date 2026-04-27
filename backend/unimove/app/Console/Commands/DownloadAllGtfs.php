@@ -17,8 +17,8 @@ class DownloadAllGtfs extends Command
     {
         $datasets = [
             'renfe'=> '152Vv5m7S276Zs1IXUV6M14qdT2zO4kJx',
-            'tram'=> '17sG3whpgkrEqw6CK_RhdzvTZDcefby8F',
-            'vectalia'=> '1Y_uX23u1qVYoNJ2JPBAgRcHkVk3GcmyC',
+            'tram'=> '1Y_uX23u1qVYoNJ2JPBAgRcHkVk3GcmyC',
+            'vectalia'=> '17sG3whpgkrEqw6CK_RhdzvTZDcefby8F',
             'vectalia_sanvi' => '1O2zdmGHypsDAZrwl9CNsj_vpf_hb3u9R',
             'interurbano'=> '1pqLxnSdF_emmREY631f4mFgExMwI3aec',
         ];

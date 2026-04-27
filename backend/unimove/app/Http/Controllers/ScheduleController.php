@@ -20,8 +20,9 @@ class ScheduleController extends Controller
             ->where('stop_id', $stop->stop_id)
             ->orderBy('departure_time', 'asc')
             ->get()
-            // Agrupamos por route_id y nos quedamos solo con el primero (más temprano) de cada línea
-            ->groupBy(fn($st) => $st->trayecto->route_id)
+            ->groupBy(fn($st) => $st->trayecto->ruta->route_short_name
+                ?? $st->trayecto->ruta->route_long_name
+                ?? $st->trayecto->route_id)
             ->map(fn($group) => $group->first())
             ->values()
             ->map(fn($st) => [
