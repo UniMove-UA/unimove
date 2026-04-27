@@ -16,6 +16,7 @@ class AuthController extends Controller
         // validar los datos
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users|alpha_dash',
             'email' => [
                 'required',
                 'string',
@@ -44,6 +45,7 @@ class AuthController extends Controller
         // crear el usuario
         $user = User::create([
             'name' => ucfirst($request->name),
+            'username'=> $request->username,
             'email' => $request->email,
             'password' => Hash::make($request->password), //para no guardar la contraseña en la base de datos (se deberá comporobar con Hash::check())
             'role' => 'external',
@@ -68,7 +70,7 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+        $loginField = filter_var($request->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
         $credentials = [
             $loginField => $request->login,
@@ -110,7 +112,8 @@ class AuthController extends Controller
         if (!$user) {
             // si el usuario no existe, lo creamos sin pedir contraseña
             $user = User::create([
-                'name' => ucfirst(explode('@', $request->email)[0]), //nombre temporal
+                'name' => ucfirst(explode('@', $request->email)[0]), //nombre temporal,
+                'username' => explode('@', $request->email)[0] . rand(10000, 99999),
                 'email' => $request->email,
                 'correo_institucional' => $request->email,
                 'password' => Hash::make(Str::random(16)), //contraseña aleatoria que no usará
