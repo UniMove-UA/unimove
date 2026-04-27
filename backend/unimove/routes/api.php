@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use app\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\TravelController;
+use App\Http\Controllers\VehicleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +16,30 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile', [ProfileController::class, 'store']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::delete('/profile', [ProfileController::class, 'destroy']);
+
+    Route::get('/vehicles/me', [VehicleController::class, 'myVehicles']);
+    Route::post('/vehicles', [VehicleController::class, 'store']);
+    Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
+    Route::get('/vehicles/{id}/edit', [VehicleController::class, 'edit']);
+    Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
+    Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
+
+    Route::get('/bookings/me', [BookingController::class, 'myBookings']);
+    Route::post('/bookings', [BookingController::class, 'store']);
+    Route::get('/bookings/{id}', [BookingController::class, 'show']);
+    Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
+
+    Route::get('/reviews/me', [ReviewController::class, 'myReviews']);
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::get('/reviews/{id}', [ReviewController::class, 'show']);
+    Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+
+    Route::get('/travels', [TravelController::class, 'index']);
+    Route::post('/travels', [TravelController::class, 'store']);
+    Route::get('/travels/me', [TravelController::class, 'myTravels']);
+    Route::get('/travels/{id}', [TravelController::class, 'show']);
+    Route::put('/travels/{id}', [TravelController::class, 'update']);
+    Route::delete('/travels/{id}', [TravelController::class, 'destroy']);
 
     Route::get('/chats/me', [MessageController::class, 'myChats']);
     Route::get('/chats/{email}', [MessageController::class, 'conversation']);
@@ -31,6 +59,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/admin/notifications/{id}/edit', [NotificationController::class, 'edit']);
         Route::put('/admin/notifications/{id}', [NotificationController::class, 'update']);
         Route::delete('/admin/notifications/{id}', [NotificationController::class, 'destroy']);
+
+        Route::get('/admin/vehicles', [VehicleController::class, 'index']);
+        Route::delete('/admin/vehicles/{id}', [VehicleController::class, 'destroy']);
+
+        Route::get('/admin/bookings', [BookingController::class, 'index']);
+        Route::put('/admin/bookings/{id}', [BookingController::class, 'update']);
+        Route::delete('/admin/bookings/{id}', [BookingController::class, 'adminDestroy']);
+
+        Route::get('/admin/reviews', [ReviewController::class, 'index']);
+        Route::delete('/admin/reviews/{id}', [ReviewController::class, 'adminDestroy']);
+
+        Route::get('/admin/travels', [TravelController::class, 'indexAll']);
+        Route::delete('/admin/travels/{id}', [TravelController::class, 'adminDestroy']);
     });
 });
 
