@@ -1,10 +1,115 @@
 <?php
-
 namespace App\Http\Controllers;
 
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class VehicleController extends Controller
 {
-    //
+    public function myVehicles()
+    {
+        $vehicles = Vehicle::where('user_id', Auth::id())->get();
+        return response()->json($vehicles);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'brand'       => 'required|string|max:255',
+            'model'       => 'required|string|max:255',
+            'plate'       => 'required|string|max:20|unique:vehicles',
+            'total_seats' => 'required|integer|min:1|max:9',
+        ]);
+
+        $vehicle = Vehicle::create([
+            'user_id'     => Auth::id(),
+            'brand'       => $request->brand,
+            'model'       => $request->model,
+            'plate'       => strtoupper($request->plate),
+            'total_seats' => $request->total_seats,
+        ]);
+
+        return response()->json([
+            'message' => 'Vehículo añadido correctamente',
+            'data'    => $vehicle,
+        ], 201);
+    }
+
+    public function show($id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+
+        if ($vehicle->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        return response()->json($vehicle);
+    }
+
+    public function edit($id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+
+        if ($vehicle->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        return response()->json($vehicle);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+
+        if ($vehicle->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $request->validate([
+            'brand'       => 'string|max:255',
+            'model'       => 'string|max:255',
+            'plate'       => 'string|max:20|unique:vehicles,plate,' . $id,
+            'total_seats' => 'integer|min:1|max:9',
+        ]);
+
+        $vehicle->update($request->only(['brand', 'model', 'plate', 'total_seats']));
+
+        return response()->json([
+            'message' => 'Vehículo actualizado correctamente',
+            'data'    => $vehicle,
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $vehicle = Vehicle::findOrFail($id);
+
+        if ($vehicle->user_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $vehicle->delete();
+        return response()->json(['message' => 'Vehículo eliminado correctamente']);
+    }
+
+    public function index(Request $request)
+    {
+        $sortable = ['brand', 'model', 'plate', 'total_seats', 'created_at'];
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'created_at';
+        $dir = $request->dir === 'desc' ? 'desc' : 'asc';
+        $search = $request->search;
+
+        $vehicles = Vehicle::with('owner')
+            ->when($search, fn($q) => $q
+                ->where('brand', 'like', "%$search%")
+                ->orWhere('model', 'like', "%$search%")
+                ->orWhere('plate', 'like', "%$search%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(20)
+            ->withQueryString();
+
+        return response()->json($vehicles);
+    }
 }
