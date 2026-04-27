@@ -8,7 +8,7 @@ export default function HeaderMobile(props: PageProps){
     return <div>
             <header id="header_mobile_bottom">
                 <nav>
-                    <HeaderButton active={props.page === 'inicio'} size={30} name='Inicio' src='house.svg' href='' />
+                    <HeaderButton active={props.page === 'inicio'} size={30} name='Inicio' src='house.svg' href='home' />
                     <HeaderButton active={props.page === 'viajes'}  size={30} name='Viajes' src='route.svg' href='travel' />
                     <HeaderButton active={props.page === 'mensajes'}  size={30} name='Mensajes' src='message.svg' href='chat' />
                     <HeaderButton active={props.page === 'perfil'}  size={30} name='Perfil' src='profile.svg' href='profile/me' />
