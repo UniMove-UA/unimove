@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\MarkerController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use app\Http\Controllers\ProfileController;
@@ -25,8 +26,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/schedule', [ScheduleController::class, 'index']);
 
-    Route::get('/travels',     [TravelController::class, 'index']);
-    Route::post('/travels',    [TravelController::class, 'store']);
+    Route::get('/markers', [MarkerController::class, 'index']);
+    Route::get('/travels',[TravelController::class, 'index']);
+    Route::post('/travels',[TravelController::class, 'store']);
 
 });
 
