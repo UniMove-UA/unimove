@@ -15,10 +15,11 @@ function App() {
         <Route path='/' element={<Main />} />
         <Route path='/travel' element={<Travel />} />
         <Route path='/chat' element={<Chat />} />
-        <Route path='/profile/:id' element={<ProfileContainer />} />
         <Route path='/login' element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/auth-universidad' element={<UniversityAuth />} />
+        {/* Rutas dinámicas */}
+        <Route path='/profile/:id' element={<ProfileContainer />} />
         <Route path='/chat/content' element={<ChatContent/>} />
       </Routes>
     </>
