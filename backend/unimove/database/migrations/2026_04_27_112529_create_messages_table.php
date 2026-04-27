@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bookings', function (Blueprint $table) {
+        Schema::create('messages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('travel_id')->constrained('travels')->onDelete('cascade');
-            $table->foreignId('passenger_id')->constrained('users')->onDelete('cascade');
-            $table->enum('status', ['pending', 'confirmed', 'rejected', 'cancelled'])->default('pending');
+            $table->foreignId('emisor_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('receptor_id')->constrained('users')->onDelete('cascade');
+            $table->text('text');
+            $table->string('url')->nullable();
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bookings');
+        Schema::dropIfExists('messages');
     }
 };

@@ -8,10 +8,24 @@ use Illuminate\Http\Request;
 
 class CalendarDateController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $calendarDates = CalendarDate::with('calendario')->get();
-        return view('calendar_date.index', compact('calendarDates'));
+        $sortable = ['service_id', 'date', 'exception_type'];
+        $sort= in_array($request->sort, $sortable) ? $request->sort : 'date';
+        $dir= $request->dir === 'desc' ? 'desc' : 'asc';
+        $search= $request->search;
+
+        $calendarDates = CalendarDate::with('calendario')
+            ->when($search, fn($q) => $q
+                ->where('service_id',     'like', "%$search%")
+                ->orWhere('date',          'like', "%$search%")
+                ->orWhere('exception_type', '=',    $search)
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('calendar_date.index', compact('calendarDates', 'sort', 'dir', 'search'));
     }
 
     public function show(Request $request)
@@ -24,15 +38,15 @@ class CalendarDateController extends Controller
 
     public function create()
     {
-        $calendars = Calendar::all();
+        $calendars = Calendar::orderBy('service_id')->get();
         return view('calendar_date.create', compact('calendars'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'service_id'     => 'required|string|max:50|exists:gtfs.calendar,service_id',
-            'date'           => 'required|string|max:12',
+            'service_id'=> 'required|string|max:50|exists:gtfs.calendar,service_id',
+            'date'=> 'required|string|max:12',
             'exception_type' => 'required|integer|in:1,2',
         ]);
 
@@ -46,16 +60,16 @@ class CalendarDateController extends Controller
         $calendarDate = CalendarDate::where('service_id', $request->service_id)
             ->where('date', $request->date)
             ->firstOrFail();
-        $calendars = Calendar::all();
+        $calendars = Calendar::orderBy('service_id')->get();
         return view('calendar_date.edit', compact('calendarDate', 'calendars'));
     }
 
     public function update(Request $request)
     {
         $request->validate([
-            'service_id'     => 'required|string|max:50|exists:gtfs.calendar,service_id',
-            'date'           => 'required|string|max:12',
-            'exception_type' => 'required|integer|in:1,2',
+            'service_id'=> 'required|string|max:50|exists:gtfs.calendar,service_id',
+            'date'=> 'required|string|max:12',
+            'exception_type'=> 'required|integer|in:1,2',
         ]);
 
         $calendarDate = CalendarDate::where('service_id', $request->service_id)

@@ -7,10 +7,24 @@ use Illuminate\Http\Request;
 
 class FeedInfoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $feedInfos = FeedInfo::all();
-        return view('feed_info.index', compact('feedInfos'));
+        $sortable = ['feed_publisher_name', 'feed_lang', 'feed_start_date', 'feed_end_date', 'feed_version'];
+        $sort= in_array($request->sort, $sortable) ? $request->sort : 'feed_publisher_name';
+        $dir= $request->dir === 'desc' ? 'desc' : 'asc';
+        $search= $request->search;
+
+        $feedInfos = FeedInfo::query()
+            ->when($search, fn($q) => $q
+                ->where('feed_publisher_name', 'like', "%$search%")
+                ->orWhere('feed_lang',          'like', "%$search%")
+                ->orWhere('feed_version',        'like', "%$search%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('feed_info.index', compact('feedInfos', 'sort', 'dir', 'search'));
     }
 
     public function show(Request $request)
@@ -28,11 +42,11 @@ class FeedInfoController extends Controller
     {
         $request->validate([
             'feed_publisher_name' => 'required|string',
-            'feed_publisher_url'  => 'required|string',
-            'feed_lang'           => 'required|string',
-            'feed_start_date'     => 'nullable|string|max:8',
-            'feed_end_date'       => 'nullable|string|max:8',
-            'feed_version'        => 'nullable|string',
+            'feed_publisher_url'=> 'required|string',
+            'feed_lang'=> 'required|string',
+            'feed_start_date'=> 'nullable|string|max:8',
+            'feed_end_date'=> 'nullable|string|max:8',
+            'feed_version'=> 'nullable|string',
         ]);
 
         FeedInfo::create($request->all());
@@ -50,11 +64,11 @@ class FeedInfoController extends Controller
     {
         $request->validate([
             'feed_publisher_name' => 'required|string',
-            'feed_publisher_url'  => 'required|string',
-            'feed_lang'           => 'required|string',
-            'feed_start_date'     => 'nullable|string|max:8',
-            'feed_end_date'       => 'nullable|string|max:8',
-            'feed_version'        => 'nullable|string',
+            'feed_publisher_url'=> 'required|string',
+            'feed_lang'=> 'required|string',
+            'feed_start_date'=> 'nullable|string|max:8',
+            'feed_end_date'=> 'nullable|string|max:8',
+            'feed_version'=> 'nullable|string',
         ]);
 
         $feedInfo = FeedInfo::where('feed_publisher_name', $request->feed_publisher_name)->firstOrFail();

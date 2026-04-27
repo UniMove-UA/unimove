@@ -10,16 +10,15 @@ class Review extends Model
     use HasFactory;
 
     protected $fillable = [
-        'trip_id', 
-        'reviewer_id', 
-        'reviewee_id', 
-        'rating', 
+        'travel_id',
+        'reviewer_id',
+        'reviewee_id',
+        'rating',
         'comment'
     ];
 
-    // El viaje al que pertenece la reseña
-    public function trip() {
-        return $this->belongsTo(Trip::class);
+    public function travel() {
+        return $this->belongsTo(Travel::class);
     }
 
     public function author() {

@@ -11,17 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('trips', function (Blueprint $table) {
+        Schema::create('travels', function (Blueprint $table) {
             $table->id();
             $table->foreignId('driver_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('vehicle_id')->constrained('vehicles');
-            
+
             $table->string('origin');
             $table->string('destination');
             $table->dateTime('departure_time');
             $table->integer('available_seats');
             $table->decimal('price', 8, 2);
             $table->enum('status', ['active', 'completed', 'cancelled'])->default('active');
+            $table->float('latitud');
+            $table->float('longitud');
             $table->timestamps();
         });
     }
@@ -31,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('trips');
+        Schema::dropIfExists('travels');
     }
 };
