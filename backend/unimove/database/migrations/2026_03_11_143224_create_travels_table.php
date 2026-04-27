@@ -22,6 +22,8 @@ return new class extends Migration
             $table->integer('available_seats');
             $table->decimal('price', 8, 2);
             $table->enum('status', ['active', 'completed', 'cancelled'])->default('active');
+            $table->float('latitud');
+            $table->float('longitud');
             $table->timestamps();
         });
     }

@@ -76,6 +76,8 @@ class DatabaseSeeder extends Seeder
             'available_seats' => 3,
             'price' => 1.50,
             'status' => 'active',
+            'longitud' => 0,5,
+            'latitud' => 34.0,
             'created_at' => Carbon::now(),
         ]);
 
