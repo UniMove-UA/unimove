@@ -28,12 +28,13 @@ class DatabaseSeeder extends Seeder
         DB::table('users')->insert([
             [
                 'name' => 'Admin',
-                'username' => 'admin',
+                'username' => 'admin.admin',
                 'email' => 'admin@gmail.com',
                 'correo_institucional' => null,
                 'password' => Hash::make('admin123'),
                 'role' => 'admin',
                 'is_university_member' => false,
+                'image' => null,
                 'created_at' => Carbon::now(),
             ],
             [
@@ -44,6 +45,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('carlos123'),
                 'role' => 'student',
                 'is_university_member' => true,
+                'image' => null,
                 'created_at' => Carbon::now(),
             ],
             [
@@ -54,6 +56,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('lucia123'),
                 'role' => 'student',
                 'is_university_member' => true,
+                'image' => null,
                 'created_at' => Carbon::now(),
             ],
             [
@@ -64,6 +67,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('pedro123'),
                 'role' => 'external',
                 'is_university_member' => false,
+                'image' => null,
                 'created_at' => Carbon::now(),
             ],
             [
@@ -74,6 +78,7 @@ class DatabaseSeeder extends Seeder
                 'password' => Hash::make('maria123'),
                 'role' => 'staff',
                 'is_university_member' => true,
+                'image' => null,
                 'created_at' => Carbon::now(),
             ],
         ]);

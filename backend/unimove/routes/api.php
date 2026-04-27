@@ -12,10 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'show']);
-    Route::post('/profile', [ProfileController::class, 'store']);
-    Route::put('/profile', [ProfileController::class, 'update']);
-    Route::delete('/profile', [ProfileController::class, 'destroy']);
+    Route::get('/profile/me', [ProfileController::class, 'me']);
+    Route::post('/profile/me', [ProfileController::class, 'updateMe']);
+    Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
 
     Route::get('/vehicles/me', [VehicleController::class, 'myVehicles']);
     Route::post('/vehicles', [VehicleController::class, 'store']);
@@ -42,8 +41,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/travels/{id}', [TravelController::class, 'destroy']);
 
     Route::get('/chats/me', [MessageController::class, 'myChats']);
-    Route::get('/chats/{email}', [MessageController::class, 'conversation']);
-    Route::put('/chats/{email}', [MessageController::class, 'sendMessage']);
+    Route::get('/chats/@{username}', [MessageController::class, 'conversation']);
+    Route::put('/chats/@{username}', [MessageController::class, 'sendMessage']);
     Route::get('/notifications', [NotificationController::class, 'myNotifications']);
 
     //middleware para el admin

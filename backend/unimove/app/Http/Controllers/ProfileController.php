@@ -2,6 +2,7 @@
 
 namespace app\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ProfileController extends Controller
@@ -18,7 +19,7 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        $user = \App\Models\User::first();
+        $user = User::first();
 
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
@@ -49,7 +50,7 @@ class ProfileController extends Controller
 
         $validated['password'] = bcrypt($validated['password']);
 
-        $user = \App\Models\User::create($validated);
+        $user = User::create($validated);
 
         return response()->json([
             'message' => 'Perfil creado correctamente',
@@ -59,7 +60,7 @@ class ProfileController extends Controller
 
     public function destroy(Request $request)
     {
-        $user = \App\Models\User::first();
+        $user = User::first();
 
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
@@ -70,5 +71,68 @@ class ProfileController extends Controller
         return response()->json([
             'message' => 'Perfil eliminado correctamente'
         ]);
+    }
+
+    //GET /profile/me
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 403);
+        }
+
+        return response()->json([
+            'name'     => $user->name,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'image'    => $user->image,
+        ], 200);
+    }
+
+    //GET /profile/@{usuario}
+    public function showByUsername(string $username)
+    {
+        $user = User::where('username', $username)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        return response()->json([
+            'name'     => $user->name,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'image'    => $user->image,
+        ], 200);
+    }
+
+    //POST /profile/me?name={name},username={username},email={email},image={image}
+    public function updateMe(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 403);
+        }
+
+        $validated = $request->validate([
+            'name'     => 'sometimes|string|max:255',
+            'username' => 'sometimes|string|max:255|unique:users,username,' . $user->id,
+            'email'    => 'sometimes|string|email|unique:users,email,' . $user->id,
+            'image'    => 'sometimes|nullable|string',
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'Perfil actualizado correctamente',
+            'user'    => [
+                'name'     => $user->name,
+                'username' => $user->username,
+                'email'    => $user->email,
+                'image'    => $user->image,
+            ],
+        ], 200);
     }
 }
