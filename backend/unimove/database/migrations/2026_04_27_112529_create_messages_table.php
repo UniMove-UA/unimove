@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('receptor_id')->constrained('users')->onDelete('cascade');
             $table->text('text');
             $table->string('url')->nullable();
+            $table->timestamps();
         });
     }
 

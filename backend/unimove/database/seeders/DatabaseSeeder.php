@@ -180,12 +180,14 @@ class DatabaseSeeder extends Seeder
                 'receptor_id' => 2,
                 'text' => '¿A qué hora sales exactamente?',
                 'url' => null,
+                'created_at' => Carbon::now()->subMinutes(30),
             ],
             [
                 'emisor_id' => 2,
                 'receptor_id' => 3,
                 'text' => 'Salgo a las 8:00 desde la Plaza.',
                 'url' => null,
+                'created_at' => Carbon::now()->subMinutes(25),
             ],
         ]);
 
@@ -194,16 +196,19 @@ class DatabaseSeeder extends Seeder
                 'user_id' => 3,
                 'text' => 'Tu reserva ha sido confirmada.',
                 'read' => false,
+                'created_at' => Carbon::now(),
             ],
             [
                 'user_id' => 4,
                 'text' => 'Tienes una nueva solicitud de reserva.',
                 'read' => false,
+                'created_at' => Carbon::now(),
             ],
             [
                 'user_id' => 2,
                 'text' => 'Lucia ha cancelado su reserva.',
                 'read' => true,
+                'created_at' => Carbon::now(),
             ],
         ]);
     }
