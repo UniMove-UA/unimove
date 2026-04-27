@@ -12,7 +12,7 @@ class TravelController extends Controller
     public function index(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'lat' => 'required|numeric|between:-180,180',
+            'lat' => 'required|numeric|between:-90,90',
             'lon' => 'required|numeric|between:-180,180',
         ]);
 
@@ -53,7 +53,7 @@ class TravelController extends Controller
             'departure_time'  => 'required|date|after:now',
             'available_seats' => 'required|integer|min:1',
             'price'           => 'required|numeric|min:0',
-            'lat'             => 'required|numeric|between:-180,180',
+            'lat'             => 'required|numeric|between:-90,90',
             'lon'             => 'required|numeric|between:-180,180',
         ]);
 

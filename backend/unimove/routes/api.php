@@ -22,33 +22,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/notifications', [NotificationController::class, 'myNotifications']);
 
-    //middleware para el admin
-    Route::middleware('can:admin')->group(function () {
-        Route::get('/admin/messages', [MessageController::class, 'index']);
-        Route::get('/admin/messages/{id}', [MessageController::class, 'show']);
-        Route::get('/admin/messages/{id}/edit', [MessageController::class, 'edit']);
-        Route::put('/admin/messages/{id}', [MessageController::class, 'update']);
-        Route::delete('/admin/messages/{id}', [MessageController::class, 'destroy']);
-
-        Route::get('/admin/notifications', [NotificationController::class, 'index']);
-        Route::get('/admin/notifications/{id}', [NotificationController::class, 'show']);
-        Route::get('/admin/notifications/{id}/edit', [NotificationController::class, 'edit']);
-        Route::put('/admin/notifications/{id}', [NotificationController::class, 'update']);
-        Route::delete('/admin/notifications/{id}', [NotificationController::class, 'destroy']);
-
-        Route::get('/admin/vehicles', [VehicleController::class, 'index']);
-        Route::delete('/admin/vehicles/{id}', [VehicleController::class, 'destroy']);
-
-        Route::get('/admin/bookings', [BookingController::class, 'index']);
-        Route::put('/admin/bookings/{id}', [BookingController::class, 'update']);
-        Route::delete('/admin/bookings/{id}', [BookingController::class, 'adminDestroy']);
-
-        Route::get('/admin/reviews', [ReviewController::class, 'index']);
-        Route::delete('/admin/reviews/{id}', [ReviewController::class, 'adminDestroy']);
-
-        Route::get('/admin/travels', [TravelController::class, 'indexAll']);
-        Route::delete('/admin/travels/{id}', [TravelController::class, 'adminDestroy']);
-    });
+    Route::get('/travels',     [TravelController::class, 'index']);
+    Route::post('/travels',    [TravelController::class, 'store']);
+    
 });
 
 //ruta para el registro de usuario
