@@ -25,7 +25,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        // 1. USUARIOS
         DB::table('users')->insert([
             [
                 'name' => 'Admin',
@@ -74,7 +73,6 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // 2. VEHÍCULOS
         DB::table('vehicles')->insert([
             [
                 'user_id' => 2,
@@ -94,7 +92,6 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // 3. VIAJES
         DB::table('travels')->insert([
             [
                 'driver_id' => 2,
@@ -124,7 +121,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'driver_id' => 5,
-                'vehicle_id' => null,
+                'vehicle_id' => 1,
                 'origin' => 'Albufereta, Alicante',
                 'destination' => 'Campus de la UA, San Vicente',
                 'departure_time' => Carbon::now()->subDays(1),
@@ -137,7 +134,6 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // 4. RESERVAS
         DB::table('bookings')->insert([
             [
                 'travel_id' => 1,
@@ -159,7 +155,6 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // 5. REVIEWS
         DB::table('reviews')->insert([
             [
                 'travel_id' => 3,
@@ -179,7 +174,6 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // 6. MENSAJES
         DB::table('messages')->insert([
             [
                 'emisor_id' => 3,
@@ -195,7 +189,6 @@ class DatabaseSeeder extends Seeder
             ],
         ]);
 
-        // 7. NOTIFICACIONES
         DB::table('notifications')->insert([
             [
                 'user_id' => 3,
