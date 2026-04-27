@@ -88,8 +88,10 @@ class MessageController extends Controller
                     : $messages->first()->receptor;
 
                 return [
-                    'name'         => $otherUser->name,
-                    'email'        => $otherUser->email,
+                    'name'=> $otherUser->name,
+                    'username' =>$otherUser->username,
+                    'image' => $otherUser->image,
+                    'email'=> $otherUser->email,
                     'last_message' => $messages->first()->text,
                 ];
             })
@@ -99,7 +101,7 @@ class MessageController extends Controller
     }
 
     // GET /chats/@{usuario}
-    public function conversation($email)
+    public function conversation($username)
     {
         $userId = Auth::id();
 
@@ -107,7 +109,7 @@ class MessageController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        $otherUser = User::where('email', $email)->firstOrFail();
+        $otherUser = User::where('username', $username)->firstOrFail();
 
         $messages = Message::where(function ($q) use ($userId, $otherUser) {
             $q->where('emisor_id', $userId)
@@ -129,7 +131,7 @@ class MessageController extends Controller
     }
 
     //PUT /chats/@{usuario}
-    public function sendMessage(Request $request, $email)
+    public function sendMessage(Request $request, $username)
     {
         $userId = Auth::id();
 
@@ -142,7 +144,7 @@ class MessageController extends Controller
             'url'     => 'nullable|url',
         ]);
 
-        $otherUser = User::where('email', $email)->firstOrFail();
+        $otherUser = User::where('username', $username)->firstOrFail();
 
         $message = Message::create([
             'emisor_id'   => $userId,
