@@ -9,7 +9,9 @@ interface PageProps {
 export default function Page(props: PageProps){
     return (
         <>
-            {props.children ?? ''}
+            <main>
+                {props.children ?? ''}
+            </main>
             <Header type='mobile' page={props.name}/>
         </>
     );
