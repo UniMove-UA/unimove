@@ -6,6 +6,7 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use app\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Http\Request;
@@ -22,9 +23,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/notifications', [NotificationController::class, 'myNotifications']);
 
+    Route::get('/schedule', [ScheduleController::class, 'index']);
+
     Route::get('/travels',     [TravelController::class, 'index']);
     Route::post('/travels',    [TravelController::class, 'store']);
-    
+
 });
 
 //ruta para el registro de usuario
