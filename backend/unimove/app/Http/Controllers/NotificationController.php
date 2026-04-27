@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 class NotificationController extends Controller
 {
     // GET /notifications
-    public function notification()
+    public function myNotifications()
     {
         $userId = Auth::id();
 
