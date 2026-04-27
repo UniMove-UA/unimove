@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
         DB::table('users')->insert([
             [
                 'name' => 'Admin',
+                'username' => 'admin',
                 'email' => 'admin@gmail.com',
                 'correo_institucional' => null,
                 'password' => Hash::make('admin123'),
@@ -37,6 +38,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Carlos',
+                'username' => 'carlos.ua',
                 'email' => 'carlos@alu.ua.es',
                 'correo_institucional' => 'carlos@alu.ua.es',
                 'password' => Hash::make('carlos123'),
@@ -46,6 +48,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Lucia',
+                'username' => 'lucia.ua',
                 'email' => 'lucia@alu.ua.es',
                 'correo_institucional' => 'lucia@alu.ua.es',
                 'password' => Hash::make('lucia123'),
@@ -55,6 +58,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Pedro',
+                'username' => 'pedro_ext',
                 'email' => 'pedro@gmail.com',
                 'correo_institucional' => null,
                 'password' => Hash::make('pedro123'),
@@ -64,6 +68,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Maria',
+                'username' => 'maria.staff',
                 'email' => 'maria@ua.es',
                 'correo_institucional' => 'maria@ua.es',
                 'password' => Hash::make('maria123'),
