@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/me', [ProfileController::class, 'me']);
     Route::post('/profile/me', [ProfileController::class, 'updateMe']);
     Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
+    Route::get('/profile/@{username}/reviews', [ProfileController::class, 'reviewsByUsername']);
 
     Route::get('/chats/me', [MessageController::class, 'myChats']);
     Route::get('/chats/@{username}', [MessageController::class, 'conversation']);
@@ -33,11 +34,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/travels',[TravelController::class, 'index']);
     Route::post('/travels',[TravelController::class, 'store']);
 
+    Route::get('/bookings/me', [BookingController::class, 'myBookings']);
+    Route::post('/bookings', [BookingController::class, 'store']);
+    Route::get('/bookings/{id}', [BookingController::class, 'show']);
+    Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
+    Route::put('/bookings/{id}/accept', [BookingController::class, 'accept']);
+    Route::put('/bookings/{id}/reject', [BookingController::class, 'reject']);
 
     Route::get('/reviews/me', [ReviewController::class, 'myReviews']);
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
-
 
     Route::get('/vehicles/me', [VehicleController::class, 'myVehicles']);
     Route::post('/vehicles', [VehicleController::class, 'store']);
