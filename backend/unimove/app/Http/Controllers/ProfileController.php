@@ -2,6 +2,7 @@
 
 namespace app\Http\Controllers;
 
+use App\Models\Review;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -134,5 +135,27 @@ class ProfileController extends Controller
                 'image'    => $user->image,
             ],
         ], 200);
+    }
+
+    //GET /profile/@{usuario}/reviews
+    public function reviewsByUsername(string $username)
+    {
+        $user = User::where('username', $username)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $reviews = Review::with('author')
+            ->where('reviewee_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($r) => [
+                'rating'  => $r->rating,
+                'comment' => $r->comment,
+                'author'  => $r->author->name,
+            ]);
+
+        return response()->json($reviews, 200);
     }
 }
