@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Message;
+use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -151,6 +152,12 @@ class MessageController extends Controller
             'receptor_id' => $otherUser->id,
             'text'        => $request->message,
             'url'         => $request->url,
+        ]);
+
+        Notification::create([
+            'user_id' => $otherUser->id,
+            'text'    => $message->emisor->name . ' te ha enviado un mensaje',
+            'read'    => false,
         ]);
 
         return response()->json([
