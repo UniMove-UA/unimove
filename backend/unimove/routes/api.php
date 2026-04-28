@@ -26,6 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/chats/@{username}', [MessageController::class, 'sendMessage']);
 
     Route::get('/notifications', [NotificationController::class, 'myNotifications']);
+    Route::put('/notifications/read', [NotificationController::class, 'markAllRead']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
 
     Route::get('/schedule', [ScheduleController::class, 'index']);
 
