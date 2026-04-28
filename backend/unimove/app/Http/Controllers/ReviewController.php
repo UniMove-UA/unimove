@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Review;
 use App\Models\Booking;
+use App\Models\Travel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,6 +27,12 @@ class ReviewController extends Controller
             'rating'      => 'required|integer|min:1|max:5',
             'comment'     => 'nullable|string|max:500',
         ]);
+
+        $travel = Travel::findOrFail($request->travel_id);
+
+        if ($travel->status !== 'completed') {
+            return response()->json(['message' => 'Solo se pueden valorar viajes completados'], 400);
+        }
 
         $exists = Review::where('travel_id', $request->travel_id)
             ->where('reviewer_id', Auth::id())

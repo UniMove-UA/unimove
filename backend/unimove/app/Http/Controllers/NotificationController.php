@@ -74,4 +74,38 @@ class NotificationController extends Controller
         Notification::findOrFail($id)->delete();
         return response()->json(['message' => 'Notificación eliminada correctamente']);
     }
+
+    public function markAllRead(Request $request)
+    {
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        Notification::where('user_id', $userId)
+            ->where('read', false)
+            ->update(['read' => true]);
+
+        return response()->json(['message' => 'Notificaciones marcadas como leídas']);
+    }
+
+    public function markRead($id)
+    {
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $notification = Notification::findOrFail($id);
+
+        if ($notification->user_id !== $userId) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $notification->update(['read' => true]);
+
+        return response()->json(['message' => 'Notificación marcada como leída']);
+    }
 }

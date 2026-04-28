@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Notification;
 use App\Models\Travel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -48,6 +49,14 @@ class BookingController extends Controller
             'status'       => 'pending',
         ]);
 
+        $travel->decrement('available_seats');
+
+        Notification::create([
+            'user_id' => $travel->driver_id,
+            'text'    => 'Tienes una nueva reserva en tu viaje de ' . $travel->origin . ' a ' . $travel->destination,
+            'read'    => false,
+        ]);
+
         return response()->json([
             'message' => 'Reserva creada correctamente',
             'data'    => $booking->load(['travel', 'passenger']),
@@ -71,6 +80,10 @@ class BookingController extends Controller
 
         if ($booking->passenger_id !== Auth::id()) {
             return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        if (in_array($booking->status, ['pending', 'confirmed'])) {
+            $booking->travel->increment('available_seats');
         }
 
         $booking->update(['status' => 'cancelled']);
@@ -108,10 +121,49 @@ class BookingController extends Controller
             'data'    => $booking,
         ]);
     }
-    
+
     public function adminDestroy($id)
     {
         Booking::findOrFail($id)->delete();
         return response()->json(['message' => 'Reserva eliminada correctamente']);
+    }
+
+    public function accept($id)
+    {
+        $booking = Booking::with('travel')->findOrFail($id);
+
+        if ($booking->travel->driver_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $booking->update(['status' => 'confirmed']);
+
+        Notification::create([
+            'user_id' => $booking->passenger_id,
+            'text'=> 'Tu reserva en el viaje de ' . $booking->travel->origin . ' a ' . $booking->travel->destination . ' ha sido aceptada',
+            'read'=> false,
+        ]);
+
+        return response()->json(['message' => 'Reserva aceptada correctamente']);
+    }
+
+    public function reject($id)
+    {
+        $booking = Booking::with('travel')->findOrFail($id);
+
+        if ($booking->travel->driver_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $booking->update(['status' => 'rejected']);
+        $booking->travel->increment('available_seats');
+
+        Notification::create([
+            'user_id' => $booking->passenger_id,
+            'text'=> 'Tu reserva en el viaje de ' . $booking->travel->origin . ' a ' . $booking->travel->destination . ' ha sido rechazada',
+            'read'=> false,
+        ]);
+
+        return response()->json(['message' => 'Reserva rechazada correctamente']);
     }
 }
