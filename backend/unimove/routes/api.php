@@ -30,12 +30,20 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/markers', [MarkerController::class, 'index']);
 
+    Route::get('/travels',[TravelController::class, 'index']);
+    Route::post('/travels',[TravelController::class, 'store']);
+
+
     Route::get('/reviews/me', [ReviewController::class, 'myReviews']);
     Route::post('/reviews', [ReviewController::class, 'store']);
     Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
 
-    Route::get('/travels',[TravelController::class, 'index']);
-    Route::post('/travels',[TravelController::class, 'store']);
+
+    Route::get('/vehicles/me', [VehicleController::class, 'myVehicles']);
+    Route::post('/vehicles', [VehicleController::class, 'store']);
+    Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
+    Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
+    Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
 });
 
