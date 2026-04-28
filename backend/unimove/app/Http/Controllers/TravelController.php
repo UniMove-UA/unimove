@@ -8,12 +8,15 @@ use Illuminate\Support\Facades\Validator;
 
 class TravelController extends Controller
 {
-    // GET /travels?lat={lat}&lon={lon}
+    //GET /travels?lat={lat}&lon={lon}&origin={origin}&destination={destination}&date={date}:
     public function index(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'lat' => 'required|numeric|between:-90,90',
             'lon' => 'required|numeric|between:-180,180',
+            'origin'      => 'nullable|string',
+            'destination' => 'nullable|string',
+            'date'        => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -29,15 +32,18 @@ class TravelController extends Controller
         $travels = Travel::with(['driver', 'vehicle'])
             ->where('status', 'active')
             ->whereRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitud)) * cos(radians(longitud) - radians(?)) + sin(radians(?)) * sin(radians(latitud)))) < 20", [$lat, $lon, $lat])
+            ->when($request->origin, fn($q) => $q->where('origin', 'like', "%{$request->origin}%"))
+            ->when($request->destination, fn($q) => $q->where('destination', 'like', "%{$request->destination}%"))
+            ->when($request->date, fn($q) => $q->whereDate('departure_time', $request->date))
             ->get()
             ->map(fn($t) => [
-                'origin'          => $t->origin,
-                'destination'     => $t->destination,
-                'departure_time'  => $t->departure_time,
-                'price'           => $t->price,
-                'status'          => $t->status,
+                'origin'=> $t->origin,
+                'destination'=> $t->destination,
+                'departure_time'=> $t->departure_time,
+                'price'=> $t->price,
+                'status'=> $t->status,
                 'available_seats' => $t->available_seats,
-                'driver'          => $t->driver->name,
+                'driver'=> $t->driver->name,
             ]);
 
         return response()->json($travels);
@@ -163,5 +169,18 @@ class TravelController extends Controller
     {
         Travel::findOrFail($id)->delete();
         return response()->json(['message' => 'Viaje eliminado correctamente']);
+    }
+
+    public function complete($id)
+    {
+        $travel = Travel::findOrFail($id);
+
+        if ($travel->driver_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $travel->update(['status' => 'completed']);
+
+        return response()->json(['message' => 'Viaje completado correctamente']);
     }
 }
