@@ -29,6 +29,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/schedule', [ScheduleController::class, 'index']);
 
     Route::get('/markers', [MarkerController::class, 'index']);
+
+    Route::get('/reviews/me', [ReviewController::class, 'myReviews']);
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+
     Route::get('/travels',[TravelController::class, 'index']);
     Route::post('/travels',[TravelController::class, 'store']);
 
