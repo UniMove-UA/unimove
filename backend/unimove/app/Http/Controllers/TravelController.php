@@ -1,6 +1,8 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\Notification;
 use App\Models\Travel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -177,6 +179,16 @@ class TravelController extends Controller
 
         if ($travel->driver_id !== Auth::id()) {
             return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $bookings = Booking::where('travel_id', $travel->id)->get();
+
+        foreach ($bookings as $booking) {
+            Notification::create([
+                'user_id' => $booking->passenger_id,
+                'text'    => 'Tu viaje de ' . $travel->origin . ' a ' . $travel->destination . ' ha finalizado',
+                'read'    => false,
+            ]);
         }
 
         $travel->update(['status' => 'completed']);
