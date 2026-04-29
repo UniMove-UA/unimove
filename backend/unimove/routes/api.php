@@ -31,8 +31,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/schedule', [ScheduleController::class, 'index']);
 
-    Route::get('/markers', [MarkerController::class, 'index']);
-
     Route::get('/travels', [TravelController::class, 'index']);
     Route::post('/travels', [TravelController::class, 'store']);
     Route::get('/travels/me', [TravelController::class, 'myTravels']);
@@ -68,6 +66,8 @@ Route::post('/login', [AuthController::class, 'login']);
 
 //ruta para la autenticacion con correo institucional
 Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
+
+Route::get('/markers', [MarkerController::class, 'index']);
 
 //ruta creada por laravel
 Route::get('/user', function (Request $request) {
