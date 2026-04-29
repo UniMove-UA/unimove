@@ -5,7 +5,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MarkerController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
-use app\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\TravelController;
