@@ -6,13 +6,9 @@
     left: 0;
 }
 
-/*
-¿Deshabilitar sólo en teléfonos móviles?
-
-.leaflet-control-container {
-   display: none;
+.leaflet-control-zoom {
+   top: 16vh;
 }
-*/
 
 .marker {
     display: flex;
@@ -35,4 +31,29 @@
     width: 14px;
     height: 14px;
     left: 13px;
+}
+
+input {
+    border: none;
+    outline: none;
+    padding: 15px 10px 15px 0;
+    color: #3c3e41;
+    font-weight: 500;
+}
+
+#search_bar {
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 20px;
+    left: 5vw;
+    width: 90%;
+    z-index: 500;
+    display: inline-flex;
+    align-items: center;
+    filter: drop-shadow(0px 2px 6px rgba(0, 0, 0, 0.2));
+
+    & svg {
+        padding: 10px;
+    }
 }
