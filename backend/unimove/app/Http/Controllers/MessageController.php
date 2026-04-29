@@ -163,7 +163,7 @@ class MessageController extends Controller
         return response()->json([
             'message' => 'Mensaje enviado correctamente',
             'data'    => [
-                'emisor' => $message->emisor->name,
+                'emisor' => $message->emisor->username,
                 'text'   => $message->text,
                 'url'    => $message->url,
             ],
