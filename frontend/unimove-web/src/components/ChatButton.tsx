@@ -12,7 +12,7 @@ export default function ChatButton({username, fullname, last_message, img}: Chat
     const imageUrl = img || 'default_user.jpg';
 
     return (
-        <Link className="chat-button" to='/chat/content'>
+        <Link className="chat-button" to={`/chat/@${username}`}>
             <img src={imageUrl} alt={fullname} className="chat-button__avatar" />
             <div className="chat-button__content">
                 <div className="chat-button__header">

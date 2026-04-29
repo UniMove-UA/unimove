@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import '../styles/Map.css';
 import TransportMarker from "./TransportMarker.tsx";
 import { useNavigate } from 'react-router-dom';
-import {useState} from "react";
+import {useState, useEffect} from "react";
 
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -12,6 +12,13 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+interface Marker {
+    name: string;
+    type: string;
+    id: string;
+    lat: number;
+    lon: number;
+}
 
 interface MapProps {
     center?: [number, number];
@@ -21,6 +28,18 @@ interface MapProps {
 export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) {
     const navigate = useNavigate();
     const [destination, setDestination] = useState<string>("");
+    const [markers, setMarkers] = useState<Marker[]>([]);
+    useEffect(() => {
+        const fetchMarkers = async() => {
+            const response = await fetch("http://localhost:8000/api/markers");
+            console.log(response);
+            const data = await response.json();
+            setMarkers(data);
+        }
+
+        fetchMarkers();
+    }, []);
+
     return (
         <div id='map'>
             <MapContainer
@@ -33,7 +52,11 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-
+                {
+                    markers.map(marker => (
+                        <TransportMarker key={marker.id}  type={marker.type} position={[marker.lat, marker.lon]} name={marker.name} />
+                    ))
+                }
                 <TransportMarker position={[38.385, -0.513]} type={'bus'} name='Parada de autobús Universidad' />
                 <TransportMarker position={[38.3865, -0.511]} type={'train'} name='TRAM Universitat' />
                 <TransportMarker position={[38.3855, -0.516]} type={'car'} name='Coche de Alfonso' />

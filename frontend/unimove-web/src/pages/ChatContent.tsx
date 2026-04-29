@@ -1,54 +1,71 @@
 import Page from "../components/Page";
 import ChatMessage, { type ChatMessageProps } from "../components/ChatMessage";
-import { useState, useRef } from "react";
+import {useState, useRef, useEffect} from "react";
 import ChatHeader from "../components/ChatHeader.tsx";
 
-interface ChatProps {
-    username: string;
-    fullname: string;
-}
-
-export default function ChatContent({username, fullname}: ChatProps) {
+export default function ChatContent() {
     const [inputValue, setInputValue] = useState("");
     const inputRef = useRef<HTMLInputElement>(null);
+    const [messages, setMessages] = useState<ChatMessageProps[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
+    const id  = window.location.href.split("@")[1];
 
-    const messages: ChatMessageProps[] = [
-        {
-            mine: false,
-            text: "¡Hola! ¿Cómo va el desarrollo del proyecto?",
-            img: "https://i.pravatar.cc/150?u=ana"
-        },
-        {
-            mine: true,
-            text: "Va muy bien. Ya tengo el componente ChatButton listo.",
-            img: null
-        },
-        {
-            mine: false,
-            text: "Genial. ¿Has probado a subir una imagen en el chat?",
-            img: null
-        },
-        {
-            mine: true,
-            text: "Sí, aquí te dejo una captura de lo que llevamos.",
-            img: "https://via.placeholder.com/300x200?text=Captura+de+Pantalla"
-        },
-        {
-            mine: false,
-            text: "Se ve perfecto. Me gusta el estilo de las burbujas.",
-            img: null
-        },
-        {
-            mine: true,
-            text: "Gracias. Ahora estoy trabajando en la parte de envío de mensajes.",
-            img: null
-        }
-    ];
+    useEffect(() => {
+        const fetchMessages = async () => {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(`http://localhost:8000/api/chats/@${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
 
-    const handleSend = () => {
+                if (!response.ok) {
+                    throw new Error(`Error HTTP: ${response.status}`);
+                }
+
+                const data = await response.json();
+                setMessages(data);
+            } catch (err) {
+                console.error("Error al cargar los chats:", err);
+                setError("No se pudieron cargar los mensajes.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMessages();
+    }, []);
+    if (loading) {
+        return <Page name='mensajes'><h1>Cargando...</h1></Page>;
+    }
+
+    if (error) {
+        return <Page name='mensajes'><h1>Error: {error}</h1></Page>;
+    }
+
+    const handleSend = async () => {
         if (inputValue.trim()) {
-            console.log("Enviando mensaje:", inputValue);
+            const token = localStorage.getItem('auth_token');
+            await fetch(`http://localhost:8000/api/chats/@${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    emisor: "Carlos",
+                    text: inputValue,
+                    url: null
+                })
+
+            });
             setInputValue("");
+
+
             if (inputRef.current) {
                 inputRef.current.focus();
             }
@@ -63,7 +80,7 @@ export default function ChatContent({username, fullname}: ChatProps) {
 
     return (
         <Page name='mensajes'>
-            <ChatHeader fullname={fullname} username={username} />
+            <ChatHeader fullname={"Nombre completo"} username={"username"} />
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',
