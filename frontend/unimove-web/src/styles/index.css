@@ -32,11 +32,14 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  margin: 2rem;
+
 }
 
 button {
@@ -81,4 +84,14 @@ button:focus-visible {
     background-color: #213547;
   }
   
+}
+
+
+main {
+  position: absolute;
+  top: 60px;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  padding-bottom: 150px;
 }

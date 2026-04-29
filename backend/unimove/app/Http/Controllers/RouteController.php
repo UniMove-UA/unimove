@@ -1,29 +1,34 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Route;
-use App\Models\Agency;
 use Illuminate\Http\Request;
 
 class RouteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $routes = Route::with('agencia')->get();
-        return view('route.index', compact('routes'));
+        $sortable = ['route_id','agency_id','route_short_name','route_long_name','route_type'];
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'route_id';
+        $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
+
+        $routes = Route::with('agencia')
+            ->when($request->search, fn($q) => $q
+                ->where('route_id',          'like', "%{$request->search}%")
+                ->orWhere('route_short_name','like', "%{$request->search}%")
+                ->orWhere('route_long_name', 'like', "%{$request->search}%")
+                ->orWhere('agency_id',       'like', "%{$request->search}%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(20)
+            ->withQueryString();
+
+        return response()->json($routes);
     }
 
     public function show(string $id)
     {
-        $route = Route::with('agencia')->findOrFail($id);
-        return view('route.show', compact('route'));
-    }
-
-    public function create()
-    {
-        $agencies = Agency::all();
-        return view('route.create', compact('agencies'));
+        return response()->json(Route::with('agencia')->findOrFail($id));
     }
 
     public function store(Request $request)
@@ -39,16 +44,8 @@ class RouteController extends Controller
             'route_text_color' => 'nullable|string|max:10',
         ]);
 
-        Route::create($request->all());
-
-        return redirect()->route('route.index')->with('success', 'Ruta creada correctamente.');
-    }
-
-    public function edit(string $id)
-    {
-        $route = Route::findOrFail($id);
-        $agencies = Agency::all();
-        return view('route.edit', compact('route', 'agencies'));
+        $route = Route::create($request->all());
+        return response()->json(['message' => 'Ruta creada correctamente', 'data' => $route], 201);
     }
 
     public function update(Request $request, string $id)
@@ -66,14 +63,12 @@ class RouteController extends Controller
         $route = Route::findOrFail($id);
         $route->update($request->all());
 
-        return redirect()->route('route.index')->with('success', 'Ruta actualizada correctamente.');
+        return response()->json(['message' => 'Ruta actualizada correctamente', 'data' => $route]);
     }
 
     public function destroy(string $id)
     {
-        $route = Route::findOrFail($id);
-        $route->delete();
-
-        return redirect()->route('route.index')->with('success', 'Ruta eliminada correctamente.');
+        Route::findOrFail($id)->delete();
+        return response()->json(['message' => 'Ruta eliminada correctamente']);
     }
 }

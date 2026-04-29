@@ -6,14 +6,6 @@
     left: 0;
 }
 
-/*
-¿Deshabilitar sólo en teléfonos móviles?
-
-.leaflet-control-container {
-   display: none;
-}
-*/
-
 .leaflet-control-zoom {
    top: 16vh;
 }
@@ -53,10 +45,10 @@ input {
     background-color: white;
     border-radius: 10px;
     position: absolute;
-    top: 9vh;
+    top: 20px;
     left: 5vw;
     width: 90%;
-    z-index: 1000000;
+    z-index: 500;
     display: inline-flex;
     align-items: center;
     filter: drop-shadow(0px 2px 6px rgba(0, 0, 0, 0.2));

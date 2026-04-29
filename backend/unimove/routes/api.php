@@ -1,15 +1,63 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BookingController;
+use App\Http\Controllers\MarkerController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationController;
+use app\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\TravelController;
+use App\Http\Controllers\VehicleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\ProfileController;
-use App\Http\Controllers\AuthController;
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'show']);
-    Route::post('/profile', [ProfileController::class, 'store']);
-    Route::put('/profile', [ProfileController::class, 'update']);
-    Route::delete('/profile', [ProfileController::class, 'destroy']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+
+    Route::get('/profile/me', [ProfileController::class, 'me']);
+    Route::post('/profile/me', [ProfileController::class, 'updateMe']);
+    Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
+    Route::get('/profile/@{username}/reviews', [ProfileController::class, 'reviewsByUsername']);
+
+    Route::get('/chats/me', [MessageController::class, 'myChats']);
+    Route::get('/chats/@{username}', [MessageController::class, 'conversation']);
+    Route::put('/chats/@{username}', [MessageController::class, 'sendMessage']);
+
+    Route::get('/notifications', [NotificationController::class, 'myNotifications']);
+    Route::put('/notifications/read', [NotificationController::class, 'markAllRead']);
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+
+    Route::get('/schedule', [ScheduleController::class, 'index']);
+
+    Route::get('/markers', [MarkerController::class, 'index']);
+
+    Route::get('/travels', [TravelController::class, 'index']);
+    Route::post('/travels', [TravelController::class, 'store']);
+    Route::get('/travels/me', [TravelController::class, 'myTravels']);
+    Route::get('/travels/{id}', [TravelController::class, 'show']);
+    Route::put('/travels/{id}', [TravelController::class, 'update']);
+    Route::delete('/travels/{id}', [TravelController::class, 'destroy']);
+    Route::put('/travels/{id}/complete', [TravelController::class, 'complete']);
+
+    Route::get('/bookings/me', [BookingController::class, 'myBookings']);
+    Route::post('/bookings', [BookingController::class, 'store']);
+    Route::get('/bookings/{id}', [BookingController::class, 'show']);
+    Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
+    Route::put('/bookings/{id}/accept', [BookingController::class, 'accept']);
+    Route::put('/bookings/{id}/reject', [BookingController::class, 'reject']);
+
+    Route::get('/reviews/me', [ReviewController::class, 'myReviews']);
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::delete('/reviews/{id}', [ReviewController::class, 'destroy']);
+
+    Route::get('/vehicles/me', [VehicleController::class, 'myVehicles']);
+    Route::post('/vehicles', [VehicleController::class, 'store']);
+    Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
+    Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
+    Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
+
 });
 
 //ruta para el registro de usuario
