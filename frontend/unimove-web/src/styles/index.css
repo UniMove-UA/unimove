@@ -1,3 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-algae-dark: #1d3531;
+  --color-algae-soft: #7ba696;
+  --color-algae-seafoam: #a7d7c5;
+  --color-algae-sand: #f4f2ee;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
