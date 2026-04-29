@@ -168,6 +168,8 @@ class MessageController extends Controller
                 'emisor' => $message->emisor->username,
                 'text'   => $message->text,
                 'url'    => $message->url,
+                'mine'   => $message->emisor_id === $userId,
+                'created_at' => $message->created_at,
             ],
         ], 201);
     }

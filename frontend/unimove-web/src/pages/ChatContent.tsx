@@ -74,8 +74,7 @@ export default function ChatContent() {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    emisor: "Carlos",
-                    text: inputValue,
+                    message: inputValue,
                     url: null
                 })
 
@@ -86,6 +85,14 @@ export default function ChatContent() {
             if (inputRef.current) {
                 inputRef.current.focus();
             }
+
+            const updatedMessages = await fetch(`http://localhost:8000/api/chats/@${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(res => res.json());
+
+            setMessages(updatedMessages);
         }
     };
 
