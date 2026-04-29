@@ -35,22 +35,30 @@ const UniversityAuth = () => {
     };
 
     return (
-        <div className="login-page" style={{ background: 'linear-gradient(135deg, #002147 0%, #003366 100%)' }}>
-            <div className="login-card" style={{ borderTop: '5px solid #0084c2' }}>
-                <h2 className="login-title">Portal Institucional</h2>
-                <p style={{ marginBottom: '20px', color: '#555', fontSize: '0.9rem' }}>
-                    Acceso seguro para estudiantes de la <strong>UA</strong>.
-                </p>
+        <div className="login-page" style={{ background: '#f4f7f6' }}>
+            <div className="login-card" style={{ 
+                borderTop: '6px solid #003366', 
+                boxShadow: '0 15px 35px rgba(0,0,0,0.05)',
+                padding: '40px'
+            }}>
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <span style={{ fontSize: '3rem' }}>🏛️</span>
+                    <h2 style={{ color: '#003366', margin: '10px 0 5px 0' }}>Acceso UA</h2>
+                    <p style={{ color: '#666', fontSize: '0.9rem' }}>Identifícate con tu correo @alu.ua.es</p>
+                </div>
                 
                 <form className="login-form" onSubmit={handleLogin}>
                     <div className="form-group">
+                        <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: '#003366', marginBottom: '5px', display: 'block' }}>
+                            CORREO INSTITUCIONAL
+                        </label>
                         <input 
                             type="email" 
-                            placeholder="estudiante@alu.ua.es" 
+                            placeholder="nombre@alu.ua.es" 
                             required 
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            style={{ border: '1px solid #ddd' }}
+                            style={{ background: '#f9f9f9', border: '1px solid #ddd' }}
                         />
                     </div>
                     
@@ -58,14 +66,14 @@ const UniversityAuth = () => {
                         type="submit" 
                         className="btn-primary" 
                         disabled={loading}
-                        style={{ background: loading ? '#666' : '#1e3a8a' }}
+                        style={{ background: '#003366', marginTop: '10px' }}
                     >
-                        {loading ? 'CONECTANDO...' : 'INICIAR SESIÓN'}
+                        {loading ? 'VALIDANDO...' : 'ENTRAR CON MI UNIVERSIDAD'}
                     </button>
 
-                    <div className="signup-link">
-                        <a href="/login" style={{ color: '#002147', fontWeight: 'bold' }}>
-                            ← Volver al login
+                    <div className="signup-link" style={{ marginTop: '25px' }}>
+                        <a href="/login" style={{ color: '#003366', fontSize: '0.85rem' }}>
+                            ← Volver al acceso general
                         </a>
                     </div>
                 </form>
