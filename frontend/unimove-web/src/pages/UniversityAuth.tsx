@@ -44,7 +44,7 @@ const UniversityAuth = () => {
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
                     <span style={{ fontSize: '3rem' }}>🏛️</span>
                     <h2 style={{ color: '#003366', margin: '10px 0 5px 0' }}>Acceso UA</h2>
-                    <p style={{ color: '#666', fontSize: '0.9rem' }}>Identifícate con tu correo @alu.ua.es</p>
+                    <p style={{ color: '#666', fontSize: '0.9rem' }}>Identifícate con tu correo @alu.ua.es / @ua.es </p>
                 </div>
                 
                 <form className="login-form" onSubmit={handleLogin}>
@@ -68,7 +68,7 @@ const UniversityAuth = () => {
                         disabled={loading}
                         style={{ background: '#003366', marginTop: '10px' }}
                     >
-                        {loading ? 'VALIDANDO...' : 'ENTRAR CON MI UNIVERSIDAD'}
+                        {loading ? 'VALIDANDO...' : 'INICIAR SESIÓN'}
                     </button>
 
                     <div className="signup-link" style={{ marginTop: '25px' }}>
