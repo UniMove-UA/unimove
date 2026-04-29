@@ -30,8 +30,8 @@ class MarkerController extends Controller
             ]);
 
         return response()->json([
-            ...$stops->toArray(),
-            ...$travels->toArray(),
+            'stops' => $stops->values(),
+            'travels' => $travels->values(),
         ]);
     }
 
