@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HeaderButton from "./HeaderButton";
 import NotificationContainer from "./NotificationContainer";
 import "../styles/Notifications.css"

@@ -34,7 +34,11 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
             const response = await fetch("http://localhost:8000/api/markers");
             console.log(response);
             const data = await response.json();
-            setMarkers(data);
+            const combined: Marker[] = [
+                ...data.stops,
+                ...data.travels,
+            ];
+            setMarkers(combined);
         }
 
         fetchMarkers();

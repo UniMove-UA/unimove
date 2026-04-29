@@ -8,13 +8,30 @@ export default function ChatContent() {
     const inputRef = useRef<HTMLInputElement>(null);
     const [messages, setMessages] = useState<ChatMessageProps[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null)
+    const [chatUser, setChatUser] = useState<{ name: string; username: string } | null>(null);
     const id  = window.location.href.split("@")[1];
 
     useEffect(() => {
         const fetchMessages = async () => {
             try {
                 const token = localStorage.getItem('auth_token');
+
+                const userResponse = await fetch(`http://localhost:8000/api/profile/@${id}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    setChatUser({
+                        name: userData.name,
+                        username: userData.username
+                    });
+                }
+
                 const response = await fetch(`http://localhost:8000/api/chats/@${id}`, {
                     method: 'GET',
                     headers: {
@@ -80,7 +97,7 @@ export default function ChatContent() {
 
     return (
         <Page name='mensajes'>
-            <ChatHeader fullname={"Nombre completo"} username={"username"} />
+            <ChatHeader fullname={chatUser?.name || "Usuario"} username={chatUser?.username || id || "desconocido"} />
             <div style={{
                 display: 'flex',
                 flexDirection: 'column',

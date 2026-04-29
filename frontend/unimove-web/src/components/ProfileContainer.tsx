@@ -31,13 +31,21 @@ export default function ProfileContainer() {
                     url = `http://localhost:8000/api/profile?user=${encodeURIComponent(id)}`;
                 }
 
-                const response = await fetch(url);
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
                 if (!response.ok) {
                     const errorText = await response.text();
                     throw new Error(`Servidor respondió con ${response.status}: ${errorText.substring(0, 100)}`);
                 }
-                const contentType = response.headers.get("content-type");
+                //const contentType = response.headers.get("content-type");
+                const data = await response.json();
                 setProfileData(data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al cargar el perfil');
