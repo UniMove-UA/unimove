@@ -6,13 +6,13 @@ interface PageProps {
     name: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
 }
 
-export default function Page(props: PageProps){
+export default function Page(props: PageProps) {
     return (
         <>
             <main>
                 {props.children ?? ''}
             </main>
-            <Header type='mobile' page={props.name}/>
+            <Header type='mobile' page={props.name} />
         </>
     );
 }

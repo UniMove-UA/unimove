@@ -5,7 +5,7 @@ import "../styles/Notifications.css"
 import Notification from "./Notification.tsx";
 
 interface PageProps {
-    page: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
+    page: 'inicio' | 'viajes' | 'mensajes' | 'perfil' | 'alquilar';
 }
 
 export default function HeaderMobile(props: PageProps) {
@@ -25,6 +25,7 @@ export default function HeaderMobile(props: PageProps) {
                 <nav>
                     <HeaderButton active={props.page === 'inicio'} size={30} name='Inicio' src='house.svg' href='home' />
                     <HeaderButton active={props.page === 'viajes'} size={30} name='Viajes' src='route.svg' href='travel' />
+                    <HeaderButton active={props.page === 'alquilar'} size={30} name='Alquilar VMP' src='vmp.svg' href='rent-vmp' />
                     <HeaderButton active={props.page === 'mensajes'} size={30} name='Mensajes' src='message.svg' href='chat' />
                     <HeaderButton active={props.page === 'perfil'} size={30} name='Perfil' src='profile.svg' href='profile/me' />
                 </nav>
@@ -61,8 +62,8 @@ export default function HeaderMobile(props: PageProps) {
                     {showNotifications && (
                         <div className="notifications-dropdown">
                             <NotificationContainer>
-                                <Notification id={"1"} message={"¡Las notificaciones funcionan!"}/>
-                                <Notification id={"2"} message={"Ahora falta la integración con la API."}/>
+                                <Notification id={"1"} message={"¡Las notificaciones funcionan!"} />
+                                <Notification id={"2"} message={"Ahora falta la integración con la API."} />
                             </NotificationContainer>
                         </div>
                     )}
