@@ -113,6 +113,7 @@ export default function ChatContent() {
                         mine={msg.mine}
                         text={msg.text}
                         img={msg.img}
+                        created_at={msg.created_at}
                     />
                 ))}
             </div>

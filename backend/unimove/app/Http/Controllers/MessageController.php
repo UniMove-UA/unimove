@@ -126,6 +126,8 @@ class MessageController extends Controller
                 'emisor' => $m->emisor->username,
                 'text'   => $m->text,
                 'url'    => $m->url,
+                'mine'   => $m->emisor_id === $userId,
+                'created_at' => $m->created_at,
             ]);
 
         return response()->json($messages);
