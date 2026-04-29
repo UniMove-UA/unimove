@@ -20,6 +20,7 @@ class NotificationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(fn($n) => [
+                'id' => $n->id,
                 'text' => $n->text,
                 'read' => $n->read,
                 'date' => $n->created_at->format('d/m/Y H:i'),
