@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/read', [NotificationController::class, 'markAllRead']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
 
-    Route::get('/schedule', [ScheduleController::class, 'index']);
+    //Route::get('/schedule', [ScheduleController::class, 'index']);
 
     Route::get('/travels', [TravelController::class, 'index']);
     Route::post('/travels', [TravelController::class, 'store']);
@@ -68,6 +68,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
 
 Route::get('/markers', [MarkerController::class, 'index']);
+Route::get('/schedule', [ScheduleController::class, 'index']);
 
 //ruta creada por laravel
 Route::get('/user', function (Request $request) {

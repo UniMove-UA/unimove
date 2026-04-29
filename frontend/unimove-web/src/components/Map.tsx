@@ -58,13 +58,9 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                 />
                 {
                     markers.map(marker => (
-                        <TransportMarker key={marker.id}  type={marker.type} position={[marker.lat, marker.lon]} name={marker.name} />
+                        <TransportMarker key={marker.id}  type={marker.type} position={[marker.lat, marker.lon]} name={marker.name} id={marker.id}/>
                     ))
                 }
-                <TransportMarker position={[38.385, -0.513]} type={'bus'} name='Parada de autobús Universidad' />
-                <TransportMarker position={[38.3865, -0.511]} type={'train'} name='TRAM Universitat' />
-                <TransportMarker position={[38.3855, -0.516]} type={'car'} name='Coche de Alfonso' />
-                <TransportMarker position={[38.3825, -0.5285]} type={'train'} name='Renfe Universidad' />
 
             </MapContainer>
             <div id='search_bar'>

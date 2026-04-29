@@ -43,6 +43,28 @@ export default function HeaderMobile(props: PageProps) {
         setShowNotifications(false);
     };
 
+    const markAsRead = async (id: string | number) => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/notifications/${id}/read`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                setNotifications(prev => prev.filter(n => n.id !== id));
+                console.log(`Notificación ${id} marcada como leída`);
+            }
+            else {
+                console.error("Error al marcar notificación como leída");
+            }
+        } catch (err) {
+            console.error("Error de red:", err);
+        }
+    };
+
     return (
         <div>
             <header id="header_mobile_bottom">
@@ -87,15 +109,7 @@ export default function HeaderMobile(props: PageProps) {
                             <NotificationContainer>
                                 {
                                     notifications.filter(n => !n.read).map((notification: Notification, index) => (
-                                        <Notification id={notification.id} key={index} message={notification.text} onMarkAsRead={() => {
-                                            fetch(`http://localhost:8000/api/notifications/${notification.id}/read`, {
-                                                method: 'PUT',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                    Authorization: `Bearer ${token}`,
-                                                },
-                                            });
-                                        }} />
+                                        <Notification id={notification.id} key={index} message={notification.text} onMarkAsRead={markAsRead}/>
                                     ))
                                 }
                             </NotificationContainer>
