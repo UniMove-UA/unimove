@@ -123,7 +123,7 @@ class MessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn($m) => [
-                'emisor' => $m->emisor->name,
+                'emisor' => $m->emisor->username,
                 'text'   => $m->text,
                 'url'    => $m->url,
             ]);
