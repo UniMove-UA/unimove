@@ -373,10 +373,10 @@
   flex-shrink: 0;
 }
 
-.admin-stat-icon.green { background: rgba(49, 164, 123, 0.12); }
-.admin-stat-icon.teal  { background: rgba(123, 166, 150, 0.15); }
-.admin-stat-icon.dark  { background: rgba(29, 53, 49, 0.10); }
-.admin-stat-icon.sand  { background: rgba(244, 242, 238, 0.8); border: 1px solid #d5ece3; }
+.admin-stat-icon.green { background: rgba(49, 164, 123, 0.12); color: #31A47B; }
+.admin-stat-icon.teal  { background: rgba(123, 166, 150, 0.15); color: #1F6E50; }
+.admin-stat-icon.dark  { background: rgba(29, 53, 49, 0.10); color: #103B31; }
+.admin-stat-icon.sand  { background: rgba(244, 242, 238, 0.8); border: 1px solid #d5ece3; color: #7ba696; }
 
 .admin-stat-body {
   flex: 1;
@@ -880,4 +880,21 @@
 
 @media (max-width: 480px) {
   .admin-stats-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- Role select inline ---------- */
+.admin-table td select {
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.admin-table td select:focus {
+  outline: none;
+  border-color: #31A47B !important;
+  box-shadow: 0 0 0 3px rgba(49, 164, 123, 0.15);
+}
+
+/* ---------- Multi-button cell ---------- */
+.admin-table td[style*="display: flex"] {
+  align-items: center;
 }

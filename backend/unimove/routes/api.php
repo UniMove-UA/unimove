@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MarkerController;
@@ -56,6 +57,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
     Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
+
+    // ── Admin routes (role=admin required) ──────────────────────────────────
+    Route::prefix('admin')->group(function () {
+        Route::get('/stats',           [AdminController::class, 'stats']);
+
+        Route::get('/users',           [AdminController::class, 'users']);
+        Route::post('/users',          [AdminController::class, 'createUser']);
+        Route::delete('/users/{id}',   [AdminController::class, 'deleteUser']);
+        Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole']);
+
+        Route::get('/travels',              [AdminController::class, 'travels']);
+        Route::delete('/travels/{id}',      [AdminController::class, 'deleteTravel']);
+        Route::put('/travels/{id}/cancel',  [AdminController::class, 'cancelTravel']);
+
+        Route::get('/reviews',           [AdminController::class, 'reviews']);
+        Route::delete('/reviews/{id}',   [AdminController::class, 'deleteReview']);
+
+        Route::get('/schedules',         [AdminController::class, 'schedules']);
+        Route::put('/schedules',         [AdminController::class, 'updateSchedule']);
+    });
 });
 
 //ruta para el registro de usuario

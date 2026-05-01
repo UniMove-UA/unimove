@@ -1,0 +1,66 @@
+﻿CONTEXTO
+UniMove
+Miembros del equipo:
+* Israel Izquierdo Sanchís
+* Marcos González Fernández
+* Ismael Boudot Martínez
+* Jastin Alexander Fernández Santín
+* Antonio Mainar Sánchez
+* Danil Launov Draganov
+Descripción general
+Existen múltiples plataformas de software centradas en la experiencia de movilidad de los estudiantes, pero su funcionalidad y facilidad de uso difieren enormemente. En lugar de tratar de usar una sola plataforma que englobe toda la problemática que hay del transporte desde o hacia la universidad, se hace una división del problema separando los dos tipos de desplazamientos que se pueden hacer: desde el exterior hasta dentro de las instalaciones y los distintos desplazamientos dentro del campus.
+La solución se enfoca en unificar todos estos servicios. Por un lado, una plataforma exterior donde se integre la información en tiempo real del transporte público como Tranvía, Autobús o Cercanías para llegar al campus y ofreciendo alternativas.
+Problema abordado / Solución propuesta
+El problema principal que se ha detectado es la fragmentación de la información de transporte a la hora de llegar a la universidad. Muchos estudiantes no son de la ciudad donde está la universidad y no conocen los medios de transporte de la misma. UniMove propone la integración de todos los datos sobre los transportes de la ciudad en un único lugar en el que se puedan consultar fácilmente, indicando cuál es la mejor opción. Por otro lado, la movilidad dentro de los campus universitarios, donde no hay soluciones claras de desplazamiento. UniMove soluciona esto proporcionando opciones para moverse rápida y eficientemente dentro del campus.
+Descripción del público objetivo
+Nuestro público objetivo está dividido en dos partes. En primer lugar, los estudiantes que buscan facilidades y rapidez a la hora de elegir un transporte hasta la universidad u orientarse rápidamente por ella. En segundo lugar, el personal docente y de servicio de la universidad.
+Arquitectura de la aplicación / Servicios externos
+Desde el punto de vista de la arquitectura, se plantea separar el problema en dos partes, uno enfocado a la movilidad fuera de la universidad y otro a la gestión de movilidad dentro. Se hace uso de APIs de transporte y servicios de mapas.
+Movilidad fuera de la universidad:
+* Bus GTFS (datos estáticos y tiempo real)
+* TRAM API
+* Renfe Cercanías
+Movilidad dentro de la universidad:
+* Google Maps
+* Sistema de alquiler de patinetes/bicicletas
+Proyectos similares / Competencias
+Actualmente, en el mercado no hay ninguna solución que se parezca a la nuestra en cuanto a la integración de transporte hasta la universidad y movilidad dentro de esta. Se suelen usar navegadores estilo Google Maps o Moovit, que resuelven en parte el problema de movilidad exterior pero no dentro del campus. Finalmente, utilizamos aplicaciones dispares que nos ofrecen el alquiler de transporte como patinetes (Bolt, Tier) pero obligan al usuario a hacer múltiples consultas en diferentes fuentes y tener que estar saltando de una a otra.
+Requisitos Funcionales
+1. Consultar mapa
+2. Visualizar líneas de transportes (bus, tranvía, cercanías)
+3. Alquilar un patinete/bicicleta
+4. Terminar el alquiler de patinete/bicicleta
+5. Compartir coche (publicar viaje)
+6. Obtener rutas para compartir coche (buscar viaje)
+7. Pago
+8. Iniciar sesión con las credenciales de la Universidad
+9. Gestionar perfil
+10. Panel Web de Administración
+Monetización
+La idea principal para que el negocio sea rentable es la de cobrar comisiones mediante diferentes transacciones. Ofrecemos servicio gratuito para pasajeros pero con anuncios en la app; sin embargo, estos se eliminarán si se paga un modelo de suscripción. Los conductores que busquen rentabilidad para sus viajes podrán llevar pasajeros que abonen un pequeño importe por el viaje. Los estudiantes podrán acceder a descuentos, pagar por suscripciones mensuales o usar una tarjeta monedero. El porcentaje de beneficio de los conductores reduce los precios a los pasajeros. Para el tier gratuito se espera que la app se lleve del 10% al 40% de los beneficios de los viajes realizados en coche compartido. Además, los pasajeros tendrán la opción de pagar con tarjeta dentro de la app para alquilar patinetes o bicicletas. Por último, los usuarios pueden aportar donaciones voluntarias.
+Futuras mejoras
+* Chatbot de consulta de transporte
+* Gamificación con recompensas
+* Sistema de recomendaciones de transporte inteligente
+* Poder pagar el billete desde la app en la red exterior a la de transporte de la ciudad
+* Mapa de la densidad de uso del transporte en cada parada y estimar tiempo de espera
+Diseño y Concepto de Arquitectura Técnica
+* Paleta de colores: Denominada "Algae", compuesta por una escala de verdes y blanco, aplicada a botones y etiquetas (ej. Treatment, Portfolio, Analytics, Finance, Yield, Withdraw, Worldwide).
+* Diagrama de Arquitectura (UML): Muestra a un usuario interactuando con una "App usuario" que se comunica con módulos de "Consultar mapa", "Consultar horario" (conectado a APIs HTTP de Tranvía, Bus y Renfe), módulos de "Compartir coche" y "Alquilar patinete o bicicleta", un sistema de "Pago" y un "Panel de Administración web", todos interactuando con bases de datos centrales.
+* Mapas incluidos: Se muestra una captura del campus de la Universidad de Alicante con marcadores verdes de transporte/paradas.
+* Secciones adicionales abocetadas: El documento incluye estructuras visuales para un "Lean Canvas" y un "Mapa de empatía" (Qué piensa y siente, Qué oye, Qué ve, Qué dice y hace, Pain, Gains).
+
+
+________________
+
+
+Funciones mínimas a realizar
+
+
+* Función detener vehículo
+* Función quitar valoraciones
+* Función quitar publicaciones de trayecto
+* Función modificar horarios
+* Función cancelar pagos/devolver
+* Borrar usuarios
+* Inicio sesión admin
