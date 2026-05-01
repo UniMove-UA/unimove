@@ -139,7 +139,7 @@ export default function RentVmp() {
         <Page name="vmp">
             <div className="rent-vmp-layout">
                 <div className="rent-vmp-map-container">
-                    <Map />
+                    <Map showOnly="vmp" onRentVmp={performRent} refreshTrigger={activeRental ? activeRental.id : 'none'} />
                 </div>
                 <div className="rent-vmp-container">
                     <h1 className="title">Alquilar Patinete Eléctrico</h1>
@@ -175,9 +175,6 @@ export default function RentVmp() {
                                             }}
                                             onError={(error) => {
                                                 console.error(error);
-                                            }}
-                                            components={{
-                                                audio: false,
                                             }}
                                         />
                                         <button className="cancel-scan-btn" onClick={() => setIsScanning(false)}>
