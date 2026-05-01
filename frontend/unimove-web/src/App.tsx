@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Travel from './pages/Travel.tsx';
+import RentVmp from './pages/RentVmp.tsx';
 import Chat from './pages/Chat.tsx';
 import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
@@ -15,13 +16,14 @@ function App() {
         <Route path='/' element={<Main />} />
         <Route path='/home' element={<Main />} />
         <Route path='/travel' element={<Travel />} />
+        <Route path='/rentvmp' element={<RentVmp />} />
         <Route path='/chat' element={<Chat />} />
         <Route path='/login' element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/auth-universidad' element={<UniversityAuth />} />
         {/* Rutas dinámicas */}
         <Route path='/profile/:id' element={<ProfileContainer />} />
-        <Route path='/chat/:id' element={<ChatContent/>} />
+        <Route path='/chat/:id' element={<ChatContent />} />
       </Routes>
     </>
   )

@@ -3,7 +3,7 @@ import Header from './Header';
 
 interface PageProps {
     children?: React.ReactNode;
-    name: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
+    name: 'inicio' | 'viajes' | 'vmp' | 'mensajes' | 'perfil';
 }
 
 export default function Page(props: PageProps) {
