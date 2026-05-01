@@ -1,19 +1,31 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Transfer;
-use App\Models\Stop;
-use App\Models\Route;
-use App\Models\Trip;
 use Illuminate\Http\Request;
 
 class TransferController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $transfers = Transfer::with(['paradaOrigen', 'paradaDestino'])->get();
-        return view('transfer.index', compact('transfers'));
+        $sortable = ['from_stop_id','to_stop_id','transfer_type','min_transfer_time','from_route_id','to_route_id'];
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'from_stop_id';
+        $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
+
+        $transfers = Transfer::with(['paradaOrigen','paradaDestino'])
+            ->when($request->search, fn($q) => $q
+                ->where('from_stop_id', 'like', "%{$request->search}%")
+                ->orWhere('to_stop_id',   'like', "%{$request->search}%")
+                ->orWhere('from_route_id','like', "%{$request->search}%")
+                ->orWhere('to_route_id',  'like', "%{$request->search}%")
+                ->orWhere('from_trip_id', 'like', "%{$request->search}%")
+                ->orWhere('to_trip_id',   'like', "%{$request->search}%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(20)
+            ->withQueryString();
+
+        return response()->json($transfers);
     }
 
     public function show(Request $request)
@@ -21,15 +33,8 @@ class TransferController extends Controller
         $transfer = Transfer::where('from_stop_id', $request->from_stop_id)
             ->where('to_stop_id', $request->to_stop_id)
             ->firstOrFail();
-        return view('transfer.show', compact('transfer'));
-    }
 
-    public function create()
-    {
-        $stops  = Stop::all();
-        $routes = Route::all();
-        $trips  = Trip::all();
-        return view('transfer.create', compact('stops', 'routes', 'trips'));
+        return response()->json($transfer);
     }
 
     public function store(Request $request)
@@ -45,20 +50,8 @@ class TransferController extends Controller
             'min_transfer_time' => 'nullable|integer|min:0',
         ]);
 
-        Transfer::create($request->all());
-
-        return redirect()->route('transfer.index')->with('success', 'Transferencia creada correctamente.');
-    }
-
-    public function edit(Request $request)
-    {
-        $transfer = Transfer::where('from_stop_id', $request->from_stop_id)
-            ->where('to_stop_id', $request->to_stop_id)
-            ->firstOrFail();
-        $stops  = Stop::all();
-        $routes = Route::all();
-        $trips  = Trip::all();
-        return view('transfer.edit', compact('transfer', 'stops', 'routes', 'trips'));
+        $transfer = Transfer::create($request->all());
+        return response()->json(['message' => 'Transferencia creada correctamente', 'data' => $transfer], 201);
     }
 
     public function update(Request $request)
@@ -79,7 +72,7 @@ class TransferController extends Controller
             ->firstOrFail();
         $transfer->update($request->all());
 
-        return redirect()->route('transfer.index')->with('success', 'Transferencia actualizada correctamente.');
+        return response()->json(['message' => 'Transferencia actualizada correctamente', 'data' => $transfer]);
     }
 
     public function destroy(Request $request)
@@ -88,6 +81,6 @@ class TransferController extends Controller
             ->where('to_stop_id', $request->to_stop_id)
             ->delete();
 
-        return redirect()->route('transfer.index')->with('success', 'Transferencia eliminada correctamente.');
+        return response()->json(['message' => 'Transferencia eliminada correctamente']);
     }
 }

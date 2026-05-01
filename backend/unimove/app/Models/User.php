@@ -9,49 +9,8 @@ use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'correo_institucional', 'password', 'phone', 'rating_avg'];
+    protected $fillable = ['name', 'email', 'username','correo_institucional', 'password', 'phone', 'rating_avg', 'role', 'is_university_member', 'image'];
 
-    public function vehicles()
-    {
-        return $this->hasMany(Vehicle::class);
-    }
-
-    public function tripsAsDriver()
-    {
-        return $this->hasMany(Trip::class, 'driver_id');
-    }
-
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class, 'passenger_id');
-    }
-
-    public function reviewsReceived()
-    {
-        return $this->hasMany(Review::class, 'reviewee_id');
-    }
-
-    public function reviewsGiven()
-    {
-        return $this->hasMany(Review::class, 'reviewer_id');
-    }
-
-    /**
-     * Rides created by the user (as a driver).
-     */
-    public function viajes()
-    {
-        return $this->hasMany(Ride::class, 'driver_id');
-    }
-
-    /**
-     * Bookings made by the user (as a passenger).
-     */
-    public function reservas()
-    {
-        return $this->hasMany(Booking::class, 'passenger_id');
-    }
 }

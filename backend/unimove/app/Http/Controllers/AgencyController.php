@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Agency;
@@ -7,21 +6,29 @@ use Illuminate\Http\Request;
 
 class AgencyController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $agencies = Agency::all();
-        return view('agency.index', compact('agencies'));
+        $sortable = ['agency_id', 'agency_name', 'agency_timezone', 'agency_lang'];
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'agency_id';
+        $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
+
+        $agencies = Agency::query()
+            ->when($request->search, fn($q) => $q
+                ->where('agency_id',       'like', "%{$request->search}%")
+                ->orWhere('agency_name',   'like', "%{$request->search}%")
+                ->orWhere('agency_timezone','like', "%{$request->search}%")
+                ->orWhere('agency_lang',   'like', "%{$request->search}%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(15)
+            ->withQueryString();
+
+        return response()->json($agencies);
     }
 
     public function show(string $id)
     {
-        $agency = Agency::findOrFail($id);
-        return view('agency.show', compact('agency'));
-    }
-
-    public function create()
-    {
-        return view('agency.create');
+        return response()->json(Agency::findOrFail($id));
     }
 
     public function store(Request $request)
@@ -37,15 +44,9 @@ class AgencyController extends Controller
             'agency_email'    => 'nullable|email',
         ]);
 
-        Agency::create($request->all());
+        $agency = Agency::create($request->all());
 
-        return redirect()->route('agency.index')->with('success', 'Agencia creada correctamente.');
-    }
-
-    public function edit(string $id)
-    {
-        $agency = Agency::findOrFail($id);
-        return view('agency.edit', compact('agency'));
+        return response()->json(['message' => 'Agencia creada correctamente', 'data' => $agency], 201);
     }
 
     public function update(Request $request, string $id)
@@ -63,14 +64,12 @@ class AgencyController extends Controller
         $agency = Agency::findOrFail($id);
         $agency->update($request->all());
 
-        return redirect()->route('agency.index')->with('success', 'Agencia actualizada correctamente.');
+        return response()->json(['message' => 'Agencia actualizada correctamente', 'data' => $agency]);
     }
 
     public function destroy(string $id)
     {
-        $agency = Agency::findOrFail($id);
-        $agency->delete();
-
-        return redirect()->route('agency.index')->with('success', 'Agencia eliminada correctamente.');
+        Agency::findOrFail($id)->delete();
+        return response()->json(['message' => 'Agencia eliminada correctamente']);
     }
 }

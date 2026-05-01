@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Stop;
@@ -7,21 +6,29 @@ use Illuminate\Http\Request;
 
 class StopController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $stops = Stop::all();
-        return view('stop.index', compact('stops'));
+        $sortable = ['stop_id','stop_name','stop_lat','stop_lon','zone_id','wheelchair_boarding'];
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'stop_id';
+        $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
+
+        $stops = Stop::query()
+            ->when($request->search, fn($q) => $q
+                ->where('stop_id',  'like', "%{$request->search}%")
+                ->orWhere('stop_name','like', "%{$request->search}%")
+                ->orWhere('stop_code','like', "%{$request->search}%")
+                ->orWhere('zone_id', 'like', "%{$request->search}%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(20)
+            ->withQueryString();
+
+        return response()->json($stops);
     }
 
     public function show(string $id)
     {
-        $stop = Stop::findOrFail($id);
-        return view('stop.show', compact('stop'));
-    }
-
-    public function create()
-    {
-        return view('stop.create');
+        return response()->json(Stop::findOrFail($id));
     }
 
     public function store(Request $request)
@@ -36,15 +43,8 @@ class StopController extends Controller
             'wheelchair_boarding' => 'nullable|integer|in:0,1,2',
         ]);
 
-        Stop::create($request->all());
-
-        return redirect()->route('stop.index')->with('success', 'Parada creada correctamente.');
-    }
-
-    public function edit(string $id)
-    {
-        $stop = Stop::findOrFail($id);
-        return view('stop.edit', compact('stop'));
+        $stop = Stop::create($request->all());
+        return response()->json(['message' => 'Parada creada correctamente', 'data' => $stop], 201);
     }
 
     public function update(Request $request, string $id)
@@ -61,14 +61,12 @@ class StopController extends Controller
         $stop = Stop::findOrFail($id);
         $stop->update($request->all());
 
-        return redirect()->route('stop.index')->with('success', 'Parada actualizada correctamente.');
+        return response()->json(['message' => 'Parada actualizada correctamente', 'data' => $stop]);
     }
 
     public function destroy(string $id)
     {
-        $stop = Stop::findOrFail($id);
-        $stop->delete();
-
-        return redirect()->route('stop.index')->with('success', 'Parada eliminada correctamente.');
+        Stop::findOrFail($id)->delete();
+        return response()->json(['message' => 'Parada eliminada correctamente']);
     }
 }

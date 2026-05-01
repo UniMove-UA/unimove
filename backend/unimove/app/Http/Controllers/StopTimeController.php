@@ -1,18 +1,27 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\StopTime;
-use App\Models\Trip;
-use App\Models\Stop;
 use Illuminate\Http\Request;
 
 class StopTimeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $stopTimes = StopTime::with(['trayecto', 'parada'])->get();
-        return view('stop_time.index', compact('stopTimes'));
+        $sortable = ['trip_id','stop_id','stop_sequence','arrival_time','departure_time','timepoint'];
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'trip_id';
+        $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
+
+        $stopTimes = StopTime::with(['trayecto','parada'])
+            ->when($request->search, fn($q) => $q
+                ->where('trip_id', 'like', "%{$request->search}%")
+                ->orWhere('stop_id','like', "%{$request->search}%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(25)
+            ->withQueryString();
+
+        return response()->json($stopTimes);
     }
 
     public function show(Request $request)
@@ -20,14 +29,8 @@ class StopTimeController extends Controller
         $stopTime = StopTime::where('trip_id', $request->trip_id)
             ->where('stop_sequence', $request->stop_sequence)
             ->firstOrFail();
-        return view('stop_time.show', compact('stopTime'));
-    }
 
-    public function create()
-    {
-        $trips = Trip::all();
-        $stops = Stop::all();
-        return view('stop_time.create', compact('trips', 'stops'));
+        return response()->json($stopTime);
     }
 
     public function store(Request $request)
@@ -41,19 +44,8 @@ class StopTimeController extends Controller
             'timepoint'      => 'nullable|integer|in:0,1',
         ]);
 
-        StopTime::create($request->all());
-
-        return redirect()->route('stop-time.index')->with('success', 'Tiempo de parada creado correctamente.');
-    }
-
-    public function edit(Request $request)
-    {
-        $stopTime = StopTime::where('trip_id', $request->trip_id)
-            ->where('stop_sequence', $request->stop_sequence)
-            ->firstOrFail();
-        $trips = Trip::all();
-        $stops = Stop::all();
-        return view('stop_time.edit', compact('stopTime', 'trips', 'stops'));
+        $stopTime = StopTime::create($request->all());
+        return response()->json(['message' => 'Tiempo de parada creado correctamente', 'data' => $stopTime], 201);
     }
 
     public function update(Request $request)
@@ -72,7 +64,7 @@ class StopTimeController extends Controller
             ->firstOrFail();
         $stopTime->update($request->all());
 
-        return redirect()->route('stop-time.index')->with('success', 'Tiempo de parada actualizado correctamente.');
+        return response()->json(['message' => 'Tiempo de parada actualizado correctamente', 'data' => $stopTime]);
     }
 
     public function destroy(Request $request)
@@ -81,6 +73,6 @@ class StopTimeController extends Controller
             ->where('stop_sequence', $request->stop_sequence)
             ->delete();
 
-        return redirect()->route('stop-time.index')->with('success', 'Tiempo de parada eliminado correctamente.');
+        return response()->json(['message' => 'Tiempo de parada eliminado correctamente']);
     }
 }

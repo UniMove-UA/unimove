@@ -3,14 +3,16 @@ import Header from './Header';
 
 interface PageProps {
     children?: React.ReactNode;
-    name: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
+    name: 'inicio' | 'viajes' | 'vmp' | 'mensajes' | 'perfil';
 }
 
-export default function Page(props: PageProps){
+export default function Page(props: PageProps) {
     return (
         <>
-            {props.children ?? ''}
-            <Header type='mobile' page={props.name}/>
+            <main>
+                {props.children ?? ''}
+            </main>
+            <Header type='mobile' page={props.name} />
         </>
     );
 }

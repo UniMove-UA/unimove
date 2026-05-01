@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\FeedInfo;
@@ -7,21 +6,30 @@ use Illuminate\Http\Request;
 
 class FeedInfoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $feedInfos = FeedInfo::all();
-        return view('feed_info.index', compact('feedInfos'));
+        $sortable = ['feed_publisher_name','feed_lang','feed_start_date','feed_end_date','feed_version'];
+        $sort = in_array($request->sort, $sortable) ? $request->sort : 'feed_publisher_name';
+        $dir  = $request->dir === 'desc' ? 'desc' : 'asc';
+
+        $feedInfos = FeedInfo::query()
+            ->when($request->search, fn($q) => $q
+                ->where('feed_publisher_name','like', "%{$request->search}%")
+                ->orWhere('feed_lang',         'like', "%{$request->search}%")
+                ->orWhere('feed_version',      'like', "%{$request->search}%")
+            )
+            ->orderBy($sort, $dir)
+            ->paginate(15)
+            ->withQueryString();
+
+        return response()->json($feedInfos);
     }
 
     public function show(Request $request)
     {
-        $feedInfo = FeedInfo::where('feed_publisher_name', $request->feed_publisher_name)->firstOrFail();
-        return view('feed_info.show', compact('feedInfo'));
-    }
-
-    public function create()
-    {
-        return view('feed_info.create');
+        return response()->json(
+            FeedInfo::where('feed_publisher_name', $request->feed_publisher_name)->firstOrFail()
+        );
     }
 
     public function store(Request $request)
@@ -35,15 +43,8 @@ class FeedInfoController extends Controller
             'feed_version'        => 'nullable|string',
         ]);
 
-        FeedInfo::create($request->all());
-
-        return redirect()->route('feed-info.index')->with('success', 'Feed info creado correctamente.');
-    }
-
-    public function edit(Request $request)
-    {
-        $feedInfo = FeedInfo::where('feed_publisher_name', $request->feed_publisher_name)->firstOrFail();
-        return view('feed_info.edit', compact('feedInfo'));
+        $feedInfo = FeedInfo::create($request->all());
+        return response()->json(['message' => 'Feed info creado correctamente', 'data' => $feedInfo], 201);
     }
 
     public function update(Request $request)
@@ -60,13 +61,12 @@ class FeedInfoController extends Controller
         $feedInfo = FeedInfo::where('feed_publisher_name', $request->feed_publisher_name)->firstOrFail();
         $feedInfo->update($request->all());
 
-        return redirect()->route('feed-info.index')->with('success', 'Feed info actualizado correctamente.');
+        return response()->json(['message' => 'Feed info actualizado correctamente', 'data' => $feedInfo]);
     }
 
     public function destroy(Request $request)
     {
         FeedInfo::where('feed_publisher_name', $request->feed_publisher_name)->delete();
-
-        return redirect()->route('feed-info.index')->with('success', 'Feed info eliminado correctamente.');
+        return response()->json(['message' => 'Feed info eliminado correctamente']);
     }
 }
