@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/Map.css';
 import TransportMarker from "./TransportMarker.tsx";
+import VmpMarker from "./VmpMarker.tsx";
 import { useNavigate } from 'react-router-dom';
 import {useState, useEffect} from "react";
 
@@ -18,31 +19,47 @@ interface Marker {
     id: string;
     lat: number;
     lon: number;
+    code?: string;
 }
 
 interface MapProps {
     center?: [number, number];
     zoom?: number;
+    showOnly?: 'vmp' | 'stops' | 'travels';
+    onRentVmp?: (code: string) => void;
+    refreshTrigger?: any;
 }
 
-export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) {
+export default function Map({ center = [38.385, -0.513], zoom = 16, showOnly, onRentVmp, refreshTrigger }: MapProps) {
     const navigate = useNavigate();
     const [destination, setDestination] = useState<string>("");
     const [markers, setMarkers] = useState<Marker[]>([]);
     useEffect(() => {
         const fetchMarkers = async() => {
-            const response = await fetch("http://localhost:8000/api/markers");
+            const response = await fetch(`http://localhost:8000/api/markers?lat=${center[0]}&lon=${center[1]}`);
             console.log(response);
             const data = await response.json();
-            const combined: Marker[] = [
-                ...data.stops,
-                ...data.travels,
-            ];
+            
+            let combined: Marker[] = [];
+            if (showOnly === 'vmp') {
+                combined = [...(data.vmps || [])];
+            } else if (showOnly === 'stops') {
+                combined = [...(data.stops || [])];
+            } else if (showOnly === 'travels') {
+                combined = [...(data.travels || [])];
+            } else {
+                combined = [
+                    ...(data.stops || []),
+                    ...(data.travels || []),
+                    ...(data.vmps || []),
+                ];
+            }
+            
             setMarkers(combined);
         }
 
         fetchMarkers();
-    }, []);
+    }, [center[0], center[1], refreshTrigger]);
 
     return (
         <div id='map'>
@@ -58,7 +75,11 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                 />
                 {
                     markers.map(marker => (
-                        <TransportMarker key={marker.id}  type={marker.type} position={[marker.lat, marker.lon]} name={marker.name} id={marker.id}/>
+                        marker.type === 'vmp' ? (
+                            <VmpMarker key={marker.id} position={[marker.lat, marker.lon]} name={marker.name} code={marker.code || ''} onRent={onRentVmp}/>
+                        ) : (
+                            <TransportMarker key={marker.id}  type={marker.type} position={[marker.lat, marker.lon]} name={marker.name} id={marker.id}/>
+                        )
                     ))
                 }
 
