@@ -10,6 +10,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VmpController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -55,6 +56,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
     Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
     Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
+
+    Route::get('/vmp/current', [VmpController::class, 'currentRental']);
+    Route::post('/vmp/rent', [VmpController::class, 'rent']);
+    Route::post('/vmp/end', [VmpController::class, 'endRental']);
 
 });
 
