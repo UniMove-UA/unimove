@@ -8,6 +8,7 @@ import UniversityAuth from "./pages/UniversityAuth.tsx";
 import Main from "./pages/Main.tsx";
 import ChatContent from "./pages/ChatContent.tsx";
 import ProfileContainer from "./components/ProfileContainer.tsx";
+import AdminPanel from "./pages/AdminPanel.tsx";
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         {/* Rutas dinámicas */}
         <Route path='/profile/:id' element={<ProfileContainer />} />
         <Route path='/chat/content' element={<ChatContent />} />
+        <Route path='/admin' element={<AdminPanel />} />
       </Routes>
     </>
   )
