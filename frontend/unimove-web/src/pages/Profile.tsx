@@ -52,9 +52,8 @@ export default function Profile({ profileData }: ProfileProps) {
             formData.append('avatar', selectedFile);
         }
 
-        console.log("Enviando FormData a la API...", formData);
-
         try {
+            // POST a la api
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             setTempData(profileData);

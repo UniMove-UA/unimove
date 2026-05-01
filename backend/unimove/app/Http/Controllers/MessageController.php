@@ -123,9 +123,11 @@ class MessageController extends Controller
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn($m) => [
-                'emisor' => $m->emisor->name,
+                'emisor' => $m->emisor->username,
                 'text'   => $m->text,
                 'url'    => $m->url,
+                'mine'   => $m->emisor_id === $userId,
+                'created_at' => $m->created_at,
             ]);
 
         return response()->json($messages);
@@ -166,6 +168,8 @@ class MessageController extends Controller
                 'emisor' => $message->emisor->username,
                 'text'   => $message->text,
                 'url'    => $message->url,
+                'mine'   => $message->emisor_id === $userId,
+                'created_at' => $message->created_at,
             ],
         ], 201);
     }

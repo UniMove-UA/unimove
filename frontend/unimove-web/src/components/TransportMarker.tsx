@@ -1,6 +1,7 @@
 import {Marker, Popup} from 'react-leaflet';
 import {divIcon} from 'leaflet';
 import Schedule from "./Schedule.tsx";
+import { useState } from 'react';
 const createTransportIcon = (type: string) => {
     return divIcon({
         className: 'transport-marker',
@@ -16,65 +17,84 @@ const createTransportIcon = (type: string) => {
     });
 };
 
+interface ScheduleItem {
+    route_id: string;
+    route_name: string;
+    headsign: string;
+    departure_time: string;
+    arrival_time: string;
+}
+
 interface MarkerProps {
     type: string;
     position: [number, number];
     name: string;
+    id: string;
 }
 
-export default function TransportMarker({type, position, name}: MarkerProps) {
+export default function TransportMarker({ type, position, name, id }: MarkerProps) {
+    const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [hasLoaded, setHasLoaded] = useState(false);
 
-    const schedules = [
-        {
-            id: 1,
-            name: "EXPRESO MATUTINO",
-            line: "L1",
-            destination: "Campus Central",
-            hour: "08:30"
-        },
-        {
-            id: 2,
-            name: "SERVICIO UNIVERSITARIO",
-            line: "AVE",
-            destination: "Estación Norte",
-            hour: "09:15"
-        },
-        {
-            id: 3,
-            name: "CONEXIÓN CAMPUS",
-            line: "L24",
-            destination: "Biblioteca",
-            hour: "10:00"
-        },
-        {
-            id: 4,
-            name: "SERVICIO VESPERTINO",
-            line: "L2",
-            destination: "Residencia Estudiantes",
-            hour: "18:45"
+    const handleMarkerClick = async () => {
+        if (hasLoaded) return;
+
+        setLoading(true);
+        try {
+            const response = await fetch(`http://localhost:8000/api/schedule?id=${id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setSchedules(data);
+            }
+            else {
+                console.error("Error al cargar horarios:", response.statusText);
+            }
         }
-    ];
+        catch (err) {
+            console.error("Error de red al cargar horarios:", err);
+        }
+        finally {
+            setLoading(false);
+            setHasLoaded(true);
+        }
+    };
 
     return (
-        <Marker 
-            position={position} 
-            icon={createTransportIcon(type)}>
-                <Popup>
-                    <span style={{fontSize: "1rem"}}><strong>{name}</strong></span>
-                    <div>
-                        {
-                            schedules.map(schedule =>
-                                <Schedule
-                                    name={schedule.name}
-                                    hour={schedule.hour}
-                                    line={schedule.line}
-                                    destination={schedule.destination}
-                                    onClick={() => {}} />
-                            )
-                        }
+        <Marker
+            position={position}
+            icon={createTransportIcon(type)}
+            eventHandlers={{
+                click: handleMarkerClick
+            }}
+        >
+            <Popup>
+                <span style={{ fontSize: "1rem" }}><strong>{name}</strong></span>
+
+                {loading && <p style={{ fontSize: "0.8rem", margin: "5px 0" }}>Cargando horarios...</p>}
+
+                {!loading && schedules.length === 0 && !hasLoaded && (
+                    <p style={{ fontSize: "0.8rem", color: "#666", margin: "5px 0" }}>
+                        Haz clic en el marcador para ver horarios
+                    </p>
+                )}
+
+                {!loading && schedules.length > 0 && (
+                    <div style={{ marginTop: "5px" }}>
+                        {schedules.map((schedule, index) => (
+                            <Schedule
+                                key={index}
+                                name={schedule.route_name || "Ruta"}
+                                hour={schedule.departure_time}
+                                line={schedule.headsign || "Línea"}
+                                destination={schedule.headsign || "Destino"}
+                                onClick={() => {}}
+                            />
+                        ))}
                     </div>
-                </Popup>
+                )}
+            </Popup>
         </Marker>
-    )
+    );
 }
 

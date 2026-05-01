@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Stop;
 use App\Models\StopTime;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ScheduleController extends Controller
 {
@@ -15,11 +16,22 @@ class ScheduleController extends Controller
         if (!$stop) {
             return response()->json(['message' => 'Parada no encontrada'], 404);
         }
+        $currentTime = Carbon::now('Europe/Madrid')->format('H:i:s');
 
-        $schedules = StopTime::with(['trayecto.ruta'])
+        $allStopTimes = StopTime::with(['trayecto.ruta'])
             ->where('stop_id', $stop->stop_id)
             ->orderBy('departure_time', 'asc')
-            ->get()
+            ->get();
+
+        $futureStopTimes = $allStopTimes->filter(function ($st) use ($currentTime) {
+            return $st->departure_time >= $currentTime;
+        });
+
+        if ($futureStopTimes->isEmpty()) {
+            $futureStopTimes = $allStopTimes;
+        }
+
+        $schedules = $futureStopTimes
             ->groupBy(fn($st) => $st->trayecto->ruta->route_short_name
                 ?? $st->trayecto->ruta->route_long_name
                 ?? $st->trayecto->route_id)
