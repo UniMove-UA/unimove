@@ -12,6 +12,8 @@ use App\Http\Controllers\TravelController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\StripeWebhookController;
+use App\Http\Controllers\Api\PaymentController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -58,6 +60,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
     Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
+    // Payments
+    Route::post('/payments/create-intent', [PaymentController::class, 'createIntent']);
+
 });
 
 //ruta para el registro de usuario
@@ -73,3 +78,6 @@ Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+// Stripe webhook (public, no CSRF)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
