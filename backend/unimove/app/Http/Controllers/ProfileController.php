@@ -88,6 +88,7 @@ class ProfileController extends Controller
             'username' => $user->username,
             'email'    => $user->email,
             'image'    => $user->image,
+            'role'     => $user->role,
         ], 200);
     }
 

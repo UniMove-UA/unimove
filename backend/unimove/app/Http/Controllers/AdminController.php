@@ -187,20 +187,19 @@ class AdminController extends Controller
     {
         $this->ensureAdmin();
 
-        // Get 50 stop times for management purposes
         $stopTimes = \App\Models\StopTime::with(['trayecto.ruta', 'parada'])
-            ->limit(50)
-            ->get()
-            ->map(function ($st) {
-                return [
-                    'trip_id' => $st->trip_id,
-                    'stop_id' => $st->stop_id,
-                    'stop_name' => $st->parada ? $st->parada->stop_name : 'Desconocida',
-                    'route_name' => $st->trayecto && $st->trayecto->ruta ? ($st->trayecto->ruta->route_short_name ?? $st->trayecto->ruta->route_long_name) : 'Ruta',
-                    'arrival_time' => $st->arrival_time,
-                    'departure_time' => $st->departure_time,
-                ];
-            });
+            ->paginate(50);
+
+        $stopTimes->getCollection()->transform(function ($st) {
+            return [
+                'trip_id' => $st->trip_id,
+                'stop_id' => $st->stop_id,
+                'stop_name' => $st->parada ? $st->parada->stop_name : 'Desconocida',
+                'route_name' => $st->trayecto && $st->trayecto->ruta ? ($st->trayecto->ruta->route_short_name ?? $st->trayecto->ruta->route_long_name) : 'Ruta',
+                'arrival_time' => $st->arrival_time,
+                'departure_time' => $st->departure_time,
+            ];
+        });
 
         return response()->json($stopTimes);
     }
