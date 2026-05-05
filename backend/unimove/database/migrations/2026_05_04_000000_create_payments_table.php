@@ -19,9 +19,8 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamps();
 
-            // Optionally add foreign keys if tables exist
-            // $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('set null');
-            // $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+            $table->foreign('booking_id')->references('id')->on('bookings')->onDelete('set null');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
         });
     }
 

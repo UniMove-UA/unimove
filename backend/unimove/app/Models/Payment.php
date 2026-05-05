@@ -19,4 +19,12 @@ class Payment extends Model
     protected $casts = [
         'metadata' => 'array',
     ];
+
+    public function booking() {
+        return $this->belongsTo(Booking::class);
+    }
+
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
 }

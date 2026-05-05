@@ -41,7 +41,7 @@ class StripeWebhookController extends Controller
                     if ($piId) {
                         $metadata = $event->data->object->metadata ?? [];
                         DB::beginTransaction();
-                        Payment::updateOrCreate(
+                        $payment =Payment::updateOrCreate(
                             ['payment_intent_id' => $piId],
                             [
                                 'status' => 'succeeded',
@@ -50,6 +50,10 @@ class StripeWebhookController extends Controller
                                 'metadata' => $metadata,
                             ]
                         );
+                        if ($payment->booking_id) {
+                            $payment->booking()->update(['status' => 'confirmed']);
+                        }
+
                         DB::commit();
                     }
                     break;
@@ -59,10 +63,15 @@ class StripeWebhookController extends Controller
                     Log::info('Pago fallido: ' . ($piId ?? 'unknown'));
                     if ($piId) {
                         DB::beginTransaction();
-                        Payment::updateOrCreate(
+                        $payment =Payment::updateOrCreate(
                             ['payment_intent_id' => $piId],
                             ['status' => 'failed']
                         );
+
+                        if ($payment->booking_id) {
+                            $payment->booking()->update(['status' => 'cancelled']);
+                            $payment->booking->travel()->increment('available_seats');
+                        }
                         DB::commit();
                     }
                     break;

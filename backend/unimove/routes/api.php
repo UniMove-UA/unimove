@@ -5,15 +5,15 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MarkerController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
-use app\Http\Controllers\ProfileController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\VehicleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\StripeWebhookController;
-use App\Http\Controllers\Api\PaymentController;
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
