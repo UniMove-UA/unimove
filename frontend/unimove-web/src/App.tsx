@@ -7,6 +7,7 @@ import UniversityAuth from "./pages/UniversityAuth.tsx";
 import Main from "./pages/Main.tsx";
 import ChatContent from "./pages/ChatContent.tsx";
 import ProfileContainer from "./components/ProfileContainer.tsx";
+import CheckoutPage from './pages/CheckoutPage.tsx';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path='/' element={<Main />} />
         <Route path='/home' element={<Main />} />
         <Route path='/travel' element={<Travel />} />
+        <Route path='/checkout' element={<CheckoutPage />} />
         <Route path='/chat' element={<Chat />} />
         <Route path='/login' element={<Login />} />
         <Route path="/register" element={<Register />} />
