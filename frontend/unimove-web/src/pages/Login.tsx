@@ -32,7 +32,11 @@ const Login = () => {
 
             if (response.ok) {
                 localStorage.setItem('auth_token', data.access_token); //Guardar el token en localStorage
-                navigate('/'); //Redirige a la pagina principal
+                if (data.user?.role === 'admin') {
+                    navigate('/admin'); //Redirige al panel de administrador
+                } else {
+                    navigate('/'); //Redirige a la pagina principal
+                }
             } else {
                 setError(data.message || 'Error al iniciar sesión. Comprueba tus credenciales.');
             }

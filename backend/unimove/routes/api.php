@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MarkerController;
@@ -31,8 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/read', [NotificationController::class, 'markAllRead']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
 
-    //Route::get('/schedule', [ScheduleController::class, 'index']);
-
     Route::get('/travels', [TravelController::class, 'index']);
     Route::post('/travels', [TravelController::class, 'store']);
     Route::get('/travels/me', [TravelController::class, 'myTravels']);
@@ -58,9 +57,26 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
     Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
 
-    // Payments
     Route::post('/payments/create-intent', [PaymentController::class, 'createIntent']);
 
+    Route::prefix('admin')->group(function () {
+        Route::get('/stats',[AdminController::class, 'stats']);
+
+        Route::get('/users',[AdminController::class, 'users']);
+        Route::post('/users',[AdminController::class, 'createUser']);
+        Route::delete('/users/{id}',[AdminController::class, 'deleteUser']);
+        Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole']);
+
+        Route::get('/travels',[AdminController::class, 'travels']);
+        Route::delete('/travels/{id}',[AdminController::class, 'deleteTravel']);
+        Route::put('/travels/{id}/cancel',[AdminController::class, 'cancelTravel']);
+
+        Route::get('/reviews',[AdminController::class, 'reviews']);
+        Route::delete('/reviews/{id}',[AdminController::class, 'deleteReview']);
+
+        Route::get('/schedules',[AdminController::class, 'schedules']);
+        Route::put('/schedules',[AdminController::class, 'updateSchedule']);
+    });
 });
 
 //ruta para el registro de usuario
@@ -80,5 +96,5 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// Stripe webhook (public, no CSRF)
+//Stripe webhook
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
