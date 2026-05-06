@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import HeaderButton from "./HeaderButton";
 import NotificationContainer from "./NotificationContainer";
 import "../styles/Notifications.css"
@@ -8,8 +8,32 @@ interface PageProps {
     page: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
 }
 
+interface Notification {
+    id: string;
+    text: string;
+    read: boolean;
+    date: string;
+}
+
 export default function HeaderMobile(props: PageProps) {
     const [showNotifications, setShowNotifications] = useState(false);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const token = localStorage.getItem('auth_token');
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            const response = await fetch(`http://localhost:8000/api/notifications`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            const data = await response.json();
+            setNotifications(data);
+        }
+        fetchNotifications();
+    }, []);
 
     const toggleNotifications = () => {
         setShowNotifications(!showNotifications);
@@ -17,6 +41,28 @@ export default function HeaderMobile(props: PageProps) {
 
     const closeNotifications = () => {
         setShowNotifications(false);
+    };
+
+    const markAsRead = async (id: string | number) => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/notifications/${id}/read`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                setNotifications(prev => prev.filter(n => n.id !== id));
+                console.log(`Notificación ${id} marcada como leída`);
+            }
+            else {
+                console.error("Error al marcar notificación como leída");
+            }
+        } catch (err) {
+            console.error("Error de red:", err);
+        }
     };
 
     return (
@@ -61,8 +107,11 @@ export default function HeaderMobile(props: PageProps) {
                     {showNotifications && (
                         <div className="notifications-dropdown">
                             <NotificationContainer>
-                                <Notification id={"1"} message={"¡Las notificaciones funcionan!"}/>
-                                <Notification id={"2"} message={"Ahora falta la integración con la API."}/>
+                                {
+                                    notifications.filter(n => !n.read).map((notification: Notification, index) => (
+                                        <Notification id={notification.id} key={index} message={notification.text} onMarkAsRead={markAsRead}/>
+                                    ))
+                                }
                             </NotificationContainer>
                         </div>
                     )}

@@ -1,6 +1,6 @@
 <?php
 
-namespace app\Http\Controllers;
+namespace App\Http\Controllers;
 
 use App\Models\Review;
 use App\Models\User;
@@ -88,6 +88,7 @@ class ProfileController extends Controller
             'username' => $user->username,
             'email'    => $user->email,
             'image'    => $user->image,
+            'role'     => $user->role,
         ], 200);
     }
 
