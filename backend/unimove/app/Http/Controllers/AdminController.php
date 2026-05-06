@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\Review;
 use App\Models\Travel;
 use App\Models\User;
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -184,6 +185,40 @@ class AdminController extends Controller
         return response()->json(['message' => 'Valoración eliminada correctamente']);
     }
 
+    // ── Vehicles (admin) ───────────────────────────────────────────────────
+    public function adminVehicles(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $search = $request->search;
+
+        $vehicles = Vehicle::with('owner:id,name,username')
+            ->when($search, fn($q) => $q
+                ->where('brand', 'like', "%$search%")
+                ->orWhere('model', 'like', "%$search%")
+                ->orWhere('plate', 'like', "%$search%")
+                ->orWhereHas('owner', fn($sq) => $sq->where('name', 'like', "%$search%")->orWhere('username', 'like', "%$search%"))
+            )
+            ->orderBy('brand')
+            ->orderBy('model')
+            ->get();
+
+        return response()->json($vehicles);
+    }
+
+    public function adminDeleteVehicle($id)
+    {
+        $this->ensureAdmin();
+        $vehicle = Vehicle::findOrFail($id);
+        
+        try {
+            $vehicle->delete();
+            return response()->json(['message' => 'Vehículo eliminado correctamente']);
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json(['message' => 'No se puede eliminar el vehículo porque tiene trayectos o reservas asociadas.'], 400);
+        }
+    }
+
     // ── Bookings ──────────────────────────────────────────────────────────────
     public function bookings(Request $request)
     {
@@ -289,6 +324,12 @@ class AdminController extends Controller
         $this->ensureAdmin();
 
         $stopTimes = \App\Models\StopTime::with(['trayecto.ruta', 'parada'])
+            ->join('trips', 'stop_times.trip_id', '=', 'trips.trip_id')
+            ->join('routes', 'trips.route_id', '=', 'routes.route_id')
+            ->join('stops', 'stop_times.stop_id', '=', 'stops.stop_id')
+            ->orderBy('routes.route_short_name')
+            ->orderBy('stops.stop_name')
+            ->select('stop_times.*')
             ->paginate(50);
 
         $stopTimes->getCollection()->transform(function ($st) {
