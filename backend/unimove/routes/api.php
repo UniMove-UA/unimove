@@ -88,6 +88,9 @@ Route::post('/login', [AuthController::class, 'login']);
 //ruta para la autenticacion con correo institucional
 Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
 
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password',  [AuthController::class, 'resetPassword']);
+
 Route::get('/markers', [MarkerController::class, 'index']);
 Route::get('/schedule', [ScheduleController::class, 'index']);
 
