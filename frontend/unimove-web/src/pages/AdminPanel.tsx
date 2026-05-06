@@ -15,8 +15,10 @@ interface Schedule { trip_id: string; stop_id: string; stop_name: string; route_
 interface Stats  { users: number; travels: number; reviews: number; active_travels: number; cancelled_travels: number; completed_travels: number; users_by_role: Record<string,number>; travels_by_month?: Record<number, number>; }
 interface Toast  { id: number; msg: string; type: 'success' | 'error' | 'info'; }
 interface ModalState { open: boolean; title: string; desc: string; target: string; confirmLabel: string; type: 'danger' | 'warning'; onConfirm: () => void; }
+interface Booking { id: number; status: string; created_at: string; passenger?: { name: string; username: string }; travel?: { origin: string; destination: string; departure_time: string }; }
+interface AdminNotif { id: number; text: string; read: boolean; created_at: string; user?: { name: string; username: string }; user_id: number; }
 
-type SectionKey = 'dashboard' | 'users' | 'travels' | 'reviews' | 'vehicles' | 'payments' | 'schedules';
+type SectionKey = 'dashboard' | 'users' | 'travels' | 'reviews' | 'vehicles' | 'payments' | 'schedules' | 'bookings' | 'notifications';
 
 const API = 'http://localhost:8000/api';
 const authHeaders = () => ({
@@ -46,19 +48,22 @@ function roleBadge(role: string) {
 
 // ─── Nav config ───────────────────────────────────────────────────────────────
 const NAV_ITEMS: { key: SectionKey; Icon: React.FC<{ size?: number }>; label: string; group: string }[] = [
-  { key: 'dashboard', Icon: IconDashboard, label: 'Dashboard',    group: 'General' },
-  { key: 'users',     Icon: IconUsers,     label: 'Usuarios',     group: 'Gestión' },
-  { key: 'travels',   Icon: IconCar,       label: 'Trayectos',    group: 'Gestión' },
-  { key: 'reviews',   Icon: IconStar,      label: 'Valoraciones', group: 'Gestión' },
-  { key: 'vehicles',  Icon: IconScooter,   label: 'Vehículos',    group: 'Servicios' },
-  { key: 'payments',  Icon: IconCard,      label: 'Pagos',        group: 'Servicios' },
-  { key: 'schedules', Icon: IconClock,     label: 'Horarios',     group: 'Servicios' },
+  { key: 'dashboard',     Icon: IconDashboard, label: 'Dashboard',       group: 'General' },
+  { key: 'users',         Icon: IconUsers,     label: 'Usuarios',        group: 'Gestión' },
+  { key: 'travels',       Icon: IconCar,       label: 'Trayectos',       group: 'Gestión' },
+  { key: 'bookings',      Icon: IconCard,      label: 'Reservas',        group: 'Gestión' },
+  { key: 'reviews',       Icon: IconStar,      label: 'Valoraciones',    group: 'Gestión' },
+  { key: 'notifications', Icon: IconBell,      label: 'Notificaciones',  group: 'Comunicación' },
+  { key: 'vehicles',      Icon: IconScooter,   label: 'Vehículos',       group: 'Servicios' },
+  { key: 'payments',      Icon: IconCard,      label: 'Pagos',           group: 'Servicios' },
+  { key: 'schedules',     Icon: IconClock,     label: 'Horarios',        group: 'Servicios' },
 ];
 const GROUPS = [...new Set(NAV_ITEMS.map(i => i.group))];
 const SECTION_TITLES: Record<SectionKey, string> = {
   dashboard: 'Dashboard', users: 'Gestión de Usuarios', travels: 'Trayectos',
-  reviews: 'Valoraciones', vehicles: 'Vehículos del Campus',
+  bookings: 'Cancelar Reservas', reviews: 'Valoraciones', vehicles: 'Vehículos del Campus',
   payments: 'Pagos y Reembolsos', schedules: 'Horarios de Transporte',
+  notifications: 'Enviar Notificaciones',
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -67,18 +72,23 @@ export default function AdminPanel() {
 
   const [collapsed, setCollapsed] = useState(false);
   const [section, setSection] = useState<SectionKey>('dashboard');
-  const [users, setUsers]     = useState<User[]>([]);
-  const [travels, setTravels] = useState<Travel[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([]);
+  const [users, setUsers]         = useState<User[]>([]);
+  const [travels, setTravels]     = useState<Travel[]>([]);
+  const [reviews, setReviews]     = useState<Review[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [stats, setStats]     = useState<Stats | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [bookings, setBookings]   = useState<Booking[]>([]);
+  const [adminNotifs, setAdminNotifs] = useState<AdminNotif[]>([]);
+  const [notifText, setNotifText] = useState('');
+  const [notifUserId, setNotifUserId] = useState<string>('');
+  const [stats, setStats]         = useState<Stats | null>(null);
+  const [loading, setLoading]     = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [schedulePage, setSchedulePage] = useState(1);
   const [scheduleLastPage, setScheduleLastPage] = useState(1);
-  const [toasts, setToasts]   = useState<Toast[]>([]);
-  const [userFilter, setUserFilter] = useState('all');
-  const [travelFilter, setTravelFilter] = useState('all');
+  const [toasts, setToasts]       = useState<Toast[]>([]);
+  const [userFilter, setUserFilter]       = useState('all');
+  const [travelFilter, setTravelFilter]   = useState('all');
+  const [bookingFilter, setBookingFilter] = useState('all');
   const [showNewUserModal, setShowNewUserModal] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', username: '', email: '', password: '', role: 'student' });
   const [adminInfo, setAdminInfo] = useState<User | null>(null);
@@ -165,6 +175,20 @@ export default function AdminPanel() {
           .catch(() => toast('Error cargando horarios', 'error'))
           .finally(() => setLoading(false));
     }
+    if (section === 'bookings') {
+      setLoading(true);
+      fetch(`${API}/admin/bookings`, { headers: authHeaders() })
+          .then(r => r.json()).then(d => setBookings(Array.isArray(d) ? d : d.data ?? []))
+          .catch(() => toast('Error cargando reservas', 'error'))
+          .finally(() => setLoading(false));
+    }
+    if (section === 'notifications') {
+      setLoading(true);
+      fetch(`${API}/admin/notifications`, { headers: authHeaders() })
+          .then(r => r.json()).then(d => setAdminNotifs(Array.isArray(d) ? d : []))
+          .catch(() => toast('Error cargando notificaciones', 'error'))
+          .finally(() => setLoading(false));
+    }
   }, [section, authChecked, schedulePage]);
 
   // ─── Actions ─────────────────────────────────────────────────────────────────
@@ -237,14 +261,56 @@ export default function AdminPanel() {
     },
   });
 
+  const cancelBooking = (b: Booking) => openModal({
+    title: 'Cancelar reserva', desc: '¿Cancelar esta reserva? El pasajero será notificado.',
+    target: `${b.passenger?.name ?? '—'} · ${b.travel?.origin ?? ''} → ${b.travel?.destination ?? ''}`,
+    confirmLabel: 'Cancelar reserva', type: 'warning',
+    onConfirm: async () => {
+      const r = await fetch(`${API}/admin/bookings/${b.id}/cancel`, { method: 'PUT', headers: authHeaders() });
+      if (r.ok) { setBookings(p => p.map(x => x.id === b.id ? { ...x, status: 'cancelled' } : x)); toast('Reserva cancelada'); }
+      else toast('Error al cancelar la reserva', 'error');
+      closeModal();
+    },
+  });
+
+  const sendNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!notifText.trim()) return;
+    const body: Record<string, string> = { text: notifText };
+    if (notifUserId) body.user_id = notifUserId;
+    const r = await fetch(`${API}/admin/notifications`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+    if (r.ok) {
+      toast(notifUserId ? 'Notificación enviada al usuario' : 'Notificación enviada a todos');
+      setNotifText('');
+      setNotifUserId('');
+      // Refresh list
+      fetch(`${API}/admin/notifications`, { headers: authHeaders() })
+        .then(res => res.json()).then(d => setAdminNotifs(Array.isArray(d) ? d : []));
+    } else {
+      toast('Error al enviar la notificación', 'error');
+    }
+  };
+
+  const deleteNotif = (id: number) => openModal({
+    title: 'Eliminar notificación', desc: '¿Eliminar esta notificación del sistema?',
+    target: '', confirmLabel: 'Eliminar', type: 'danger',
+    onConfirm: async () => {
+      const r = await fetch(`${API}/admin/notifications/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (r.ok) { setAdminNotifs(p => p.filter(x => x.id !== id)); toast('Notificación eliminada'); }
+      else toast('Error al eliminar la notificación', 'error');
+      closeModal();
+    },
+  });
+
   const handleLogout = async () => {
     await fetch(`${API}/logout`, { method: 'POST', headers: authHeaders() }).catch(() => {});
     localStorage.removeItem('auth_token');
     navigate('/login');
   };
 
-  const filteredUsers = userFilter === 'all' ? users : users.filter(u => u.role === userFilter);
+  const filteredUsers   = userFilter === 'all'   ? users   : users.filter(u => u.role === userFilter);
   const filteredTravels = travelFilter === 'all' ? travels : travels.filter(t => t.status === travelFilter);
+  const filteredBookings = bookingFilter === 'all' ? bookings : bookings.filter(b => b.status === bookingFilter);
 
   const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
   const chartHeights = Array.from({ length: 12 }, (_, i) => {
@@ -334,7 +400,6 @@ export default function AdminPanel() {
               <input placeholder="Buscar…" />
             </div>
             <div className="admin-topbar-actions">
-              <button className="admin-topbar-btn" title="Notificaciones"><IconBell size={18} /></button>
               <button className="admin-topbar-btn admin-logout-btn" onClick={handleLogout}>
                 <IconPower size={15} /> Salir
               </button>
@@ -660,6 +725,150 @@ export default function AdminPanel() {
                     </button>
                   </div>
                   <br/>
+                </div>
+            )}
+
+            {/* ── BOOKINGS ──────────────────────────────── */}
+            {section === 'bookings' && (
+                <div className="admin-table-card">
+                  <div className="admin-filter-bar">
+                    <span className="admin-filter-label">Estado:</span>
+                    {['all','pending','confirmed','cancelled','rejected'].map(s => (
+                        <button key={s} className={`admin-filter-chip${bookingFilter === s ? ' active' : ''}`}
+                                onClick={() => setBookingFilter(s)}>
+                          {s === 'all' ? 'Todas' : s === 'pending' ? 'Pendientes' : s === 'confirmed' ? 'Confirmadas' : s === 'cancelled' ? 'Canceladas' : 'Rechazadas'}
+                        </button>
+                    ))}
+                  </div>
+                  <div className="admin-table-scroll">
+                    <table className="admin-table">
+                      <thead>
+                      <tr><th>#</th><th>Pasajero</th><th>Trayecto</th><th>Salida</th><th>Estado</th><th>Acciones</th></tr>
+                      </thead>
+                      <tbody>
+                      {loading && <tr><td colSpan={6} style={{ textAlign: 'center', padding: 32, color: '#7ba696' }}>Cargando reservas…</td></tr>}
+                      {!loading && filteredBookings.length === 0 && (
+                          <tr><td colSpan={6}>
+                            <div className="admin-empty-state">
+                              <div className="admin-empty-icon"><IconCard size={32} /></div>
+                              <p>No hay reservas en esta categoría.</p>
+                            </div>
+                          </td></tr>
+                      )}
+                      {!loading && filteredBookings.map(b => (
+                          <tr key={b.id}>
+                            <td style={{ color: '#a7d7c5', fontWeight: 700 }}>#{b.id}</td>
+                            <td>
+                              <div className="admin-user-cell">
+                                <div className="admin-user-avatar" style={{ width: 28, height: 28, fontSize: '0.7rem' }}>{initials(b.passenger?.name)}</div>
+                                <span style={{ fontSize: '0.82rem', color: '#103B31' }}>{b.passenger?.name ?? '—'} <span style={{color:'#a7d7c5'}}>@{b.passenger?.username}</span></span>
+                              </div>
+                            </td>
+                            <td style={{ fontSize: '0.82rem' }}>{b.travel?.origin ?? '—'} → {b.travel?.destination ?? '—'}</td>
+                            <td style={{ color: '#7ba696', fontSize: '0.78rem' }}>{b.travel?.departure_time ? new Date(b.travel.departure_time).toLocaleString('es-ES') : '—'}</td>
+                            <td>
+                              <Badge
+                                  label={b.status}
+                                  color={b.status === 'confirmed' ? 'blue' : b.status === 'cancelled' ? 'red' : b.status === 'rejected' ? 'yellow' : 'green'}
+                              />
+                            </td>
+                            <td>
+                              {(b.status === 'pending' || b.status === 'confirmed') && (
+                                  <button className="admin-action-btn warning" onClick={() => cancelBooking(b)}>
+                                    <IconX size={14} /> Cancelar
+                                  </button>
+                              )}
+                            </td>
+                          </tr>
+                      ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+            )}
+
+            {/* ── NOTIFICATIONS ──────────────────────────── */}
+            {section === 'notifications' && (
+                <div>
+                  {/* Send form */}
+                  <div className="admin-table-card" style={{ padding: '22px 24px', marginBottom: 20 }}>
+                    <div style={{ fontWeight: 800, color: '#103B31', fontSize: '1rem', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <IconBell size={18} /> Enviar Notificación
+                    </div>
+                    <form onSubmit={sendNotification} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <textarea
+                          required
+                          placeholder="Escribe el mensaje de la notificación…"
+                          value={notifText}
+                          onChange={e => setNotifText(e.target.value)}
+                          rows={3}
+                          style={{ padding: 12, borderRadius: 8, border: '1.5px solid #d5ece3', fontFamily: 'inherit', fontSize: '0.88rem', color: '#103B31', resize: 'vertical' }}
+                      />
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <select
+                            value={notifUserId}
+                            onChange={e => setNotifUserId(e.target.value)}
+                            style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #d5ece3', fontFamily: 'inherit', fontSize: '0.85rem', color: '#103B31', flex: 1, minWidth: 200 }}
+                        >
+                          <option value="">📢 Enviar a todos los usuarios</option>
+                          {users.map(u => <option key={u.id} value={String(u.id)}>👤 {u.name} (@{u.username})</option>)}
+                        </select>
+                        <button type="submit" className="admin-action-btn primary" style={{ background: '#31A47B', color: '#fff', padding: '8px 20px', borderRadius: 8, fontSize: '0.85rem' }}>
+                          <IconCheck size={14} /> Enviar
+                        </button>
+                      </div>
+                      {users.length === 0 && (
+                          <p style={{ fontSize: '0.75rem', color: '#a7d7c5', margin: 0 }}>
+                            Carga primero la sección "Usuarios" para poder seleccionar destinatarios individuales.
+                          </p>
+                      )}
+                    </form>
+                  </div>
+
+                  {/* Notification list */}
+                  <div className="admin-table-card">
+                    <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0ede8', fontWeight: 700, color: '#7ba696', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Historial de notificaciones ({adminNotifs.length})
+                    </div>
+                    <div className="admin-table-scroll">
+                      <table className="admin-table">
+                        <thead>
+                        <tr><th>Destinatario</th><th>Mensaje</th><th>Leída</th><th>Fecha</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                        {loading && <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: '#7ba696' }}>Cargando notificaciones…</td></tr>}
+                        {!loading && adminNotifs.length === 0 && (
+                            <tr><td colSpan={5}>
+                              <div className="admin-empty-state">
+                                <div className="admin-empty-icon"><IconBell size={32} /></div>
+                                <p>No hay notificaciones registradas.</p>
+                              </div>
+                            </td></tr>
+                        )}
+                        {!loading && adminNotifs.map(n => (
+                            <tr key={n.id}>
+                              <td>
+                                <div className="admin-user-cell">
+                                  <div className="admin-user-avatar" style={{ width: 28, height: 28, fontSize: '0.7rem' }}>{initials(n.user?.name)}</div>
+                                  <span style={{ fontSize: '0.82rem', color: '#103B31' }}>{n.user?.name ?? '—'} <span style={{color:'#a7d7c5'}}>@{n.user?.username}</span></span>
+                                </div>
+                              </td>
+                              <td style={{ fontSize: '0.82rem', color: '#1d3531', maxWidth: 260 }}>{n.text?.slice(0, 80)}{(n.text?.length ?? 0) > 80 ? '…' : ''}</td>
+                              <td>
+                                <Badge label={n.read ? 'Leída' : 'No leída'} color={n.read ? 'grey' : 'green'} />
+                              </td>
+                              <td style={{ color: '#7ba696', fontSize: '0.78rem' }}>{new Date(n.created_at).toLocaleString('es-ES')}</td>
+                              <td>
+                                <button className="admin-action-btn danger" onClick={() => deleteNotif(n.id)}>
+                                  <IconTrash size={14} /> Eliminar
+                                </button>
+                              </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
             )}
 

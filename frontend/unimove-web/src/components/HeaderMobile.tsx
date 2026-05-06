@@ -18,21 +18,23 @@ interface Notification {
 export default function HeaderMobile(props: PageProps) {
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [userRole, setUserRole] = useState<string>('');
     const token = localStorage.getItem('auth_token');
 
     useEffect(() => {
-        const fetchNotifications = async () => {
-            const response = await fetch(`http://localhost:8000/api/notifications`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const data = await response.json();
-            setNotifications(data);
-        }
-        fetchNotifications();
+        const fetchData = async () => {
+            try {
+                const [profileRes, notifRes] = await Promise.all([
+                    fetch(`http://localhost:8000/api/profile/me`, { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } }),
+                    fetch(`http://localhost:8000/api/notifications`, { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } }),
+                ]);
+                const profile = await profileRes.json();
+                setUserRole(profile?.role ?? '');
+                const notifData = await notifRes.json();
+                setNotifications(notifData);
+            } catch {}
+        };
+        fetchData();
     }, []);
 
     const toggleNotifications = () => {
@@ -80,29 +82,31 @@ export default function HeaderMobile(props: PageProps) {
                     <div></div>
                     <p>UniMove</p>
 
-                    <button
-                        onClick={toggleNotifications}
-                        style={{
-                            position: 'absolute',
-                            right: 30,
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 0,
-                            zIndex: 100
-                        }}
-                        aria-label="Ver notificaciones"
-                    >
-                        <img
-                            src='/bell.svg'
-                            alt="Campana"
+                    {userRole !== 'admin' && (
+                        <button
+                            onClick={toggleNotifications}
                             style={{
-                                width: '24px',
-                                height: '24px',
-                                filter: showNotifications ? 'drop-shadow(0 0 2px #31A47B)' : 'none'
+                                position: 'absolute',
+                                right: 30,
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 0,
+                                zIndex: 100
                             }}
-                        />
-                    </button>
+                            aria-label="Ver notificaciones"
+                        >
+                            <img
+                                src='/bell.svg'
+                                alt="Campana"
+                                style={{
+                                    width: '24px',
+                                    height: '24px',
+                                    filter: showNotifications ? 'drop-shadow(0 0 2px #31A47B)' : 'none'
+                                }}
+                            />
+                        </button>
+                    )}
 
                     {showNotifications && (
                         <div className="notifications-dropdown">

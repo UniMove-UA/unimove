@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Booking;
+use App\Models\Notification;
 use App\Models\Review;
 use App\Models\Travel;
 use App\Models\User;
@@ -180,6 +182,105 @@ class AdminController extends Controller
         $this->ensureAdmin();
         Review::findOrFail($id)->delete();
         return response()->json(['message' => 'Valoración eliminada correctamente']);
+    }
+
+    // ── Bookings ──────────────────────────────────────────────────────────────
+    public function bookings(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $status = $request->status;
+        $search = $request->search;
+
+        $bookings = Booking::with(['travel:id,origin,destination,departure_time', 'passenger:id,name,username'])
+            ->when($status && $status !== 'all', fn($q) => $q->where('status', $status))
+            ->when($search, fn($q) => $q
+                ->whereHas('passenger', fn($sq) => $sq->where('name', 'like', "%$search%")->orWhere('username', 'like', "%$search%"))
+            )
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($bookings);
+    }
+
+    public function cancelBooking($id)
+    {
+        $this->ensureAdmin();
+
+        $booking = Booking::with('travel')->findOrFail($id);
+
+        if (in_array($booking->status, ['pending', 'confirmed'])) {
+            $booking->travel->increment('available_seats');
+        }
+
+        $booking->update(['status' => 'cancelled']);
+
+        // Notify passenger
+        Notification::create([
+            'user_id' => $booking->passenger_id,
+            'text'    => 'Tu reserva ha sido cancelada por un administrador.',
+            'read'    => false,
+        ]);
+
+        return response()->json(['message' => 'Reserva cancelada correctamente']);
+    }
+
+    // ── Notifications (admin send) ────────────────────────────────────────────
+    public function adminNotifications(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $notifications = Notification::with('user:id,name,username')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($n) => [
+                'id'         => $n->id,
+                'text'       => $n->text,
+                'read'       => $n->read,
+                'created_at' => $n->created_at,
+                'user'       => $n->user ? ['name' => $n->user->name, 'username' => $n->user->username] : null,
+                'user_id'    => $n->user_id,
+            ]);
+
+        return response()->json($notifications);
+    }
+
+    public function sendNotification(Request $request)
+    {
+        $this->ensureAdmin();
+
+        $request->validate([
+            'text'    => 'required|string|max:500',
+            'user_id' => 'nullable|exists:users,id',
+        ]);
+
+        if ($request->user_id) {
+            // Send to a specific user
+            $notif = Notification::create([
+                'user_id' => $request->user_id,
+                'text'    => $request->text,
+                'read'    => false,
+            ]);
+            return response()->json(['message' => 'Notificación enviada', 'data' => $notif], 201);
+        } else {
+            // Broadcast to all non-admin users
+            $users = User::where('role', '!=', 'admin')->pluck('id');
+            foreach ($users as $uid) {
+                Notification::create([
+                    'user_id' => $uid,
+                    'text'    => $request->text,
+                    'read'    => false,
+                ]);
+            }
+            return response()->json(['message' => 'Notificación enviada a todos los usuarios'], 201);
+        }
+    }
+
+    public function deleteNotification($id)
+    {
+        $this->ensureAdmin();
+        Notification::findOrFail($id)->delete();
+        return response()->json(['message' => 'Notificación eliminada correctamente']);
     }
 
     // ── Schedules ─────────────────────────────────────────────────────────────
