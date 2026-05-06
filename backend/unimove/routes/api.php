@@ -13,6 +13,7 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VmpController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/profile/me', [ProfileController::class, 'me']);
-    Route::post('/profile/me', [ProfileController::class, 'updateMe']);
+    Route::put('/profile/me', [ProfileController::class, 'updateMe']);
     Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
     Route::get('/profile/@{username}/reviews', [ProfileController::class, 'reviewsByUsername']);
 
@@ -56,6 +57,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicles/{id}', [VehicleController::class, 'show']);
     Route::put('/vehicles/{id}', [VehicleController::class, 'update']);
     Route::delete('/vehicles/{id}', [VehicleController::class, 'destroy']);
+
+    Route::get('/vmp/current', [VmpController::class, 'currentRental']);
+    Route::post('/vmp/rent', [VmpController::class, 'rent']);
+    Route::post('/vmp/end', [VmpController::class, 'endRental']);
 
     Route::post('/payments/create-intent', [PaymentController::class, 'createIntent']);
 
@@ -97,6 +102,9 @@ Route::post('/login', [AuthController::class, 'login']);
 
 //ruta para la autenticacion con correo institucional
 Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
+
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password',  [AuthController::class, 'resetPassword']);
 
 Route::get('/markers', [MarkerController::class, 'index']);
 Route::get('/schedule', [ScheduleController::class, 'index']);
