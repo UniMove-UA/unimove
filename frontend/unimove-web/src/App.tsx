@@ -9,7 +9,6 @@ import ChatContent from "./pages/ChatContent.tsx";
 import ProfileContainer from "./components/ProfileContainer.tsx";
 import AdminPanel from "./pages/AdminPanel.tsx";
 import CheckoutPage from './pages/CheckoutPage.tsx';
-import RentVmp from './pages/RentVmp.tsx';
 
 function App() {
   return (
@@ -23,7 +22,6 @@ function App() {
         <Route path='/login' element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path='/auth-universidad' element={<UniversityAuth />} />
-        <Route path='/rentvmp' element={<RentVmp />} />
         {/* Rutas dinámicas */}
         <Route path='/profile/:id' element={<ProfileContainer />} />
         <Route path='/chat/:id' element={<ChatContent />} />
