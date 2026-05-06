@@ -48,6 +48,7 @@ class MarkerController extends Controller
                 'lon'  => $stop->stop_lon,
             ]);
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error fetching stops: ' . $e->getMessage());
             $stops = collect([]);
         }
 

@@ -25,6 +25,7 @@ export default function RentVmp() {
             try {
                 const response = await fetch("/api/vmp/current", {
                     headers: {
+                        'Accept': 'application/json',
                         'Authorization': `Bearer ${token}`
                     }
                 });
@@ -57,6 +58,7 @@ export default function RentVmp() {
             const response = await fetch("/api/vmp/rent", {
                 method: 'POST',
                 headers: {
+                    'Accept': 'application/json',
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
@@ -114,6 +116,7 @@ export default function RentVmp() {
             const response = await fetch("/api/vmp/end", {
                 method: 'POST',
                 headers: {
+                    'Accept': 'application/json',
                     'Authorization': `Bearer ${token}`
                 }
             });
