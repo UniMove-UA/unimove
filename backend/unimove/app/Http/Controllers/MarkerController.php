@@ -36,16 +36,20 @@ class MarkerController extends Controller
         $minLon = min($fromLon, $toLon);
         $maxLon = max($fromLon, $toLon);
 
-        $stopsQuery = Stop::query();
-        $stopsQuery->whereBetween('stop_lat', [$minLat, $maxLat]);
-        $stopsQuery->whereBetween('stop_lon', [$minLon, $maxLon]);
-        $stops = $stopsQuery->get()->map(fn($stop) => [
-            'id'   => $stop->stop_id,
-            'name' => $stop->stop_name,
-            'type' => $this->getType($stop->stop_id),
-            'lat'  => $stop->stop_lat,
-            'lon'  => $stop->stop_lon,
-        ]);
+        try {
+            $stopsQuery = Stop::query();
+            $stopsQuery->whereBetween('stop_lat', [$minLat, $maxLat]);
+            $stopsQuery->whereBetween('stop_lon', [$minLon, $maxLon]);
+            $stops = $stopsQuery->get()->map(fn($stop) => [
+                'id'   => $stop->stop_id,
+                'name' => $stop->stop_name,
+                'type' => $this->getType($stop->stop_id),
+                'lat'  => $stop->stop_lat,
+                'lon'  => $stop->stop_lon,
+            ]);
+        } catch (\Exception $e) {
+            $stops = collect([]);
+        }
 
         try {
             $travelsQuery = Travel::with('driver')
