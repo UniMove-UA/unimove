@@ -4,7 +4,8 @@ import 'leaflet/dist/leaflet.css';
 import '../styles/Map.css';
 import TransportMarker from "./TransportMarker.tsx";
 import { useNavigate } from 'react-router-dom';
-import {useState, useEffect} from "react";
+import {useState, useEffect, useCallback} from "react";
+import { useMap } from 'react-leaflet';
 
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -25,23 +26,54 @@ interface MapProps {
     zoom?: number;
 }
 
+function MapFetcher({ onFetch }: { onFetch: (bounds: L.LatLngBounds) => void }){
+    const map = useMap();
+
+    useEffect(() => {
+        onFetch(map.getBounds());
+        const handleMoveEnd = () => {
+            onFetch(map.getBounds());
+        };
+        map.on('moveend', handleMoveEnd);
+        return () => {
+            map.off('moveend', handleMoveEnd);
+        };
+    }, [map, onFetch]);
+
+    return null;
+}
+
 export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) {
     const navigate = useNavigate();
     const [destination, setDestination] = useState<string>("");
     const [markers, setMarkers] = useState<Marker[]>([]);
-    useEffect(() => {
-        const fetchMarkers = async() => {
-            const response = await fetch("http://localhost:8000/api/markers");
-            console.log(response);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const handleBoundsChange = useCallback(async (bounds: L.LatLngBounds) => {
+        setLoading(true);
+        try {
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+
+            // Construir la URL con los parámetros correctos
+            const from = `${sw.lat},${sw.lng}`;
+            const to = `${ne.lat},${ne.lng}`;
+
+            const response = await fetch(`http://localhost:8000/api/markers?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`);
+
+            if (!response.ok) throw new Error(`Error: ${response.status}`);
+
             const data = await response.json();
             const combined: Marker[] = [
-                ...data.stops,
-                ...data.travels,
+                ...(data.stops || []),
+                ...(data.travels || [])
             ];
             setMarkers(combined);
+        } catch (error) {
+            console.error("Error fetching markers:", error);
+        } finally {
+            setLoading(false);
         }
-
-        fetchMarkers();
     }, []);
 
     return (
@@ -52,6 +84,7 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                 scrollWheelZoom={true}
                 style={{ width: '100%', height: '100%' }}
             >
+                <MapFetcher onFetch={handleBoundsChange} />
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -61,6 +94,12 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                         <TransportMarker key={marker.id}  type={marker.type} position={[marker.lat, marker.lon]} name={marker.name} id={marker.id}/>
                     ))
                 }
+
+                {loading && (
+                    <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'white', padding: '5px', borderRadius: '4px' }}>
+                        Cargando...
+                    </div>
+                )}
 
             </MapContainer>
             <div id='search_bar'>
@@ -73,7 +112,7 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                         }
                     }}></input>
             </div>
-            
+
         </div>
     );
 }
