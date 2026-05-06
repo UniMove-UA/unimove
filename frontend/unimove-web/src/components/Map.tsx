@@ -6,6 +6,9 @@ import TransportMarker from "./TransportMarker.tsx";
 import { useNavigate } from 'react-router-dom';
 import {useState, useEffect, useCallback} from "react";
 import { useMap } from 'react-leaflet';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -89,11 +92,18 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {
-                    markers.map(marker => (
-                        <TransportMarker key={marker.id}  type={marker.type} position={[marker.lat, marker.lon]} name={marker.name} id={marker.id}/>
-                    ))
-                }
+
+                <MarkerClusterGroup>
+                    {markers.map(marker => (
+                        <TransportMarker
+                            key={marker.id}
+                            type={marker.type}
+                            position={[marker.lat, marker.lon]}
+                            name={marker.name}
+                            id={marker.id}
+                        />
+                    ))}
+                </MarkerClusterGroup>
 
                 {loading && (
                     <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 1000, background: 'white', padding: '5px', borderRadius: '4px' }}>
