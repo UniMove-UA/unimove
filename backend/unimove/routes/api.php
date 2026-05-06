@@ -81,6 +81,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/schedules',[AdminController::class, 'schedules']);
         Route::put('/schedules',[AdminController::class, 'updateSchedule']);
+
+        Route::get('/bookings',[AdminController::class, 'bookings']);
+        Route::put('/bookings/{id}/cancel',[AdminController::class, 'cancelBooking']);
+
+        Route::get('/vehicles',[AdminController::class, 'adminVehicles']);
+        Route::delete('/vehicles/{id}',[AdminController::class, 'adminDeleteVehicle']);
+
+        Route::get('/notifications',[AdminController::class, 'adminNotifications']);
+        Route::post('/notifications',[AdminController::class, 'sendNotification']);
+        Route::delete('/notifications/{id}',[AdminController::class, 'deleteNotification']);
     });
 });
 
