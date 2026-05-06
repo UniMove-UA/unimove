@@ -12,9 +12,11 @@ class VmpSeeder extends Seeder
      */
     public function run(): void
     {
-        // Ubicación base de ejemplo (UA, Alicante)
-        $baseLat = 38.385;
-        $baseLon = -0.513;
+        // Límites aproximados del campus de la Universidad de Alicante
+        $minLat = 38.3825;
+        $maxLat = 38.3865;
+        $minLon = -0.5175;
+        $maxLon = -0.5095;
 
         for ($i = 100; $i < 120; $i++) {
             Vmp::create([
@@ -22,8 +24,8 @@ class VmpSeeder extends Seeder
                 'status' => 'available',
                 'battery_level' => rand(30, 100),
                 'price_per_minute' => 0.15,
-                'latitude' => $baseLat + (rand(-50, 50) / 10000),
-                'longitude' => $baseLon + (rand(-50, 50) / 10000),
+                'latitude' => $minLat + (rand(0, 40) / 10000), // Rango de 0.0040 para coincidir con maxLat
+                'longitude' => $minLon + (rand(0, 80) / 10000), // Rango de 0.0080 para coincidir con maxLon
             ]);
         }
     }

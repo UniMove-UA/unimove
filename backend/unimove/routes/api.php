@@ -6,9 +6,11 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\MarkerController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\VehicleController;
 use App\Http\Controllers\VmpController;
@@ -19,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/profile/me', [ProfileController::class, 'me']);
-    Route::post('/profile/me', [ProfileController::class, 'updateMe']);
+    Route::put('/profile/me', [ProfileController::class, 'updateMe']);
     Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
     Route::get('/profile/@{username}/reviews', [ProfileController::class, 'reviewsByUsername']);
 
@@ -30,8 +32,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [NotificationController::class, 'myNotifications']);
     Route::put('/notifications/read', [NotificationController::class, 'markAllRead']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
-
-    //Route::get('/schedule', [ScheduleController::class, 'index']);
 
     Route::get('/travels', [TravelController::class, 'index']);
     Route::post('/travels', [TravelController::class, 'store']);
@@ -62,24 +62,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/vmp/rent', [VmpController::class, 'rent']);
     Route::post('/vmp/end', [VmpController::class, 'endRental']);
 
-    // ── Admin routes (role=admin required) ──────────────────────────────────
-    Route::prefix('admin')->group(function () {
-        Route::get('/stats',           [AdminController::class, 'stats']);
+    Route::post('/payments/create-intent', [PaymentController::class, 'createIntent']);
 
-        Route::get('/users',           [AdminController::class, 'users']);
-        Route::post('/users',          [AdminController::class, 'createUser']);
-        Route::delete('/users/{id}',   [AdminController::class, 'deleteUser']);
+    Route::prefix('admin')->group(function () {
+        Route::get('/stats',[AdminController::class, 'stats']);
+
+        Route::get('/users',[AdminController::class, 'users']);
+        Route::post('/users',[AdminController::class, 'createUser']);
+        Route::delete('/users/{id}',[AdminController::class, 'deleteUser']);
         Route::put('/users/{id}/role', [AdminController::class, 'updateUserRole']);
 
-        Route::get('/travels',              [AdminController::class, 'travels']);
-        Route::delete('/travels/{id}',      [AdminController::class, 'deleteTravel']);
-        Route::put('/travels/{id}/cancel',  [AdminController::class, 'cancelTravel']);
+        Route::get('/travels',[AdminController::class, 'travels']);
+        Route::delete('/travels/{id}',[AdminController::class, 'deleteTravel']);
+        Route::put('/travels/{id}/cancel',[AdminController::class, 'cancelTravel']);
 
-        Route::get('/reviews',           [AdminController::class, 'reviews']);
-        Route::delete('/reviews/{id}',   [AdminController::class, 'deleteReview']);
+        Route::get('/reviews',[AdminController::class, 'reviews']);
+        Route::delete('/reviews/{id}',[AdminController::class, 'deleteReview']);
 
-        Route::get('/schedules',         [AdminController::class, 'schedules']);
-        Route::put('/schedules',         [AdminController::class, 'updateSchedule']);
+        Route::get('/schedules',[AdminController::class, 'schedules']);
+        Route::put('/schedules',[AdminController::class, 'updateSchedule']);
     });
 });
 
@@ -92,6 +93,9 @@ Route::post('/login', [AuthController::class, 'login']);
 //ruta para la autenticacion con correo institucional
 Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
 
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password',  [AuthController::class, 'resetPassword']);
+
 Route::get('/markers', [MarkerController::class, 'index']);
 Route::get('/schedule', [ScheduleController::class, 'index']);
 
@@ -99,3 +103,6 @@ Route::get('/schedule', [ScheduleController::class, 'index']);
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+//Stripe webhook
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);

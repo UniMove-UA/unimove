@@ -75,6 +75,16 @@ const Login = () => {
                             required
                         />
                     </div>
+
+                    <div style={{ textAlign: 'right', marginTop: '-0.5rem', marginBottom: '1rem' }}>
+                        <Link
+                            to="/forgot-password"
+                            style={{ fontSize: '0.85rem', color: '#888', textDecoration: 'none' }}
+                        >
+                            ¿Olvidaste tu contraseña?
+                        </Link>
+                    </div>
+
                     <button type="submit" className="btn-primary" disabled={loading}>
                         {loading ? 'Cargando...' : 'INICIAR SESIÓN'}
                     </button>

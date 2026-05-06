@@ -88,6 +88,7 @@ class ProfileController extends Controller
             'username' => $user->username,
             'email'    => $user->email,
             'image'    => $user->image,
+            'role'     => $user->role,
         ], 200);
     }
 
@@ -108,7 +109,6 @@ class ProfileController extends Controller
         ], 200);
     }
 
-    //POST /profile/me?name={name},username={username},email={email},image={image}
     public function updateMe(Request $request)
     {
         $user = $request->user();
@@ -116,7 +116,8 @@ class ProfileController extends Controller
         if (!$user) {
             return response()->json(['message' => 'No autenticado'], 403);
         }
-
+        //echo json_encode($request->all());
+        //exit;
         $validated = $request->validate([
             'name'     => 'sometimes|string|max:255',
             'username' => 'sometimes|string|max:255|unique:users,username,' . $user->id,
@@ -125,7 +126,7 @@ class ProfileController extends Controller
         ]);
 
         $user->update($validated);
-
+        $user->refresh();
         return response()->json([
             'message' => 'Perfil actualizado correctamente',
             'user'    => [

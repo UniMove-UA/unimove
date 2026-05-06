@@ -45,7 +45,11 @@ class TravelController extends Controller
                 'price'=> $t->price,
                 'status'=> $t->status,
                 'available_seats' => $t->available_seats,
-                'driver'=> $t->driver->name,
+                'driver'=> [
+                    'name' => $t->driver->name,
+                    'username' => $t->driver->username,
+                    'image' => $t->driver->image,
+                ],
             ]);
 
         return response()->json($travels);
