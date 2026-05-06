@@ -83,12 +83,15 @@ class ProfileController extends Controller
             return response()->json(['message' => 'No autenticado'], 403);
         }
 
+        $avgRating = Review::where('reviewee_id', $user->id)->avg('rating') ?? 0;
+
         return response()->json([
             'name'     => $user->name,
             'username' => $user->username,
             'email'    => $user->email,
             'image'    => $user->image,
             'role'     => $user->role,
+            'rating'   => round($avgRating, 1)
         ], 200);
     }
 
