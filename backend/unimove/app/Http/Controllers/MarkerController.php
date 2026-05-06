@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Stop;
@@ -10,37 +11,56 @@ class MarkerController extends Controller
 {
     public function index(Request $request)
     {
-        $lat = $request->query('lat', 38.385);
-        $lon = $request->query('lon', -0.513);
-        $radius = 0.04; // Aprox 4-5km
+        $fromStr = $request->input('from');
+        $toStr = $request->input('to');
 
-        try {
-            $stops = Stop::whereBetween('stop_lat', [$lat - $radius, $lat + $radius])
-                ->whereBetween('stop_lon', [$lon - $radius, $lon + $radius])
-                ->limit(300)
-                ->get()
-                ->map(fn($stop) => [
-                'id'   => $stop->stop_id,
-                'name' => $stop->stop_name,
-                'type' => $this->getType($stop->stop_id),
-                'lat'  => $stop->stop_lat,
-                'lon'  => $stop->stop_lon,
-            ]);
-        } catch (\Exception $e) {
-            $stops = collect([]);
+        if (!$fromStr || !$toStr) {
+            return response()->json(['error' => 'Faltan parámetros de límites (from y to)'], 400);
         }
 
+        // 1. Parsear los strings "lat,lon"
+        $fromParts = explode(',', $fromStr);
+        $toParts = explode(',', $toStr);
+
+        if (count($fromParts) !== 2 || count($toParts) !== 2) {
+            return response()->json(['error' => 'Formato inválido para from o to. Debe ser "lat,lon"'], 400);
+        }
+
+        $fromLat = (float) $fromParts[0];
+        $fromLon = (float) $fromParts[1];
+        $toLat = (float) $toParts[0];
+        $toLon = (float) $toParts[1];
+
+        $minLat = min($fromLat, $toLat);
+        $maxLat = max($fromLat, $toLat);
+        $minLon = min($fromLon, $toLon);
+        $maxLon = max($fromLon, $toLon);
+
+        $stopsQuery = Stop::query();
+        $stopsQuery->whereBetween('stop_lat', [$minLat, $maxLat]);
+        $stopsQuery->whereBetween('stop_lon', [$minLon, $maxLon]);
+        $stops = $stopsQuery->get()->map(fn($stop) => [
+            'id'   => $stop->stop_id,
+            'name' => $stop->stop_name,
+            'type' => $this->getType($stop->stop_id),
+            'lat'  => $stop->stop_lat,
+            'lon'  => $stop->stop_lon,
+        ]);
+
         try {
-            $travels = Travel::with('driver')
-                ->where('status', 'active')
-                ->get()
-                ->map(fn($t) => [
-                    'id'   => $t->id,
-                    'name' => $t->origin . ' → ' . $t->destination,
-                    'type' => 'coche',
-                    'lat'  => $t->latitud,
-                    'lon'  => $t->longitud,
-                ]);
+            $travelsQuery = Travel::with('driver')
+                ->where('status', 'active');
+
+            $travelsQuery->whereBetween('latitud', [$minLat, $maxLat]);
+        $travelsQuery->whereBetween('longitud', [$minLon, $maxLon]);
+
+            $travels = $travelsQuery->get()->map(fn($t) => [
+                'id'   => $t->id,
+                'name' => $t->origin . ' → ' . $t->destination,
+                'type' => 'coche',
+                'lat'  => $t->latitud,
+                'lon'  => $t->longitud,
+            ]);
         } catch (\Exception $e) {
             $travels = collect([]);
         }
@@ -74,10 +94,10 @@ class MarkerController extends Controller
         return match(true) {
             str_starts_with($stopId, 'tram_')  => 'tram',
             str_starts_with($stopId, 'renfe_') => 'tren',
-            str_starts_with($stopId, 'vec_')=> 'bus',
-            str_starts_with($stopId, 'sv_')=> 'bus',
-            str_starts_with($stopId, 'int_')=> 'bus',
-            default=> 'bus',
+            str_starts_with($stopId, 'vec_')   => 'bus',
+            str_starts_with($stopId, 'sv_')    => 'bus',
+            str_starts_with($stopId, 'int_')   => 'bus',
+            default                            => 'bus',
         };
     }
 }
