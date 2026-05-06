@@ -2,11 +2,13 @@ import { useState, useRef } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
 
+// 1. Actualizar la interfaz para incluir rating (opcional)
 interface ProfileData {
     fullName: string;
     username: string;
     email: string;
     avatarUrl: string;
+    rating?: number; // Nuevo campo
 }
 
 interface ProfileProps {
@@ -17,12 +19,15 @@ export default function Profile({ profileData }: ProfileProps) {
     const [isEditing, setIsEditing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // 2. Inicializar rating en tempData
     const [tempData, setTempData] = useState<ProfileData>({
         fullName: profileData.fullName || "",
         username: profileData.username || "",
         email: profileData.email || "",
         avatarUrl: profileData.avatarUrl || "",
+        rating: profileData.rating ?? 0, // Si no viene, usa 0
     });
+
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const handleAvatarClick = () => {
@@ -48,15 +53,6 @@ export default function Profile({ profileData }: ProfileProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const formData = new FormData();
-        formData.append('fullName', tempData.fullName);
-        formData.append('username', tempData.username);
-        formData.append('email', tempData.email);
-
-        if (selectedFile) {
-            formData.append('avatar', selectedFile);
-        }
-
         try {
             const token = localStorage.getItem('auth_token');
             const payload = {
@@ -72,22 +68,23 @@ export default function Profile({ profileData }: ProfileProps) {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(payload)
-            })
+            });
 
-            if(!response.ok){
-                console.log(response.body);
+            if (!response.ok) {
+                throw new Error(`Error: ${response.status}`);
             }
 
-            console.log(response.status);
             const data = await response.json();
 
-            console.log(data);
+            // Actualizar también el rating si el backend lo devuelve
             setTempData({
                 fullName: data.user.name,
                 username: data.user.username,
                 email: data.user.email,
                 avatarUrl: data.user.image,
+                rating: data.user.rating ?? tempData.rating, // Mantener el actual si no viene
             });
+
             setIsEditing(false);
             setSelectedFile(null);
             alert(data.message);
@@ -129,6 +126,19 @@ export default function Profile({ profileData }: ProfileProps) {
                                 </div>
                             )}
                         </div>
+
+                        {/* --- NUEVA SECCIÓN: BADGE DE PUNTUACIÓN --- */}
+                        <div className="profile-rating-badge">
+                            <img
+                                src="/star.svg"
+                                alt="Estrella"
+                                className="profile-star-icon"
+                            />
+                            <span className="profile-rating-text">
+                                {tempData.rating} estrellas
+                            </span>
+                        </div>
+
                         <input
                             ref={fileInputRef}
                             type="file"
@@ -141,7 +151,6 @@ export default function Profile({ profileData }: ProfileProps) {
                     <div className="profile-info-section">
                         <form onSubmit={handleSubmit} className="profile-form">
                             <div className="profile-field-group">
-
                                 <div className="profile-field">
                                     <label className="profile-field-label">Nombre Completo</label>
                                     {isEditing ? (
