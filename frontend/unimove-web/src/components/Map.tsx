@@ -69,17 +69,29 @@ export default function Map({ center = [38.385, -0.513], zoom = 16, showOnly, on
             if (!response.ok) throw new Error(`Error: ${response.status}`);
 
             const data = await response.json();
-            const combined: Marker[] = [
-                ...(data.stops || []),
-                ...(data.travels || [])
-            ];
+            
+            let combined: Marker[] = [];
+            if (showOnly === 'vmp') {
+                combined = [...(data.vmps || [])];
+            } else if (showOnly === 'stops') {
+                combined = [...(data.stops || [])];
+            } else if (showOnly === 'travels') {
+                combined = [...(data.travels || [])];
+            } else {
+                combined = [
+                    ...(data.stops || []),
+                    ...(data.travels || []),
+                    ...(data.vmps || [])
+                ];
+            }
+            
             setMarkers(combined);
         } catch (error) {
             console.error("Error fetching markers:", error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [showOnly]);
 
     return (
         <div id='map'>
@@ -97,13 +109,17 @@ export default function Map({ center = [38.385, -0.513], zoom = 16, showOnly, on
 
                 <MarkerClusterGroup>
                     {markers.map(marker => (
-                        <TransportMarker
-                            key={marker.id}
-                            type={marker.type}
-                            position={[marker.lat, marker.lon]}
-                            name={marker.name}
-                            id={marker.id}
-                        />
+                        marker.type === 'vmp' ? (
+                            <VmpMarker key={marker.id} position={[marker.lat, marker.lon]} name={marker.name} code={marker.code || ''} onRent={onRentVmp}/>
+                        ) : (
+                            <TransportMarker
+                                key={marker.id}
+                                type={marker.type}
+                                position={[marker.lat, marker.lon]}
+                                name={marker.name}
+                                id={marker.id}
+                            />
+                        )
                     ))}
                 </MarkerClusterGroup>
 
