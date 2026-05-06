@@ -17,7 +17,12 @@ export default function Profile({ profileData }: ProfileProps) {
     const [isEditing, setIsEditing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const [tempData, setTempData] = useState<ProfileData>({ ...profileData });
+    const [tempData, setTempData] = useState<ProfileData>({
+        fullName: profileData.fullName || "",
+        username: profileData.username || "",
+        email: profileData.email || "",
+        avatarUrl: profileData.avatarUrl || "",
+    });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const handleAvatarClick = () => {
@@ -53,13 +58,39 @@ export default function Profile({ profileData }: ProfileProps) {
         }
 
         try {
-            // POST a la api
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const token = localStorage.getItem('auth_token');
+            const payload = {
+                name: tempData.fullName,
+                username: tempData.username,
+                email: tempData.email,
+                image: tempData.avatarUrl != "" ? tempData.avatarUrl : null,
+            };
+            const response = await fetch(`http://localhost:8000/api/profile/me`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            })
 
-            setTempData(profileData);
+            if(!response.ok){
+                console.log(response.body);
+            }
+
+            console.log(response.status);
+            const data = await response.json();
+
+            console.log(data);
+            setTempData({
+                fullName: data.user.name,
+                username: data.user.username,
+                email: data.user.email,
+                avatarUrl: data.user.image,
+            });
             setIsEditing(false);
             setSelectedFile(null);
-            alert("Perfil actualizado correctamente");
+            alert(data.message);
         } catch (error) {
             console.error("Error al actualizar perfil", error);
             alert("Hubo un error al guardar los cambios.");

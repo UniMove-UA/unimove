@@ -5,7 +5,7 @@ import "../styles/Notifications.css"
 import Notification from "./Notification.tsx";
 
 interface PageProps {
-    page: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
+    page: 'inicio' | 'viajes' | 'vmp' | 'mensajes' | 'perfil';
 }
 
 interface Notification {
