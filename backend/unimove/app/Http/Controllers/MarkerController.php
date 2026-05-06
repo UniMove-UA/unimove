@@ -18,7 +18,6 @@ class MarkerController extends Controller
             return response()->json(['error' => 'Faltan parámetros de límites (from y to)'], 400);
         }
 
-        // 1. Parsear los strings "lat,lon"
         $fromParts = explode(',', $fromStr);
         $toParts = explode(',', $toStr);
 
