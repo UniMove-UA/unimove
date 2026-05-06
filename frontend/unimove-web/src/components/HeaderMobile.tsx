@@ -6,7 +6,7 @@ import Notification from "./Notification.tsx";
 import {useNavigate} from "react-router-dom";
 
 interface PageProps {
-    page: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
+    page: 'inicio' | 'viajes' | 'mensajes' | 'perfil' | 'vmp';
 }
 
 interface Notification {
@@ -73,6 +73,7 @@ export default function HeaderMobile(props: PageProps) {
                     <nav>
                         <HeaderButton active={props.page === 'inicio'} size={30} name='Inicio' src='house.svg' href='home' />
                         <HeaderButton active={props.page === 'viajes'} size={30} name='Viajes' src='route.svg' href='travel' />
+                        <HeaderButton active={props.page === 'vmp'} size={30} name='VMP' src='vmp.svg' href='rentvmp' />
                         <HeaderButton active={props.page === 'mensajes'} size={30} name='Mensajes' src='message.svg' href='chat' />
                         <HeaderButton active={props.page === 'perfil'} size={30} name='Perfil' src='profile.svg' href='profile/me' />
                     </nav>
