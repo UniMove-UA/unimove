@@ -1,4 +1,5 @@
 import Page from "../components/Page";
+import { useNavigate } from 'react-router-dom';
 import { useState } from "react";
 import "../styles/Travel.css";
 import CarSharingWidget from "../components/CarSharingWidget.tsx";
@@ -6,6 +7,8 @@ import PublicTransportWidget from "../components/PublicTransportWidget.tsx";
 import { useSearchParams } from 'react-router-dom';
 
 export default function Travel() {
+    const navigate = useNavigate();
+    
     const [searchParams] = useSearchParams();
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState(searchParams.get("destination") || "");
@@ -107,6 +110,9 @@ export default function Travel() {
     return (
         <Page name="viajes">
             <div style={{margin: "3% 20%"}}>
+                <button onClick={() => navigate("/travels/publish")} className="btn-primary">
+                    ➕ Publicar mi propio viaje
+                </button>
                 <div className="search-container">
                     <input
                         type="text"
