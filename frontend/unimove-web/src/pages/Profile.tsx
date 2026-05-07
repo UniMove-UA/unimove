@@ -127,7 +127,6 @@ export default function Profile({ profileData }: ProfileProps) {
                             )}
                         </div>
 
-                        {/* --- NUEVA SECCIÓN: BADGE DE PUNTUACIÓN --- */}
                         <div className="profile-rating-badge">
                             <img
                                 src="/star.svg"

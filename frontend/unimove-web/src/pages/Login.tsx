@@ -52,6 +52,30 @@ const Login = () => {
             <video autoPlay loop muted playsInline className="login-video-bg">
                 <source src="/login-bg.mp4" type="video/mp4" />
             </video>
+
+            <button
+                onClick={() => navigate('/')}
+                style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    left: '1.5rem',
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '1px solid rgba(255,255,255,0.4)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.9rem',
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    zIndex: 10,
+                }}
+            >
+                ← Volver al inicio
+            </button>
+
             <div className="login-card">
                 <h2 className="login-title">Iniciar Sesión</h2>
                 {error && <div style={{ color: 'red', marginBottom: '1rem', fontWeight: 'bold' }}>{error}</div>}
