@@ -88,10 +88,6 @@ const ForgotPassword = () => {
                         {loading ? 'Enviando...' : 'ENVIAR ENLACE'}
                     </button>
                 </form>
-
-                <div className="signup-link" style={{ marginTop: '1rem' }}>
-                    <Link to="/login">← Volver al inicio de sesión</Link>
-                </div>
             </div>
         </div>
     );
