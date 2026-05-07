@@ -105,6 +105,8 @@ Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
 
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password',  [AuthController::class, 'resetPassword']);
+Route::get('/auth/google/redirect',  [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback',  [AuthController::class, 'handleGoogleCallback']);
 
 Route::get('/markers', [MarkerController::class, 'index']);
 Route::get('/schedule', [ScheduleController::class, 'index']);
