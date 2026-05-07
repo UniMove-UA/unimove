@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
 import Travel from './pages/Travel.tsx';
-import RentVmp from './pages/RentVmp.tsx';
 import Chat from './pages/Chat.tsx';
 import Login from './pages/Login.tsx';
 import Register from './pages/Register.tsx';
@@ -20,7 +19,6 @@ function App() {
         <Route path='/' element={<Main />} />
         <Route path='/home' element={<Main />} />
         <Route path='/travel' element={<Travel />} />
-        <Route path='/rentvmp' element={<RentVmp />} />
         <Route path='/checkout' element={<CheckoutPage />} />
         <Route path='/chat' element={<Chat />} />
         <Route path='/login' element={<Login />} />

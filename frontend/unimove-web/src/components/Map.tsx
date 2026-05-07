@@ -3,7 +3,6 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/Map.css';
 import TransportMarker from "./TransportMarker.tsx";
-import VmpMarker from "./VmpMarker.tsx";
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from "react";
 import { useMap } from 'react-leaflet';
@@ -23,15 +22,11 @@ interface Marker {
     id: string;
     lat: number;
     lon: number;
-    code?: string;
 }
 
 interface MapProps {
     center?: [number, number];
     zoom?: number;
-    showOnly?: string;
-    onRentVmp?: (code: string) => void;
-    refreshTrigger?: string;
 }
 
 function MapFetcher({ onFetch }: { onFetch: (bounds: L.LatLngBounds) => void }) {
@@ -51,7 +46,7 @@ function MapFetcher({ onFetch }: { onFetch: (bounds: L.LatLngBounds) => void }) 
     return null;
 }
 
-export default function Map({ center = [38.385, -0.513], zoom = 16, showOnly, onRentVmp, refreshTrigger }: MapProps) {
+export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) {
     const navigate = useNavigate();
     const [destination, setDestination] = useState<string>("");
     const [markers, setMarkers] = useState<Marker[]>([]);
@@ -75,20 +70,14 @@ export default function Map({ center = [38.385, -0.513], zoom = 16, showOnly, on
             const combined: Marker[] = [
                 ...(data.stops || []),
                 ...(data.travels || []),
-                ...(data.vmps || [])
             ];
-
-            if (showOnly) {
-                setMarkers(combined.filter(m => m.type === showOnly));
-            } else {
-                setMarkers(combined);
-            }
+            setMarkers(combined);
         } catch (error) {
             console.error("Error fetching markers:", error);
         } finally {
             setLoading(false);
         }
-    }, [showOnly, refreshTrigger]);
+    }, []);
 
     return (
         <div id='map'>
@@ -106,17 +95,13 @@ export default function Map({ center = [38.385, -0.513], zoom = 16, showOnly, on
 
                 <MarkerClusterGroup>
                     {markers.map(marker => (
-                        marker.type === 'vmp' ? (
-                            <VmpMarker key={marker.id} position={[marker.lat, marker.lon]} name={marker.name} code={marker.code || ''} onRent={onRentVmp} />
-                        ) : (
-                            <TransportMarker
-                                key={marker.id}
-                                type={marker.type}
-                                position={[marker.lat, marker.lon]}
-                                name={marker.name}
-                                id={marker.id}
-                            />
-                        )
+                        <TransportMarker
+                            key={marker.id}
+                            type={marker.type}
+                            position={[marker.lat, marker.lon]}
+                            name={marker.name}
+                            id={marker.id}
+                        />
                     ))}
                 </MarkerClusterGroup>
 

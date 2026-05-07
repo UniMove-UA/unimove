@@ -3,7 +3,7 @@ import '../styles/Header.css';
 
 interface HeaderProps {
   type: string;
-  page: 'inicio' | 'viajes' | 'mensajes' | 'perfil' | 'vmp';
+  page: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
 }
 
 export default function Header(props: HeaderProps) {
