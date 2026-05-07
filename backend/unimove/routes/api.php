@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/profile/me', [ProfileController::class, 'me']);
-    Route::put('/profile/me', [ProfileController::class, 'updateMe']);
+    Route::post('/profile/me', [ProfileController::class, 'updateMe']);
     Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
     Route::get('/profile/@{username}/reviews', [ProfileController::class, 'reviewsByUsername']);
 
@@ -105,6 +105,8 @@ Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
 
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password',  [AuthController::class, 'resetPassword']);
+Route::get('/auth/google/redirect',  [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback',  [AuthController::class, 'handleGoogleCallback']);
 
 Route::get('/markers', [MarkerController::class, 'index']);
 Route::get('/schedule', [ScheduleController::class, 'index']);

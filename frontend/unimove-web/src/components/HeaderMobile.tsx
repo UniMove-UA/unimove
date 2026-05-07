@@ -46,6 +46,23 @@ export default function HeaderMobile(props: PageProps) {
         setShowNotifications(false);
     };
 
+    const handleLogout = async () => {
+        try {
+            await fetch('http://localhost:8000/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+        } catch (err) {
+            console.error("Error al cerrar sesión:", err);
+        } finally {
+            localStorage.removeItem('auth_token');
+            navigate('/login');
+        }
+    };
+
     const markAsRead = async (id: string | number) => {
         try {
             const response = await fetch(`http://localhost:8000/api/notifications/${id}/read`, {
@@ -91,7 +108,7 @@ export default function HeaderMobile(props: PageProps) {
                             onClick={token ? toggleNotifications : () => { navigate('/login') }}
                             style={{
                                 position: 'absolute',
-                                right: 30,
+                                right: 70,
                                 background: 'none',
                                 border: 'none',
                                 cursor: 'pointer',
@@ -121,6 +138,34 @@ export default function HeaderMobile(props: PageProps) {
                                     />
                             }
 
+                        </button>
+                    )}
+
+                    {token && userRole !== 'admin' && (
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                position: 'absolute',
+                                right: 30,
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 0,
+                                zIndex: 100,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                            aria-label="Cerrar sesión"
+                        >
+                            <img
+                                src='/logout.svg'
+                                alt="Cerrar sesión"
+                                style={{
+                                    width: '24px',
+                                    height: '24px',
+                                }}
+                            />
                         </button>
                     )}
 
