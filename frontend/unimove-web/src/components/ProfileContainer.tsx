@@ -46,7 +46,12 @@ export default function ProfileContainer() {
                 }
                 //const contentType = response.headers.get("content-type");
                 const data = await response.json();
-                setProfileData(data);
+                setProfileData({
+                    fullName: data.name,
+                    username: data.username,
+                    email: data.email,
+                    avatarUrl: data.image
+                });
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al cargar el perfil');
             } finally {

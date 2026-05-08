@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Review;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -83,12 +84,15 @@ class ProfileController extends Controller
             return response()->json(['message' => 'No autenticado'], 403);
         }
 
+        $avgRating = Review::where('reviewee_id', $user->id)->avg('rating') ?? 0;
+
         return response()->json([
             'name'     => $user->name,
             'username' => $user->username,
             'email'    => $user->email,
             'image'    => $user->image,
             'role'     => $user->role,
+            'rating'   => round($avgRating, 1)
         ], 200);
     }
 
@@ -109,7 +113,6 @@ class ProfileController extends Controller
         ], 200);
     }
 
-    //POST /profile/me?name={name},username={username},email={email},image={image}
     public function updateMe(Request $request)
     {
         $user = $request->user();
@@ -122,10 +125,30 @@ class ProfileController extends Controller
             'name'     => 'sometimes|string|max:255',
             'username' => 'sometimes|string|max:255|unique:users,username,' . $user->id,
             'email'    => 'sometimes|string|email|unique:users,email,' . $user->id,
-            'image'    => 'sometimes|nullable|string',
+            'image'    => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // 👈 ahora es archivo
         ]);
 
-        $user->update($validated);
+        if ($request->hasFile('image')) {
+            // Borra la imagen anterior si existe
+            if ($user->image) {
+                Storage::disk('public')->delete($user->image);
+            }
+            $path = $request->file('image')->store('avatars', 'public');
+            $user->image = $path;
+        }
+
+        if ($request->name) {
+            $user->name= $request->name;
+        }
+        if ($request->username) {
+            $user->username = $request->username;
+        }
+        if ($request->email) {
+            $user->email= $request->email;
+        }
+
+        $user->save();
+        $user->refresh();
 
         return response()->json([
             'message' => 'Perfil actualizado correctamente',
@@ -134,6 +157,7 @@ class ProfileController extends Controller
                 'username' => $user->username,
                 'email'    => $user->email,
                 'image'    => $user->image,
+                'rating'   => $user->rating_avg,
             ],
         ], 200);
     }
