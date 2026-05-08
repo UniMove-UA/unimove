@@ -9,6 +9,7 @@ export default function PublishTravel() {
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [locating, setLocating] = useState(false);
+    const [hasLoaded, setHasLoaded] = useState(false);
 
     const [formData, setFormData] = useState({
         vehicle_id: "",
@@ -36,6 +37,8 @@ export default function PublishTravel() {
                 }
             } catch (err) {
                 console.error("Error cargando vehículos:", err);
+            } finally {
+                setHasLoaded(true); // Carga completada
             }
         };
         fetchVehicles();
@@ -107,6 +110,8 @@ export default function PublishTravel() {
         }
     };
 
+    if (!hasLoaded) return null;
+
     return (
         <Page name="viajes">
             <div className="publish-layout">
@@ -116,103 +121,112 @@ export default function PublishTravel() {
                     </header>
 
                     <form onSubmit={handleSubmit} className="publish-form">
-                        {(errors.general || errors.location) && (
+                        {vehicles.length === 0 ? (
                             <div className="error-alert">
-                                {errors.general?.[0] || errors.location?.[0]}
+                                Debes registrar un vehículo en tu perfil para poder publicar un viaje.
                             </div>
+                        ) : (
+                            <>
+                                {/* Solo se muestra el resto del formulario si hay vehículos*/}
+                                {(errors.general || errors.location) && (
+                                    <div className="error-alert">
+                                        {errors.general?.[0] || errors.location?.[0]}
+                                    </div>
+                                )}
+
+                                <section className="form-section">
+                                    <h3 className="section-subtitle">Ruta y Ubicación</h3>
+                                    <div className="form-group">
+                                        <label>Punto de encuentro</label>
+                                        <div className="input-with-action">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Ej: Crevillente, Alicante"
+                                                value={formData.origin}
+                                                onChange={e => setFormData({...formData, origin: e.target.value})}
+                                                required 
+                                            />
+                                            <button 
+                                                type="button" 
+                                                onClick={handleGetLocation}
+                                                className={`location-btn ${formData.lat ? 'success' : ''}`}
+                                            >
+                                                {locating ? "..." : formData.lat ? "✓" : "📍"}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Destino final</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Ej: Universidad de Alicante (UA)"
+                                            value={formData.destination}
+                                            onChange={e => setFormData({...formData, destination: e.target.value})}
+                                            required 
+                                        />
+                                    </div>
+                                </section>
+
+                                <section className="form-section grid-2">
+                                    <div className="form-group">
+                                        <label>Fecha salida</label>
+                                        <input 
+                                            type="datetime-local" 
+                                            min={new Date().toISOString().slice(0, 16)}
+                                            max="2027-12-31T23:59"
+                                            value={formData.departure_time}
+                                            onChange={e => setFormData({...formData, departure_time: e.target.value})}
+                                            required 
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Vehículo</label>
+                                        <select 
+                                            value={formData.vehicle_id}
+                                            onChange={e => setFormData({...formData, vehicle_id: e.target.value})}
+                                        >
+                                            {vehicles.map(v => (
+                                                <option key={v.id} value={v.id.toString()}>{v.brand} {v.model} ({v.plate})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </section>
+
+                                <section className="form-section grid-2">
+                                    <div className="form-group">
+                                        <label>Plazas (Máx: {maxSeats})</label>
+                                        <input 
+                                            type="number" 
+                                            min="1" 
+                                            max={maxSeats}
+                                            value={formData.available_seats || ""}
+                                            onChange={e => {
+                                                const val = e.target.value === "" ? 0 : parseInt(e.target.value);
+                                                setFormData({...formData, available_seats: Math.min(val, maxSeats)});
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Precio por plaza (€)</label>
+                                        <div className="price-input-wrapper">
+                                            <input 
+                                                type="number" 
+                                                step="0.50" 
+                                                min="0"
+                                                placeholder="0.00"
+                                                onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <button type="submit" className="confirm-btn" disabled={loading}>
+                                    {loading ? "PROCESANDO..." : "CONFIRMAR PUBLICACIÓN"}
+                                </button>
+                            </>
                         )}
-
-                        <section className="form-section">
-                            <h3 className="section-subtitle">Ruta y Ubicación</h3>
-                            <div className="form-group">
-                                <label>Punto de encuentro</label>
-                                <div className="input-with-action">
-                                    <input 
-                                        type="text" 
-                                        placeholder="Ej: Crevillente, Alicante"
-                                        value={formData.origin}
-                                        onChange={e => setFormData({...formData, origin: e.target.value})}
-                                        required 
-                                    />
-                                    <button 
-                                        type="button" 
-                                        onClick={handleGetLocation}
-                                        className={`location-btn ${formData.lat ? 'success' : ''}`}
-                                    >
-                                        {locating ? "..." : formData.lat ? "✓" : "📍"}
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Destino final</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Ej: Universidad de Alicante (UA)"
-                                    value={formData.destination}
-                                    onChange={e => setFormData({...formData, destination: e.target.value})}
-                                    required 
-                                />
-                            </div>
-                        </section>
-
-                        <section className="form-section grid-2">
-                            <div className="form-group">
-                                <label>Fecha salida</label>
-                                <input 
-                                    type="datetime-local" 
-                                    min={new Date().toISOString().slice(0, 16)}
-                                    max="2027-12-31T23:59"
-                                    value={formData.departure_time}
-                                    onChange={e => setFormData({...formData, departure_time: e.target.value})}
-                                    required 
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Vehículo</label>
-                                <select 
-                                    value={formData.vehicle_id}
-                                    onChange={e => setFormData({...formData, vehicle_id: e.target.value})}
-                                >
-                                    {vehicles.map(v => (
-                                        <option key={v.id} value={v.id}>{v.brand} {v.model} ({v.plate})</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </section>
-
-                        <section className="form-section grid-2">
-                            <div className="form-group">
-                                <label>Plazas (Máx: {maxSeats})</label>
-                                <input 
-                                    type="number" 
-                                    min="1" 
-                                    max={maxSeats}
-                                    value={formData.available_seats || ""}
-                                    onChange={e => {
-                                        const val = e.target.value === "" ? 0 : parseInt(e.target.value);
-                                        setFormData({...formData, available_seats: Math.min(val, maxSeats)});
-                                    }}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Precio por plaza (€)</label>
-                                <div className="price-input-wrapper">
-                                    <input 
-                                        type="number" 
-                                        step="0.50" 
-                                        min="0"
-                                        placeholder="0.00"
-                                        onChange={e => setFormData({...formData, price: parseFloat(e.target.value)})}
-                                        required
-                                    />
-                                </div>
-                            </div>
-                        </section>
-
-                        <button type="submit" className="confirm-btn" disabled={loading}>
-                            {loading ? "PUBLICANDO..." : "CONFIRMAR VIAJE"}
-                        </button>
                     </form>
                 </div>
             </div>
