@@ -16,9 +16,9 @@ class TravelController extends Controller
         $validator = Validator::make($request->all(), [
             'lat' => 'required|numeric|between:-90,90',
             'lon' => 'required|numeric|between:-180,180',
-            'origin'      => 'nullable|string',
+            'origin'=> 'nullable|string',
             'destination' => 'nullable|string',
-            'date'        => 'nullable|date',
+            'date'=> 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -39,34 +39,34 @@ class TravelController extends Controller
             ->when($request->date, fn($q) => $q->whereDate('departure_time', $request->date))
             ->get()
             ->map(fn($t) => [
-                'origin'          => $t->origin,
-                'destination'     => $t->destination,
+                'origin'=> $t->origin,
+                'destination'=> $t->destination,
                 'departure_time'  => $t->departure_time,
-                'price'           => $t->price,
-                'status'          => $t->status,
+                'price'=> $t->price,
+                'status'=> $t->status,
                 'available_seats' => $t->available_seats,
                 'driver' => [
-                    'name'     => $t->driver->name,
+                    'name'=> $t->driver->name,
                     'username' => $t->driver->username,
-                    'image'    => $t->driver->image,
+                    'image'=> $t->driver->image,
                 ],
             ]);
 
         return response()->json($travels);
     }
 
-    // POST /travels
+    //POST /travels
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'vehicle_id'      => 'required|exists:vehicles,id',
-            'origin'          => 'required|string|max:255',
-            'destination'     => 'required|string|max:255',
+            'vehicle_id'=> 'required|exists:vehicles,id',
+            'origin'=> 'required|string|max:255',
+            'destination'=> 'required|string|max:255',
             'departure_time'  => 'required|date|after:now',
             'available_seats' => 'required|integer|min:1',
-            'price'           => 'required|numeric|min:0',
-            'lat'             => 'required|numeric|between:-90,90',
-            'lon'             => 'required|numeric|between:-180,180',
+            'price'=> 'required|numeric|min:0',
+            'lat'=> 'required|numeric|between:-90,90',
+            'lon'=> 'required|numeric|between:-180,180',
         ]);
 
         if ($validator->fails()) {
@@ -77,16 +77,16 @@ class TravelController extends Controller
         }
 
         $travel = Travel::create([
-            'driver_id'       => Auth::id(),
-            'vehicle_id'      => $request->vehicle_id,
-            'origin'          => $request->origin,
-            'destination'     => $request->destination,
+            'driver_id'=> Auth::id(),
+            'vehicle_id'=> $request->vehicle_id,
+            'origin'=> $request->origin,
+            'destination'=> $request->destination,
             'departure_time'  => $request->departure_time,
             'available_seats' => $request->available_seats,
-            'price'           => $request->price,
-            'status'          => 'active',
-            'latitud'         => $request->lat,
-            'longitud'        => $request->lon,
+            'price'=> $request->price,
+            'status'=> 'active',
+            'latitud'=> $request->lat,
+            'longitud'=> $request->lon,
         ]);
 
         $travel->load(['driver', 'vehicle']);
@@ -94,19 +94,19 @@ class TravelController extends Controller
         return response()->json([
             'message' => 'Viaje creado correctamente',
             'data'    => [
-                'origin'          => $travel->origin,
-                'destination'     => $travel->destination,
+                'origin'=> $travel->origin,
+                'destination'=> $travel->destination,
                 'departure_time'  => $travel->departure_time,
-                'price'           => $travel->price,
-                'status'          => $travel->status,
+                'price'=> $travel->price,
+                'status'=> $travel->status,
                 'available_seats' => $travel->available_seats,
                 'driver' => [
-                    'name'     => $travel->driver->name,
+                    'name'=> $travel->driver->name,
                     'username' => $travel->driver->username,
-                    'image'    => $travel->driver->image,
+                    'image'=> $travel->driver->image,
                 ],
                 'vehicle' => [
-                    'id'    => $travel->vehicle->id,
+                    'id'=> $travel->vehicle->id,
                     'brand' => $travel->vehicle->brand,
                     'model' => $travel->vehicle->model,
                     'plate' => $travel->vehicle->plate,
@@ -115,7 +115,7 @@ class TravelController extends Controller
         ], 201);
     }
 
-    // GET /travels/{id}
+    //GET /travels/{id}
     public function show($id){
         $travel = Travel::with(['driver', 'vehicle'])->findOrFail($id);
 
@@ -163,7 +163,7 @@ class TravelController extends Controller
         return response()->json($travels);
     }
 
-    // PUT /travels/{id}
+    //PUT /travels/{id}
     public function update(Request $request, $id)
     {
         $travel=Travel::findOrFail($id);
@@ -199,7 +199,7 @@ class TravelController extends Controller
         ]);
     }
 
-    // DELETE /travels/{id}
+    //DELETE /travels/{id}
     public function destroy($id)
     {
         $travel = Travel::findOrFail($id);
@@ -212,7 +212,7 @@ class TravelController extends Controller
         return response()->json(['message' => 'Viaje cancelado correctamente']);
     }
 
-    // PUT /travels/{id}/complete
+    //PUT /travels/{id}/complete
     public function complete($id)
     {
         $travel = Travel::findOrFail($id);
@@ -275,6 +275,7 @@ class TravelController extends Controller
         return response()->json($travels);
     }
 
+    //GET /route
     public function route(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -289,7 +290,6 @@ class TravelController extends Controller
             ], 400);
         }
 
-        // Extraer lat y lon del parámetro from="lat,lon"
         $coords = explode(',', $request->from);
 
         if (count($coords) !== 2 || !is_numeric(trim($coords[0])) || !is_numeric(trim($coords[1]))) {
