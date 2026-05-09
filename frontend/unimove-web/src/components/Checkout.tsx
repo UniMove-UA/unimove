@@ -17,12 +17,13 @@ function CheckoutForm() {
     setLoading(true)
     setStatus(null)
 
-    // Ask backend to create a PaymentIntent using cookie-based auth
+    const token = localStorage.getItem('auth_token');
     const resp = await fetch('/api/payments/create-intent', {
       method: 'POST',
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json' ,
+        'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({ amount: 12.50, currency: 'eur' })
     })
@@ -101,9 +102,6 @@ function CheckoutForm() {
         </button>
       </form>
       {status && <p className="mt-4">{status}</p>}
-      <div className="mt-4">
-        <p className="text-sm text-gray-400">Debug: abre la consola del navegador para ver detalles de `confirmCardPayment`.</p>
-      </div>
     </div>
   )
 }
