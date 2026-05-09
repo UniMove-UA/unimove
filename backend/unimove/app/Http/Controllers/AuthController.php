@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -201,5 +202,35 @@ class AuthController extends Controller
         }
 
         return response()->json(['message' => __($status)], 400);
+    }
+
+    public function redirectToGoogle(){
+        return Socialite::driver('google')->stateless()->redirect();
+    }
+
+    public function handleGoogleCallback()
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->user();
+        }
+        catch (\Exception $e) {
+            return response()->json(['message' => 'Error al autenticar con Google'], 401);
+        }
+
+        $user = User::where('email', $googleUser->getEmail())->first();
+
+        if (!$user) {
+            $user = User::create([
+                'name'=> $googleUser->getName(),
+                'username'=> explode('@', $googleUser->getEmail())[0] . rand(1000, 9999),
+                'email'=> $googleUser->getEmail(),
+                'password'=> Hash::make(Str::random(16)),
+                'role'=> 'external',
+                'is_university_member' => false,
+            ]);
+        }
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+        return redirect(env('FRONTEND_URL') . '/auth/google/callback?token=' . $token);
     }
 }

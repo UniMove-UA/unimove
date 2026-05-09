@@ -3,7 +3,7 @@ import HeaderButton from "./HeaderButton";
 import NotificationContainer from "./NotificationContainer";
 import "../styles/Notifications.css"
 import Notification from "./Notification.tsx";
-import {useNavigate} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 interface PageProps {
     page: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
@@ -19,21 +19,23 @@ interface Notification {
 export default function HeaderMobile(props: PageProps) {
     const [showNotifications, setShowNotifications] = useState(false);
     const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [userRole, setUserRole] = useState<string>('');
     const token = localStorage.getItem('auth_token');
     const navigate = useNavigate();
     useEffect(() => {
-        const fetchNotifications = async () => {
-            const response = await fetch(`http://localhost:8000/api/notifications`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const data = await response.json();
-            setNotifications(data);
-        }
-        fetchNotifications();
+        const fetchData = async () => {
+            try {
+                const [profileRes, notifRes] = await Promise.all([
+                    fetch(`http://localhost:8000/api/profile/me`, { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } }),
+                    fetch(`http://localhost:8000/api/notifications`, { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } }),
+                ]);
+                const profile = await profileRes.json();
+                setUserRole(profile?.role ?? '');
+                const notifData = await notifRes.json();
+                setNotifications(notifData);
+            } catch { }
+        };
+        fetchData();
     }, []);
 
     const toggleNotifications = () => {
@@ -42,6 +44,23 @@ export default function HeaderMobile(props: PageProps) {
 
     const closeNotifications = () => {
         setShowNotifications(false);
+    };
+
+    const handleLogout = async () => {
+        try {
+            await fetch('http://localhost:8000/api/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+        } catch (err) {
+            console.error("Error al cerrar sesión:", err);
+        } finally {
+            localStorage.removeItem('auth_token');
+            navigate('/login');
+        }
     };
 
     const markAsRead = async (id: string | number) => {
@@ -84,48 +103,78 @@ export default function HeaderMobile(props: PageProps) {
                     <div></div>
                     <p>UniMove</p>
 
-                    <button
-                        onClick={token ? toggleNotifications : () => {navigate('/login')}}
-                        style={{
-                            position: 'absolute',
-                            right: 30,
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: 0,
-                            zIndex: 100
-                        }}
-                        aria-label="Ver notificaciones"
-                    >
-                        {
-                            token?
-                                <img
-                                    src='/bell.svg'
-                                    alt="Campana"
-                                    style={{
-                                        width: '24px',
-                                        height: '24px',
-                                        filter: showNotifications ? 'drop-shadow(0 0 2px #31A47B)' : 'none'
-                                    }}
-                                />:
-                                <img
-                                    src='/profile.svg'
-                                    alt="Iniciar sesión"
-                                    style={{
-                                        width: '24px',
-                                        height: '24px'
-                                    }}
-                                />
-                        }
+                    {userRole !== 'admin' && (
+                        <button
+                            onClick={token ? toggleNotifications : () => { navigate('/login') }}
+                            style={{
+                                position: 'absolute',
+                                right: 70,
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 0,
+                                zIndex: 100
+                            }}
+                            aria-label="Ver notificaciones"
+                        >
+                            {
+                                token ?
+                                    <img
+                                        src='/bell.svg'
+                                        alt="Campana"
+                                        style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            filter: showNotifications ? 'drop-shadow(0 0 2px #31A47B)' : 'none'
+                                        }}
+                                    /> :
+                                    <img
+                                        src='/profile.svg'
+                                        alt="Iniciar sesión"
+                                        style={{
+                                            width: '24px',
+                                            height: '24px'
+                                        }}
+                                    />
+                            }
 
-                    </button>
+                        </button>
+                    )}
+
+                    {token && userRole !== 'admin' && (
+                        <button
+                            onClick={handleLogout}
+                            style={{
+                                position: 'absolute',
+                                right: 30,
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                padding: 0,
+                                zIndex: 100,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                            aria-label="Cerrar sesión"
+                        >
+                            <img
+                                src='/logout.svg'
+                                alt="Cerrar sesión"
+                                style={{
+                                    width: '24px',
+                                    height: '24px',
+                                }}
+                            />
+                        </button>
+                    )}
 
                     {showNotifications && (
                         <div className="notifications-dropdown">
                             <NotificationContainer>
                                 {
                                     notifications.filter(n => !n.read).map((notification: Notification, index) => (
-                                        <Notification id={notification.id} key={index} message={notification.text} onMarkAsRead={markAsRead}/>
+                                        <Notification id={notification.id} key={index} message={notification.text} onMarkAsRead={markAsRead} />
                                     ))
                                 }
                             </NotificationContainer>

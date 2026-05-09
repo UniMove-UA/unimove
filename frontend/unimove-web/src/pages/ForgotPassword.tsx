@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -42,6 +43,28 @@ const ForgotPassword = () => {
             <video autoPlay loop muted playsInline className="login-video-bg">
                 <source src="/login-bg.mp4" type="video/mp4" />
             </video>
+            <button
+                onClick={() => navigate('/login')}
+                style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    left: '1.5rem',
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '1px solid rgba(255,255,255,0.4)',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.9rem',
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer',
+                    backdropFilter: 'blur(4px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    zIndex: 10,
+                }}
+            >
+                ← Volver
+            </button>
             <div className="login-card">
                 <h2 className="login-title">¿Olvidaste tu contraseña?</h2>
                 <p style={{ color: '#888', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
@@ -65,10 +88,6 @@ const ForgotPassword = () => {
                         {loading ? 'Enviando...' : 'ENVIAR ENLACE'}
                     </button>
                 </form>
-
-                <div className="signup-link" style={{ marginTop: '1rem' }}>
-                    <Link to="/login">← Volver al inicio de sesión</Link>
-                </div>
             </div>
         </div>
     );
