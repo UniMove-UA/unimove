@@ -94,4 +94,41 @@ class VmpController extends Controller
 
         return response()->json(['rental' => $rental]);
     }
+
+    // List available vmps (simple index used by frontend)
+    public function index(Request $request)
+    {
+        $vmps = Vmp::where('status', 'available')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->get()
+            ->map(fn($v) => [
+                'id' => $v->id,
+                'code' => $v->code,
+                'type' => $v->type ?? 'scooter',
+                'location_name' => $v->location_name,
+                'lat' => (float)$v->latitude,
+                'lon' => (float)$v->longitude,
+                'price_per_minute' => $v->price_per_minute,
+                'unlock_price' => max(0.50, (float)($v->unlock_price ?? $v->price_per_minute ?? 0.50)),
+            ]);
+
+        return response()->json(['vmps' => $vmps]);
+    }
+
+    // Show single vmp details
+    public function show($id)
+    {
+        $v = Vmp::find($id);
+        if (!$v) return response()->json(['error' => 'Not found'], 404);
+        return response()->json([
+            'id' => $v->id,
+            'code' => $v->code,
+            'type' => $v->type ?? 'scooter',
+            'location_name' => $v->location_name,
+            'price_per_minute' => $v->price_per_minute,
+            'unlock_price' => max(0.50, (float)($v->unlock_price ?? $v->price_per_minute ?? 0.50)),
+            'status' => $v->status,
+        ]);
+    }
 }
