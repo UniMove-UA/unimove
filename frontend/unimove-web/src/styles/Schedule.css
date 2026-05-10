@@ -1,0 +1,95 @@
+.schedule-button {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-align: left;
+    font-family: inherit;
+}
+
+.schedule-button:hover {
+    border-color: #31A47B;
+    box-shadow: 0 4px 12px rgba(49, 164, 123, 0.15);
+    transform: translateY(-1px);
+}
+
+.schedule-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(49, 164, 123, 0.1);
+}
+
+.schedule-button:focus {
+    outline: none;
+    border-color: #31A47B;
+    box-shadow: 0 0 0 3px rgba(49, 164, 123, 0.2);
+}
+
+.schedule-row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.schedule-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #103B31;
+}
+
+.schedule-line-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.6rem;
+    background-color: #31A47B;
+    color: #ffffff;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.schedule-row-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.schedule-destination {
+    font-size: 0.85rem;
+    color: #555;
+    font-weight: 500;
+}
+
+.schedule-hour {
+    font-size: 0.85rem;
+    color: #31A47B;
+    font-weight: 600;
+}
+
+@media (max-width: 480px) {
+    .schedule-button {
+        padding: 0.75rem;
+    }
+
+    .schedule-name {
+        font-size: 0.85rem;
+    }
+
+    .schedule-line-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.4rem;
+    }
+
+    .schedule-destination,
+    .schedule-hour {
+        font-size: 0.75rem;
+    }
+}

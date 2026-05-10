@@ -1,8 +1,11 @@
 <?php
 
-namespace app\Http\Controllers;
+namespace App\Http\Controllers;
 
+use App\Models\Review;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -18,7 +21,7 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        $user = \App\Models\User::first();
+        $user = User::first();
 
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
@@ -49,7 +52,7 @@ class ProfileController extends Controller
 
         $validated['password'] = bcrypt($validated['password']);
 
-        $user = \App\Models\User::create($validated);
+        $user = User::create($validated);
 
         return response()->json([
             'message' => 'Perfil creado correctamente',
@@ -59,7 +62,7 @@ class ProfileController extends Controller
 
     public function destroy(Request $request)
     {
-        $user = \App\Models\User::first();
+        $user = User::first();
 
         if (!$user) {
             return response()->json(['message' => 'Usuario no encontrado'], 404);
@@ -70,5 +73,114 @@ class ProfileController extends Controller
         return response()->json([
             'message' => 'Perfil eliminado correctamente'
         ]);
+    }
+
+    //GET /profile/me
+    public function me(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 403);
+        }
+
+        $avgRating = Review::where('reviewee_id', $user->id)->avg('rating') ?? 0;
+
+        return response()->json([
+            'name'     => $user->name,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'image'    => $user->image,
+            'role'     => $user->role,
+            'rating'   => round($avgRating, 1)
+        ], 200);
+    }
+
+    //GET /profile/@{usuario}
+    public function showByUsername(string $username)
+    {
+        $user = User::where('username', $username)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        return response()->json([
+            'name'     => $user->name,
+            'username' => $user->username,
+            'email'    => $user->email,
+            'image'    => $user->image,
+        ], 200);
+    }
+
+    public function updateMe(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 403);
+        }
+
+        $validated = $request->validate([
+            'name'     => 'sometimes|string|max:255',
+            'username' => 'sometimes|string|max:255|unique:users,username,' . $user->id,
+            'email'    => 'sometimes|string|email|unique:users,email,' . $user->id,
+            'image'    => 'sometimes|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // 👈 ahora es archivo
+        ]);
+
+        if ($request->hasFile('image')) {
+            // Borra la imagen anterior si existe
+            if ($user->image) {
+                Storage::disk('public')->delete($user->image);
+            }
+            $path = $request->file('image')->store('avatars', 'public');
+            $user->image = $path;
+        }
+
+        if ($request->name) {
+            $user->name= $request->name;
+        }
+        if ($request->username) {
+            $user->username = $request->username;
+        }
+        if ($request->email) {
+            $user->email= $request->email;
+        }
+
+        $user->save();
+        $user->refresh();
+
+        return response()->json([
+            'message' => 'Perfil actualizado correctamente',
+            'user'    => [
+                'name'     => $user->name,
+                'username' => $user->username,
+                'email'    => $user->email,
+                'image'    => $user->image,
+                'rating'   => $user->rating_avg,
+            ],
+        ], 200);
+    }
+
+    //GET /profile/@{usuario}/reviews
+    public function reviewsByUsername(string $username)
+    {
+        $user = User::where('username', $username)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        $reviews = Review::with('author')
+            ->where('reviewee_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn($r) => [
+                'rating'  => $r->rating,
+                'comment' => $r->comment,
+                'author'  => $r->author->name,
+            ]);
+
+        return response()->json($reviews, 200);
     }
 }

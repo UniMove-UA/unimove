@@ -1,0 +1,125 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Booking;
+use App\Models\Payment;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
+
+class PaymentController extends Controller
+{
+    /**
+     * Create a Stripe PaymentIntent and return client_secret.
+     * Expected input: { bookingId: int }
+     */
+    public function createIntent(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $data = $request->validate([
+            'bookingId' => 'nullable|integer',
+            'amount' => 'nullable|numeric',
+            'currency' => 'nullable|string',
+        ]);
+
+        $currency = $data['currency'] ?? 'eur';
+
+        $amountCents = null;
+
+        if (!empty($data['bookingId'])) {
+            $booking = Booking::find($data['bookingId']);
+            if (!$booking) {
+                return response()->json(['error' => 'Booking not found'], 404);
+            }
+            // ensure the authenticated user is the passenger (simple authorization)
+            if ($booking->passenger_id !== $user->id) {
+                return response()->json(['error' => 'Forbidden'], 403);
+            }
+
+            // travel price expected in main currency (e.g. euros)
+            $price = $booking->travel->price ?? null;
+            if ($price === null) {
+                return response()->json(['error' => 'Booking has no price configured'], 400);
+            }
+            $amountCents = (int) round(floatval($price) * 100);
+            $metadata = ['booking_id' => $booking->id];
+            $idempotencyKey = 'pi_booking_' . $booking->id;
+        } elseif (!empty($data['amount'])) {
+            $amountCents = (int) round(floatval($data['amount']) * 100);
+            $metadata = [];
+            // Use a per-request unique idempotency key for manual payments to
+            // avoid "same key different params" errors during local testing.
+            $idempotencyKey = 'pi_manual_' . ($user->id ?? 'anon') . '_' . uniqid();
+        } else {
+            return response()->json(['error' => 'No amount or bookingId provided'], 400);
+        }
+
+        if ($amountCents <= 0) {
+            return response()->json(['error' => 'Invalid amount'], 400);
+        }
+
+        $secret = config('services.stripe.secret') ?? env('STRIPE_SECRET');
+        if (empty($secret)) {
+            Log::error('Stripe secret key not configured');
+            return response()->json(['error' => 'Payment gateway not configured'], 500);
+        }
+
+        Stripe::setApiKey($secret);
+
+        try {
+            // For this application we only simulate card payments and never
+            // handle redirect-based payment methods. To avoid requiring a
+            // return_url on confirmation, disable redirects and restrict to cards.
+            $pi = PaymentIntent::create([
+                'amount' => $amountCents,
+                'currency' => $currency,
+                'automatic_payment_methods' => [
+                    'enabled' => true,
+                    'allow_redirects' => 'never',
+                ],
+                'metadata' => $metadata ?? [],
+            ], [
+                'idempotency_key' => $idempotencyKey,
+            ]);
+
+            // Persist payment record (idempotent)
+            try {
+                DB::beginTransaction();
+                $bookingId = isset($booking) ? ($booking->id ?? null) : null;
+
+                $paymentAttrs = [
+                    'payment_intent_id' => $pi->id,
+                    'booking_id' => $bookingId,
+                    'user_id' => $user->id,
+                    'amount' => $amountCents,
+                    'currency' => $currency,
+                    'status' => $pi->status ?? 'pending',
+                    'metadata' => $metadata ?? [],
+                ];
+
+                // Use updateOrCreate keyed by payment_intent_id to be idempotent
+                $payment = Payment::updateOrCreate(
+                    ['payment_intent_id' => $pi->id],
+                    $paymentAttrs
+                );
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('Could not persist payment record: ' . $e->getMessage());
+            }
+
+            return response()->json(['clientSecret' => $pi->client_secret, 'payment_intent_id' => $pi->id]);
+        } catch (\Exception $e) {
+            Log::error('Stripe create intent error: ' . $e->getMessage());
+            return response()->json(['error' => 'Could not create payment intent'], 500);
+        }
+    }
+}

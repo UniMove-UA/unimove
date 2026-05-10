@@ -26,37 +26,32 @@ export default function ProfileContainer() {
                 let url = '';
 
                 if (id === 'me') {
-                    url = '/profile/me';
+                    url = 'http://localhost:8000/api/profile/me';
                 } else {
-                    url = `/profile?user=${encodeURIComponent(id)}`;
+                    url = `http://localhost:8000/api/profile?user=${encodeURIComponent(id)}`;
                 }
 
-                const response = await fetch(url);
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
 
-                // 1. Verificar si la respuesta fue exitosa (status 200-299)
                 if (!response.ok) {
-                    // Intentar leer el cuerpo del error para ver qué dice el servidor
                     const errorText = await response.text();
                     throw new Error(`Servidor respondió con ${response.status}: ${errorText.substring(0, 100)}`);
                 }
-
-                // 2. Verificar el tipo de contenido antes de parsear
-                const contentType = response.headers.get("content-type");
-
-                if (!contentType || !contentType.includes("application/json")) {
-                    const textContent = await response.text();
-                    throw new Error(`La respuesta no es JSON. Recibido: ${textContent.substring(0, 100)}`);
-                }
-
-                // 3. Parsear JSON seguro
+                //const contentType = response.headers.get("content-type");
                 const data = await response.json();
-
-                // Validación básica de estructura
-                if (!data.fullName || !data.username || !data.email || !data.avatarUrl) {
-                    throw new Error("La respuesta del servidor no tiene la estructura esperada.");
-                }
-
-                setProfileData(data);
+                setProfileData({
+                    fullName: data.name,
+                    username: data.username,
+                    email: data.email,
+                    avatarUrl: data.image
+                });
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al cargar el perfil');
             } finally {
@@ -65,7 +60,7 @@ export default function ProfileContainer() {
         };
 
         fetchProfile();
-    }, [id]);
+    }, []);
 
     if (loading) {
         return (
