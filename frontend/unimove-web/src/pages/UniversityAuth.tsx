@@ -36,6 +36,27 @@ const UniversityAuth = () => {
 
     return (
         <div className="login-page" style={{ background: '#f4f7f6' }}>
+            <button
+                onClick={() => navigate('/login')}
+                style={{
+                    position: 'absolute',
+                    top: '1.5rem',
+                    left: '1.5rem',
+                    background: 'rgba(0,51,102,0.1)',
+                    border: '1px solid rgba(0,51,102,0.3)',
+                    borderRadius: '8px',
+                    color: '#003366',
+                    fontSize: '0.9rem',
+                    padding: '0.5rem 1rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    zIndex: 10,
+                }}
+            >
+                ← Volver
+            </button>
             <div className="login-card" style={{ 
                 borderTop: '6px solid #003366', 
                 boxShadow: '0 15px 35px rgba(0,0,0,0.05)',
@@ -70,12 +91,6 @@ const UniversityAuth = () => {
                     >
                         {loading ? 'VALIDANDO...' : 'INICIAR SESIÓN'}
                     </button>
-
-                    <div className="signup-link" style={{ marginTop: '25px' }}>
-                        <a href="/login" style={{ color: '#003366', fontSize: '0.85rem' }}>
-                            ← Volver al acceso general
-                        </a>
-                    </div>
                 </form>
             </div>
         </div>

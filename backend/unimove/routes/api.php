@@ -21,7 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::get('/profile/me', [ProfileController::class, 'me']);
-    Route::put('/profile/me', [ProfileController::class, 'updateMe']);
+    Route::post('/profile/me', [ProfileController::class, 'updateMe']);
     Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
     Route::get('/profile/@{username}/reviews', [ProfileController::class, 'reviewsByUsername']);
 
@@ -81,6 +81,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/schedules',[AdminController::class, 'schedules']);
         Route::put('/schedules',[AdminController::class, 'updateSchedule']);
+
+        Route::get('/bookings',[AdminController::class, 'bookings']);
+        Route::put('/bookings/{id}/cancel',[AdminController::class, 'cancelBooking']);
+
+        Route::get('/vehicles',[AdminController::class, 'adminVehicles']);
+        Route::delete('/vehicles/{id}',[AdminController::class, 'adminDeleteVehicle']);
+
+        Route::get('/notifications',[AdminController::class, 'adminNotifications']);
+        Route::post('/notifications',[AdminController::class, 'sendNotification']);
+        Route::delete('/notifications/{id}',[AdminController::class, 'deleteNotification']);
     });
 });
 
@@ -95,6 +105,8 @@ Route::post('/auth/universidad', [AuthController::class, 'loginUniversitario']);
 
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password',  [AuthController::class, 'resetPassword']);
+Route::get('/auth/google/redirect',  [AuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback',  [AuthController::class, 'handleGoogleCallback']);
 
 Route::get('/markers', [MarkerController::class, 'index']);
 Route::get('/schedule', [ScheduleController::class, 'index']);
