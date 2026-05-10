@@ -44,24 +44,51 @@ export default function Travel() {
             const [latStr, lonStr] = origin.split(',').map(s => s.trim());
             const lat = parseFloat(latStr);
             const lon = parseFloat(lonStr);
+            const token = localStorage.getItem('auth_token');
 
             if (isNaN(lat) || isNaN(lon)) {
                 throw new Error("Formato de coordenadas inválido");
             }
 
-            const transportRes = await fetch(`http://localhost:8000/api/travels/near?lat=${lat}&lon=${lon}`);
+            const transportRes = await fetch(`/api/travels/near?lat=${lat}&lon=${lon}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
             if (!transportRes.ok) {
                 throw new Error(`Error en transporte público: ${transportRes.statusText}`);
             }
             const transportData = await transportRes.json();
-            setPublicTransportTrips(transportData);
+            const mappedTransportData = transportData.map((trip: any) => ({
+                ...trip,
+                fullName: trip.driver?.name || '',
+                username: trip.driver?.username || '',
+                profileImage: trip.driver?.image || '',
+                departureTime: trip.departure_time,
+            }));
+            setPublicTransportTrips(mappedTransportData);
 
-            const routeRes = await fetch(`http://localhost:8000/api/route?from=${lat},${lon}&to=${encodeURIComponent(destination)}`);
+            const routeRes = await fetch(`/api/route?from=${lat},${lon}&to=${encodeURIComponent(destination)}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
             if (!routeRes.ok) {
                 throw new Error(`Error en carsharing: ${routeRes.statusText}`);
             }
             const routeData = await routeRes.json();
-            setCarSharingTrips(routeData);
+            const mappedRouteData = routeData.map((trip: any) => ({
+                ...trip,
+                fullName: trip.driver?.name || '',
+                username: trip.driver?.username || '',
+                profileImage: trip.driver?.image || '',
+                departureTime: trip.departure_time,
+            }));
+            setCarSharingTrips(mappedRouteData);
 
         } catch (err) {
             console.error(err);
