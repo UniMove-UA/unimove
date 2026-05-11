@@ -10,6 +10,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\StopController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TravelController;
 use App\Http\Controllers\VehicleController;
@@ -112,6 +113,8 @@ Route::get('/auth/google/callback',  [AuthController::class, 'handleGoogleCallba
 
 Route::get('/markers', [MarkerController::class, 'index']);
 Route::get('/schedule', [ScheduleController::class, 'index']);
+
+Route::get('/stops/near', [StopController::class, 'near']);
 
 //ruta creada por laravel
 Route::get('/user', function (Request $request) {

@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Stop;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class StopController extends Controller
 {
@@ -68,5 +69,31 @@ class StopController extends Controller
     {
         Stop::findOrFail($id)->delete();
         return response()->json(['message' => 'Parada eliminada correctamente']);
+    }
+
+    public function near(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'lat' => 'required|numeric|between:-90,90',
+            'lon' => 'required|numeric|between:-180,180',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Parámetros inválidos',
+                'errors'  => $validator->errors()
+            ], 400);
+        }
+
+        $lat = $request->lat;
+        $lon = $request->lon;
+
+        $stops = Stop::selectRaw("*, (6371 * acos(cos(radians(?)) * cos(radians(stop_lat)) * cos(radians(stop_lon) - radians(?)) + sin(radians(?)) * sin(radians(stop_lat)))) AS distance", [$lat, $lon, $lat])
+            ->having('distance', '<', 1)
+            ->orderBy('distance')
+            ->limit(5)
+            ->get();
+
+        return response()->json($stops);
     }
 }
