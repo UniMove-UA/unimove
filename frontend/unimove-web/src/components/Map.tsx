@@ -51,6 +51,8 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
     const [destination, setDestination] = useState<string>("");
     const [markers, setMarkers] = useState<Marker[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const token = localStorage.getItem('auth_token');
+
 
     const handleBoundsChange = useCallback(async (bounds: L.LatLngBounds) => {
         setLoading(true);
@@ -118,7 +120,7 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                     onChange={(e) => { setDestination(e.target.value) }}
                     onKeyDown={(event) => {
                         if (event.key == 'Enter') {
-                            navigate(`/travel?destination=${destination}`)
+                           navigate(token ? `/travel?destination=${destination}` : '/login')
                         }
                     }}></input>
             </div>
