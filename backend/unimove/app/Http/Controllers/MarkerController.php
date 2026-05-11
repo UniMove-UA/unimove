@@ -76,11 +76,15 @@ class MarkerController extends Controller
                 ->get()
                 ->map(fn($v) => [
                     'id'   => 'vmp_' . $v->id,
-                    'name' => 'Patinete ' . $v->code,
+                    'vmp_id' => $v->id,
+                    'name' => ($v->type === 'bike' ? 'Bicicleta ' : 'Patinete ') . $v->code,
                     'code' => $v->code,
-                    'type' => 'vmp',
+                    'type' => $v->type ?? 'scooter',
                     'lat'  => (float) $v->latitude,
                     'lon'  => (float) $v->longitude,
+                    'location_name' => $v->location_name ?? null,
+                    'price_per_minute' => $v->price_per_minute ?? null,
+                    'unlock_price' => $v->unlock_price ?? null,
                 ]);
         } catch (\Exception $e) {
             $vmps = collect([]);
