@@ -9,6 +9,7 @@ import ChatContent from "./pages/ChatContent.tsx";
 import ProfileContainer from "./components/ProfileContainer.tsx";
 import AdminPanel from "./pages/AdminPanel.tsx";
 import CheckoutPage from './pages/CheckoutPage.tsx';
+import PublishTravel from "./pages/PublishTravel";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import GoogleCallback from './pages/GoogleCallback';
@@ -32,6 +33,7 @@ function App() {
         <Route path='/profile/:id' element={<ProfileContainer />} />
         <Route path='/chat/:id' element={<ChatContent />} />
         <Route path='/admin' element={<AdminPanel />} />
+        <Route path="/travels/publish" element={<PublishTravel />} />
       </Routes>
     </>
   )
