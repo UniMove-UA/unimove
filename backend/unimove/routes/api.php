@@ -34,12 +34,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
 
     Route::get('/travels', [TravelController::class, 'index']);
+    Route::get('/travels/all', [TravelController::class, 'all']);
     Route::post('/travels', [TravelController::class, 'store']);
     Route::get('/travels/me', [TravelController::class, 'myTravels']);
+    Route::get('/travels/near', [TravelController::class, 'nearTravels']);
     Route::get('/travels/{id}', [TravelController::class, 'show']);
     Route::put('/travels/{id}', [TravelController::class, 'update']);
     Route::delete('/travels/{id}', [TravelController::class, 'destroy']);
     Route::put('/travels/{id}/complete', [TravelController::class, 'complete']);
+    Route::get('/route', [TravelController::class, 'route']);
 
     Route::get('/bookings/me', [BookingController::class, 'myBookings']);
     Route::post('/bookings', [BookingController::class, 'store']);
@@ -61,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vmp/current', [VmpController::class, 'currentRental']);
     Route::post('/vmp/rent', [VmpController::class, 'rent']);
     Route::post('/vmp/end', [VmpController::class, 'endRental']);
+    Route::get('/vmps', [VmpController::class, 'index']);
+    Route::get('/vmp/{id}', [VmpController::class, 'show']);
 
     Route::post('/payments/create-intent', [PaymentController::class, 'createIntent']);
 

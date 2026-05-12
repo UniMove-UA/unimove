@@ -1,19 +1,32 @@
 import "../styles/Travel.css"
+import { useNavigate } from 'react-router-dom';
+
 interface CarSharingWidgetProps {
+    id?: number;
+    price?: number;
     profileImage: string;
     origin: string;
     destination: string;
     departureTime: string; // Formato HH:mm
     fullName: string;
     username: string;
-    onClick?: () => void;
 }
 
-export default function CarSharingWidget({profileImage, origin, destination, departureTime, fullName, username, onClick}: CarSharingWidgetProps) {
+export default function CarSharingWidget({id, price, profileImage, origin, destination, departureTime, fullName, username}: CarSharingWidgetProps) {
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        if (id) {
+            navigate(`/checkout?type=carpool&id=${id}`);
+        } else {
+            navigate('/checkout');
+        }
+    }
+
     return (
         <button
             className="car-sharing-widget"
-            onClick={onClick}
+            onClick={handleClick}
             aria-label={`Viaje compartido de ${fullName} desde ${origin} a ${destination}`}
         >
             <div className="widget-profile">
@@ -37,6 +50,12 @@ export default function CarSharingWidget({profileImage, origin, destination, dep
                     <span className="driver-name">{fullName}</span>
                     <span className="driver-username">@{username}</span>
                 </div>
+
+                {price !== undefined && (
+                    <div className="price-info">
+                        <strong>{price}€</strong>
+                    </div>
+                )}
             </div>
         </button>
     );
