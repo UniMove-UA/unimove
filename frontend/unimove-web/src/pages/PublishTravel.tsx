@@ -99,7 +99,7 @@ export default function PublishTravel() {
             const data = await response.json();
 
             if (response.ok) {
-                navigate("/travels");
+                navigate("/travel");
             } else {
                 setErrors(data.errors || { general: [data.message] });
             }

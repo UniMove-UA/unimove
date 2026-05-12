@@ -111,7 +111,7 @@ export default function Travel() {
         <Page name="viajes">
             <div style={{margin: "3% 20%"}}>
                 <button onClick={() => navigate("/travels/publish")} className="btn-primary">
-                    ➕ Publicar mi propio viaje
+                    Publicar mi propio viaje
                 </button>
                 <div className="search-container">
                     <input
