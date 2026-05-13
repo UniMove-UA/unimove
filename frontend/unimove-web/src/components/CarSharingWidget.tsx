@@ -7,15 +7,17 @@ interface CarSharingWidgetProps {
     profileImage: string;
     origin: string;
     destination: string;
-    departureTime: string; // Formato HH:mm
+    departureTime: string;
     fullName: string;
     username: string;
+    clickable?: boolean;
 }
 
-export default function CarSharingWidget({id, price, profileImage, origin, destination, departureTime, fullName, username}: CarSharingWidgetProps) {
+export default function CarSharingWidget({id, price, profileImage, origin, destination, departureTime, fullName, username, clickable = true}: CarSharingWidgetProps) {
     const navigate = useNavigate();
 
     const handleClick = () => {
+        if (!clickable) return;
         if (id) {
             navigate(`/checkout?type=carpool&id=${id}`);
         } else {
@@ -27,6 +29,8 @@ export default function CarSharingWidget({id, price, profileImage, origin, desti
         <button
             className="car-sharing-widget"
             onClick={handleClick}
+            disabled={!clickable}
+            style={!clickable ? { cursor: 'default', opacity: 1 } : {}}
             aria-label={`Viaje compartido de ${fullName} desde ${origin} a ${destination}`}
         >
             <div className="widget-profile">
