@@ -146,6 +146,15 @@
     background-color: #25805f;
 }
 
+.profile-btn-nuevo {
+    background-color: #31A47B;
+    color: #ffffff;
+}
+
+.profile-btn-nuevo:hover {
+    background-color: #25805f;
+}
+
 .profile-btn-cancel {
     background-color: #e5e7eb;
     color: #1f2937;

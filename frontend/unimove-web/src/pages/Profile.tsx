@@ -316,16 +316,8 @@ export default function Profile({ profileData }: ProfileProps) {
 
                 <button
                     onClick={() => setIsModalOpen(true)}
-                    style={{
-                        padding: '12px 30px',
-                        backgroundColor: '#28a745',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer',
-                        fontSize: '16px',
-                        fontWeight: 'bold'
-                    }}>Nuevo vehículo</button>
+                    className={"profile-btn-nuevo"}
+                >Nuevo vehículo</button>
                 <VehicleRegistrationModal isOpen={isModalOpen} onClose={handleCloseModal} />
             </div>
         </Page>
