@@ -77,23 +77,15 @@ export default function Travel() {
         unlock_price?: number | null;
     }>>([]);
 
-    const getCampusZone = (lat?: number | null, lon?: number | null) => {
-        if (lat == null || lon == null) return 'Campus UA';
-        if (lat >= 38.3855) return 'Zona Norte (Aulario II)';
-        if (lat <= 38.3835) return 'Zona Sur (Aulario I)';
-        if (lon <= -0.5155) return 'Zona Oeste (Biblioteca)';
-        if (lon >= -0.5120) return 'Zona Este (Deportivas)';
-        return 'Zona Central (Rectorado)';
-    };
+    const token = localStorage.getItem("auth_token");
 
     useEffect(() => {
         const fetchVmps = async () => {
             try {
-                const token = localStorage.getItem('auth_token');
                 const response = await fetch('http://localhost:8000/api/vmps', {
                     headers: {
                         'Content-Type': 'application/json',
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        Authorization: `Bearer ${token}`,
                     },
                     credentials: 'include',
                 });
@@ -113,7 +105,6 @@ export default function Travel() {
     }, []);
     const [apiError, setApiError] = useState<string | null>(null);
 
-    const token = localStorage.getItem("auth_token");
 
     const fetchTrips = async () => {
         if (!origin || !destination) {
@@ -282,12 +273,12 @@ export default function Travel() {
                         onClick={handleSearch}
                         disabled={fetchLoading || loading}
                         style={{
-                            padding: '10px 20px',
-                            backgroundColor: fetchLoading || loading ? '#ccc' : '#007bff',
+                            padding: '12px 30px',
+                            backgroundColor: '#28a745',
                             color: 'white',
                             border: 'none',
                             borderRadius: '5px',
-                            cursor: fetchLoading || loading ? 'not-allowed' : 'pointer',
+                            cursor: 'pointer',
                             fontSize: '16px',
                             fontWeight: 'bold'
                         }}

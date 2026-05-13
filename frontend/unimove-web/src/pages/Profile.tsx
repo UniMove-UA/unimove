@@ -15,7 +15,7 @@ interface Vehicle {
     id: number | string;
     brand: string;
     model: string;
-    license_plate: string;
+    plate: string;
     total_seats: number;
 }
 
@@ -292,7 +292,7 @@ export default function Profile({ profileData }: ProfileProps) {
                     </div>
                 </div>
 
-                <h2>Mis vehículos</h2>
+                <h2 style={{fontSize: 20, fontWeight: "bold"}}>Mis vehículos</h2>
 
                 <div className="vehicles-list-container">
                     {vehiclesLoading ? (
@@ -306,7 +306,7 @@ export default function Profile({ profileData }: ProfileProps) {
                             {vehicles.map((vehicle) => (
                                 <li key={vehicle.id} className="vehicle-item">
                                     <strong>{vehicle.brand} {vehicle.model}</strong>
-                                    <span>Matrícula: {vehicle.license_plate}</span>
+                                    <span>Matrícula: {vehicle.plate}</span>
                                     <span>Asientos: {vehicle.total_seats}</span>
                                 </li>
                             ))}
@@ -314,7 +314,18 @@ export default function Profile({ profileData }: ProfileProps) {
                     )}
                 </div>
 
-                <button onClick={() => setIsModalOpen(true)}>Nuevo vehículo</button>
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    style={{
+                        padding: '12px 30px',
+                        backgroundColor: '#28a745',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                    }}>Nuevo vehículo</button>
                 <VehicleRegistrationModal isOpen={isModalOpen} onClose={handleCloseModal} />
             </div>
         </Page>
