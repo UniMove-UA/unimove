@@ -32,13 +32,12 @@ export default function PublishTravel() {
                 const data = await response.json();
                 if (Array.isArray(data) && data.length > 0) {
                     setVehicles(data);
-                    // Aseguramos que el ID inicial sea un string válido
                     setFormData(f => ({ ...f, vehicle_id: data[0].id.toString() }));
                 }
             } catch (err) {
                 console.error("Error cargando vehículos:", err);
             } finally {
-                setHasLoaded(true); // Carga completada
+                setHasLoaded(true);
             }
         };
         fetchVehicles();

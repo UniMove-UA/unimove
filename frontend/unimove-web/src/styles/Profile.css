@@ -246,3 +246,87 @@
     font-size: 0.9rem;
     color: #555;
 }
+
+.password-section {
+    margin-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 16px;
+}
+
+.profile-btn-toggle-password {
+    background: none;
+    border: none;
+    color: #6b7280;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+    margin-bottom: 12px;
+    transition: color 0.2s ease;
+}
+
+.profile-btn-toggle-password:hover {
+    color: #103B31;
+}
+
+.password-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background-color: #f3faf7;
+    border: 1px solid #d1ede4;
+    border-radius: 8px;
+    animation: fadeInPassword 0.2s ease;
+}
+
+@keyframes fadeInPassword {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.password-fields .profile-field-label {
+    color: #374151;
+}
+
+.password-fields .profile-field-input {
+    background-color: #ffffff;
+}
+
+.password-fields .btn-register {
+    margin-top: 4px;
+    padding: 8px 16px;
+    background-color: #31A47B;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    align-self: flex-start;
+}
+
+.password-fields .btn-register:hover {
+    background-color: #25805f;
+}
+
+.password-fields .btn-register:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.error-message {
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background-color: #fef2f2;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+}

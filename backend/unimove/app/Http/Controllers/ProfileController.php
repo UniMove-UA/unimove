@@ -6,6 +6,7 @@ use App\Models\Review;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 
 class ProfileController extends Controller
 {
@@ -182,5 +183,26 @@ class ProfileController extends Controller
             ]);
 
         return response()->json($reviews, 200);
+    }
+
+    //PUT /profile/password
+    public function updatePassword(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json(['message' => 'No autenticado'], 403);
+        }
+
+        $request->validate([
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'Contraseña actualizada correctamente.'
+        ], 200);
     }
 }
