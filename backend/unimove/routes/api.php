@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
     Route::get('/chats/me', [MessageController::class, 'myChats']);
+    Route::put('/chats/me', [MessageController::class, 'startChat']);
     Route::get('/chats/@{username}', [MessageController::class, 'conversation']);
     Route::put('/chats/@{username}', [MessageController::class, 'sendMessage']);
 

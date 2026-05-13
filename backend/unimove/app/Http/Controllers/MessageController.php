@@ -63,7 +63,54 @@ class MessageController extends Controller
         return response()->json(['message' => 'Mensaje eliminado correctamente']);
     }
 
-    // PUT /chats/me?user={user}
+    // PUT /chats/me?user={username}
+    public function startChat(Request $request)
+    {
+        $userId = Auth::id();
+
+        if (!$userId) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $username = $request->query('user');
+
+        if (!$username) {
+            return response()->json(['message' => 'Usuario requerido'], 422);
+        }
+
+        $otherUser = User::where('username', $username)->first();
+
+        if (!$otherUser) {
+            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        }
+
+        if ($otherUser->id === $userId) {
+            return response()->json(['message' => 'No puedes iniciar un chat contigo mismo'], 422);
+        }
+
+        if ($otherUser->role === 'admin') {
+            return response()->json(['message' => 'No puedes iniciar un chat con este usuario.'], 422);
+        }
+
+        $exists = Message::where(function ($q) use ($userId, $otherUser) {
+            $q->where('emisor_id', $userId)->where('receptor_id', $otherUser->id);
+        })->orWhere(function ($q) use ($userId, $otherUser) {
+            $q->where('emisor_id', $otherUser->id)->where('receptor_id', $userId);
+        })->exists();
+
+        if ($exists) {
+            return response()->json(['message' => 'Ya tienes un chat con este usuario'], 200);
+        }
+
+        Message::create([
+            'emisor_id'=> $userId,
+            'receptor_id' => $otherUser->id,
+            'text'=> 'Hola 👋',
+            'url'=> null,
+        ]);
+
+        return response()->json(['message' => 'Chat iniciado correctamente'], 201);
+    }
 
     // GET /chats/me
     public function myChats()
