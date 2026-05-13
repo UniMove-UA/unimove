@@ -1,4 +1,5 @@
 import Page from "../components/Page";
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from "react";
 import "../styles/Travel.css";
 import CarSharingWidget from "../components/CarSharingWidget.tsx";
@@ -6,11 +7,55 @@ import PublicTransportWidget from "../components/PublicTransportWidget.tsx";
 import { useSearchParams } from 'react-router-dom';
 import CampusMobilityWidget from "../components/CampusMobilityWidget.tsx";
 
+interface Trip {
+    type: string;
+    id: string;
+    profileImage: string;
+    origin: string;
+    destination: string;
+    lineName: string;
+    departureTime: string;
+    fullName: string;
+    username: string;
+}
+
+function getTransportType(stopId: string): string {
+    if (stopId.startsWith('tram_')) {
+        return 'tram';
+    }
+    if (stopId.startsWith('vec_')) {
+        return 'bus';
+    }
+    if (stopId.startsWith('renfe_')) {
+        return 'train';
+    }
+    if (stopId.startsWith('int_')) {
+        return 'bus';
+    }
+    return 'bus';
+}
+
+const getTransportIcon = (type: string) => {
+    switch(type) {
+        case 'train': return '/tren.png';
+        case 'tram': return '/tram.png';
+        case 'bus': return '/autobus.png';
+        default: return '/autobus.png';
+    }
+}
+
 export default function Travel() {
+    const navigate = useNavigate();
+
     const [searchParams] = useSearchParams();
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState(searchParams.get("destination") || "");
+
+    const [publicTransportTrips, setPublicTransportTrips] = useState<Trip[]>([]);
+    const [myTrips, setMyTrips] = useState<Trip[]>([]);
+
     const [loading, setLoading] = useState(false);
+    const [fetchLoading, setFetchLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [carSharingTrips, setCarSharingTrips] = useState<Array<{
         id: number;
@@ -32,23 +77,15 @@ export default function Travel() {
         unlock_price?: number | null;
     }>>([]);
 
-    const getCampusZone = (lat?: number | null, lon?: number | null) => {
-        if (lat == null || lon == null) return 'Campus UA';
-        if (lat >= 38.3855) return 'Zona Norte (Aulario II)';
-        if (lat <= 38.3835) return 'Zona Sur (Aulario I)';
-        if (lon <= -0.5155) return 'Zona Oeste (Biblioteca)';
-        if (lon >= -0.5120) return 'Zona Este (Deportivas)';
-        return 'Zona Central (Rectorado)';
-    };
+    const token = localStorage.getItem("auth_token");
 
     useEffect(() => {
         const fetchVmps = async () => {
             try {
-                const token = localStorage.getItem('auth_token');
                 const response = await fetch('http://localhost:8000/api/vmps', {
                     headers: {
                         'Content-Type': 'application/json',
-                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                        Authorization: `Bearer ${token}`,
                     },
                     credentials: 'include',
                 });
@@ -66,6 +103,100 @@ export default function Travel() {
 
         fetchVmps();
     }, []);
+    const [apiError, setApiError] = useState<string | null>(null);
+
+
+    const fetchTrips = async () => {
+        if (!origin || !destination) {
+            setApiError("Por favor, introduce tanto un origen como un destino.");
+            return;
+        }
+
+        setFetchLoading(true);
+        setApiError(null);
+
+        try {
+            const [latStr, lonStr] = origin.split(',').map(s => s.trim());
+            const lat = parseFloat(latStr);
+            const lon = parseFloat(lonStr);
+            const token = localStorage.getItem('auth_token');
+
+            if (isNaN(lat) || isNaN(lon)) {
+                throw new Error("Formato de coordenadas inválido");
+            }
+
+
+            const myTripsRes = await fetch(`/api/travels/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (!myTripsRes.ok) {
+                throw new Error(`Error buscando tus trayectos: ${myTripsRes.statusText}`);
+            }
+            const data = await myTripsRes.json();
+            const mappedData = data.map((trip) => ({
+                ...trip,
+                fullName: trip.driver?.name || '',
+                username: trip.driver?.username || '',
+                profileImage: trip.driver?.image || '',
+                departureTime: trip.departure_time,
+            }));
+            setMyTrips(mappedData);
+
+            const routeRes = await fetch(`/api/route?from=${lat},${lon}&to=${encodeURIComponent(destination)}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!routeRes.ok) {
+                throw new Error(`Error en carsharing: ${routeRes.statusText}`);
+            }
+            const routeData = await routeRes.json();
+            const mappedRouteData = routeData.map((trip) => ({
+                ...trip,
+                fullName: trip.driver?.name || '',
+                username: trip.driver?.username || '',
+                profileImage: trip.driver?.image || '',
+                departureTime: trip.departure_time,
+            }));
+            setCarSharingTrips(mappedRouteData);
+
+            const stopsRes = await fetch(`/api/stops/near?lat=${lat}&lon=${lon}`);
+            const stopsData = await stopsRes.json();
+
+            const schedules: Trip[] = [];
+            for (const stop of stopsData) {
+                const schedRes = await fetch(`/api/schedule?id=${stop.stop_id}`);
+                const schedData = await schedRes.json();
+                if (Array.isArray(schedData)) {
+                    for (const sched of schedData) {
+                        schedules.push({
+                            id: `${stop.stop_id}_${sched.route_id}`,
+                            type: getTransportType(stop.stop_id),
+                            origin: stop.stop_name,
+                            destination: sched.headsign || '',
+                            lineName: sched.route_name,
+                            departureTime: sched.departure_time,
+                            profileImage: '',
+                            fullName: '',
+                            username: '',
+                        });
+                    }
+                }
+            }
+            setPublicTransportTrips(schedules);
+
+        } catch (err) {
+            console.error(err);
+            setApiError(err instanceof Error ? err.message : "Error desconocido al obtener los viajes");
+        } finally {
+            setFetchLoading(false);
+        }
+    };
 
     const handleOriginClick = () => {
         if (!navigator.geolocation) {
@@ -75,11 +206,11 @@ export default function Travel() {
 
         setLoading(true);
         setError(null);
+        setApiError(null);
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const { latitude, longitude } = position.coords;
-                // Formato: latitud, longitud (con 6 decimales)
                 const coords = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
                 setOrigin(coords);
                 setLoading(false);
@@ -103,84 +234,18 @@ export default function Travel() {
             {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 300000 // 5 minutos de caché
+                maximumAge: 300000
             }
         );
     };
 
-    const fetchAllTravels = async () => {
-        try {
-            const token = localStorage.getItem('auth_token');
-            const response = await fetch('http://localhost:8000/api/travels/all', {
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                },
-                credentials: 'include',
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    setError('Debes iniciar sesión para ver viajes.');
-                    setCarSharingTrips([]);
-                    return;
-                }
-                throw new Error('No se pudieron cargar los viajes');
-            }
-
-            const data = await response.json();
-            const mapped = (data || []).map((trip: any) => ({
-                id: trip.id,
-                profileImage: trip?.driver?.image ? `http://localhost:8000/storage/${trip.driver.image}` : "https://i.pravatar.cc/150?img=1",
-                origin: trip.origin,
-                destination: trip.destination,
-                departureTime: trip.departure_time,
-                fullName: trip?.driver?.name || 'Conductor',
-                username: trip?.driver?.username || 'usuario',
-                price: Number(trip.price ?? 0),
-            }));
-
-            setCarSharingTrips(mapped);
-        } catch (err) {
-            console.error(err);
-            setError('No se pudieron cargar los viajes.');
+    const handleSearch = () => {
+        if (!origin || !destination) {
+            setApiError("Por favor, introduce tanto un origen como un destino.");
+            return;
         }
+        fetchTrips();
     };
-
-    useEffect(() => {
-        fetchAllTravels();
-    }, []);
-
-    const publicTransportTrips = [
-        {
-            id: 1,
-            profileImage: "https://cdn-icons-png.flaticon.com/512/3063/3063823.png",
-            origin: "Madrid Centro",
-            destination: "Barcelona Sants",
-            lineName: "AVE",
-            departureTime: "12:30",
-            type: "train"
-        },
-        {
-            id: 2,
-            profileImage: "https://cdn-icons-png.flaticon.com/512/3063/3063823.png",
-            origin: "Valencia Norte",
-            destination: "Alicante Terminal",
-            lineName: "L24",
-            departureTime: "14:45",
-            type: "bus"
-        },
-        {
-            id: 3,
-            profileImage: "https://cdn-icons-png.flaticon.com/512/3063/3063823.png",
-            origin: "Sevilla Plaza",
-            destination: "Málaga Centro",
-            lineName: "L1",
-            departureTime: "16:00",
-            type: "tram"
-        }
-    ];
-
 
     return (
         <Page name="viajes">
@@ -193,7 +258,8 @@ export default function Travel() {
                         value={origin}
                         onChange={(e) => setOrigin(e.target.value)}
                         onClick={handleOriginClick}
-                        readOnly={!origin} // Solo editable si ya tiene coordenadas
+                        readOnly={false}
+                        style={{ flex: 1 }}
                     />
                     <input
                         type="text"
@@ -201,96 +267,153 @@ export default function Travel() {
                         className="search-input destination-input"
                         value={destination}
                         onChange={(e) => setDestination(e.target.value)}
+                        style={{ flex: 1 }}
                     />
+                    <button
+                        onClick={handleSearch}
+                        disabled={fetchLoading || loading}
+                        style={{
+                            padding: '12px 30px',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        {fetchLoading ? 'Buscando...' : 'Buscar'}
+                    </button>
                 </div>
 
-                {error && (
-                    <div className="error-message">
-                        {error}
-                    </div>
-                )}
-
-                {loading && (
-                    <div className="loading-indicator">
-                        Obteniendo tu ubicación...
-                    </div>
-                )}
+                {error && <div className="error-message">{error}</div>}
+                {loading && <div className="loading-indicator">Obteniendo tu ubicación...</div>}
+                {fetchLoading && <div className="loading-indicator">Buscando viajes disponibles...</div>}
+                {apiError && <div className="error-message" style={{color: '#d32f2f'}}>{apiError}</div>}
 
                 <h1 className="section-title">Encuentra viajes cerca de ti</h1>
                 <div className="nearby-trips-container">
-                    {carSharingTrips.length === 0 && !loading && (
-                        <p style={{ padding: "1rem", color: "#666" }}>
-                            No hay viajes cercanos disponibles ahora mismo.
-                        </p>
+                    {carSharingTrips.length === 0 && !fetchLoading && !apiError ? (
+                        <p>No se encontraron viajes de carsharing disponibles. Introduce un origen y destino y pulsa Buscar.</p>
+                    ) : (
+                        carSharingTrips.map((trip) => (
+                            <CarSharingWidget
+                                key={trip.id}
+                                profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
+                                origin={trip.origin}
+                                destination={trip.destination}
+                                departureTime={trip.departureTime}
+                                fullName={trip.fullName}
+                                username={trip.username}
+                            />
+                        ))
                     )}
-                    {carSharingTrips.map((trip) => (
-                        <CarSharingWidget
-                            key={trip.id}
-                            id={trip.id}
-                            price={trip.price}
-                            profileImage={trip.profileImage}
-                            origin={trip.origin}
-                            destination={trip.destination}
-                            departureTime={trip.departureTime}
-                            fullName={trip.fullName}
-                            username={trip.username}
-                        />
-                    ))}
                 </div>
 
                 <h1 className="section-title">Otros métodos de transporte</h1>
                 <div className="transport-methods-grid">
                     <div className="transport-column">
                         <h2>Transporte público</h2>
-                        {publicTransportTrips.filter(t => t.type == "bus" || t.type == "tram").map((trip) => (
-                            <PublicTransportWidget
-                                key={trip.id}
-                                profileImage={trip.profileImage}
-                                origin={trip.origin}
-                                destination={trip.destination}
-                                lineName={trip.lineName}
-                                departureTime={trip.departureTime}
-                                onClick={() => {}}
-                            />
-                        ))}
+                        {publicTransportTrips.filter(t => t.type === "bus" || t.type === "tram").length === 0 && !fetchLoading ? (
+                            <p>No hay transporte público cercano.</p>
+                        ) : (
+                            publicTransportTrips
+                                .filter(t => t.type === "bus" || t.type === "tram")
+                                .map((trip) => (
+                                    <PublicTransportWidget
+                                        key={trip.id}
+                                        profileImage={getTransportIcon(trip.type)}
+                                        origin={trip.origin}
+                                        destination={trip.destination}
+                                        lineName={trip.lineName}
+                                        departureTime={trip.departureTime}
+                                        onClick={() => {}}
+                                    />
+                                ))
+                        )}
                     </div>
                     <div className="transport-column">
                         <h2>Tren</h2>
-                        {publicTransportTrips.filter(t => t.type == "train").map((trip) => (
-                            <PublicTransportWidget
-                                key={trip.id}
-                                profileImage={trip.profileImage}
-                                origin={trip.origin}
-                                destination={trip.destination}
-                                lineName={trip.lineName}
-                                departureTime={trip.departureTime}
-                                onClick={() => {}}
-                            />
-                        ))}
+                        {publicTransportTrips.filter(t => t.type === "train").length === 0 && !fetchLoading ? (
+                            <p>No hay trenes cercanos.</p>
+                        ) : (
+                            publicTransportTrips
+                                .filter(t => t.type === "train")
+                                .map((trip) => (
+                                    <PublicTransportWidget
+                                        key={trip.id}
+                                        profileImage={getTransportIcon(trip.type)}
+                                        origin={trip.origin}
+                                        destination={trip.destination}
+                                        lineName={trip.lineName}
+                                        departureTime={trip.departureTime}
+                                        onClick={() => {}}
+                                    />
+                                ))
+                        )}
                     </div>
                     <div className="transport-column">
                         <h2>Dentro del campus</h2>
-                        {campusVmps.length === 0 && (
-                            <p style={{ fontSize: "0.9rem", color: "#666", marginTop: "1rem" }}>
-                                No hay VMPs disponibles ahora mismo.
-                            </p>
+                        {publicTransportTrips.filter(t => t.type === "campus").length === 0 && !fetchLoading ? (
+                            <p>No hay transporte dentro del campus cercano.</p>
+                        ) : (
+                            publicTransportTrips
+                                .filter(t => t.type === "campus")
+                                .map((trip) => (
+                                    <PublicTransportWidget
+                                        key={trip.id}
+                                        profileImage={getTransportIcon(trip.type)}
+                                        origin={trip.origin}
+                                        destination={trip.destination}
+                                        lineName={trip.lineName}
+                                        departureTime={trip.departureTime}
+                                        onClick={() => {}}
+                                    />
+                                ))
                         )}
-                        {campusVmps.map((vmp) => {
-                            const pricePerMinute = Number(vmp.price_per_minute ?? 0);
-                            const unlockPrice = Math.max(0.5, Number(vmp.unlock_price ?? 0));
-                            const priceText = `${unlockPrice.toFixed(2)}€ desbloqueo · ${pricePerMinute.toFixed(2)}€/min`;
-                            const locationName = vmp.location_name || getCampusZone(vmp.lat, vmp.lon);
-                            return (
-                                <CampusMobilityWidget
-                                    key={vmp.id}
-                                    id={vmp.id}
-                                    type={vmp.type ?? 'scooter'}
-                                    locationName={locationName}
-                                    priceText={priceText}
-                                />
-                            );
-                        })}
                     </div>
+                </div>
+
+                <h1 className="section-title">Mis viajes</h1>
+                <div className="my-trips-container" style={{ marginBottom: '20px' }}>
+                    <div className="trips-row" style={{
+                        display: 'flex',
+                        gap: '15px',
+                        overflowX: 'auto',
+                        paddingBottom: '10px'
+                    }}>
+                        {
+                            myTrips.map((trip: Trip) =>
+                                <CarSharingWidget
+                                    key={trip.id}
+                                    profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
+                                    origin={trip.origin}
+                                    destination={trip.destination}
+                                    departureTime={trip.departureTime}
+                                    fullName={trip.fullName}
+                                    username={trip.username}
+                                />
+                            )
+                        }
+                    </div>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                    <button
+                        onClick={() => {navigate('/travels/publish')}}
+                        style={{
+                            padding: '12px 30px',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Nuevo viaje
+                    </button>
                 </div>
             </div>
         </Page>

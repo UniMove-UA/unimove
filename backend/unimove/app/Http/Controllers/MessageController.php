@@ -63,6 +63,8 @@ class MessageController extends Controller
         return response()->json(['message' => 'Mensaje eliminado correctamente']);
     }
 
+    // PUT /chats/me?user={user}
+
     // GET /chats/me
     public function myChats()
     {

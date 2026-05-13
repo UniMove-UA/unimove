@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 class VehicleController extends Controller
 {
@@ -15,12 +16,26 @@ class VehicleController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'brand'       => 'required|string|max:255',
             'model'       => 'required|string|max:255',
-            'plate'       => 'required|string|max:20|unique:vehicles',
+            'plate' => 'required|string|max:20|unique:vehicles,plate|regex:/^\d{4}[A-Z]{3}$/',
             'total_seats' => 'required|integer|min:1|max:9',
         ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+
+            if ($errors->has('plate')) {
+                return response()->json([
+                    'message' => 'Esta matrícula ya está registrada. Por favor, introduce otra diferente.',
+                ], 422);
+            }
+
+            return response()->json([
+                'message' => $errors->first(),
+            ], 422);
+        }
 
         $vehicle = Vehicle::create([
             'user_id'     => Auth::id(),

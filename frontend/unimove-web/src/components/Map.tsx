@@ -66,6 +66,8 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
     const [markers, setMarkers] = useState<Marker[]>([]);
     const [vmpMarkers, setVmpMarkers] = useState<VmpMarkerData[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const token = localStorage.getItem('auth_token');
+
 
     const getCampusZone = (lat?: number | null, lon?: number | null) => {
         if (lat == null || lon == null) return 'Campus UA';
@@ -157,7 +159,7 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                     onChange={(e) => { setDestination(e.target.value) }}
                     onKeyDown={(event) => {
                         if (event.key == 'Enter') {
-                            navigate(`/travel?destination=${destination}`)
+                           navigate(token ? `/travel?destination=${destination}` : '/login')
                         }
                     }}></input>
             </div>

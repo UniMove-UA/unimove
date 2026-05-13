@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
+import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
 
 interface ProfileData {
     fullName: string;
@@ -8,6 +9,14 @@ interface ProfileData {
     email: string;
     avatarUrl: string;
     rating?: number;
+}
+
+interface Vehicle {
+    id: number | string;
+    brand: string;
+    model: string;
+    plate: string;
+    total_seats: number;
 }
 
 interface ProfileProps {
@@ -27,16 +36,59 @@ const getImageUrl = (image: string | null | undefined): string => {
 export default function Profile({ profileData }: ProfileProps) {
     const [isEditing, setIsEditing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [vehiclesLoading, setVehiclesLoading] = useState(false);
+    const [vehiclesError, setVehiclesError] = useState<string | null>(null);
+
+    const [passwordData, setPasswordData] = useState({
+        new_password: '',
+        new_password_confirmation: '',
+    });
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [showPasswordSection, setShowPasswordSection] = useState(false);
 
     const [tempData, setTempData] = useState<ProfileData>({
         fullName: profileData.fullName || "",
         username: profileData.username || "",
         email: profileData.email || "",
         avatarUrl: getImageUrl(profileData.avatarUrl),
-        rating: profileData.rating ?? 0, // Si no viene, usa 0
+        rating: profileData.rating ?? 0,
     });
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const fetchVehicles = async () => {
+        setVehiclesLoading(true);
+        setVehiclesError(null);
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch('http://localhost:8000/api/vehicles/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error al cargar vehículos: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            setVehicles(data);
+        } catch (err) {
+            setVehiclesError(err instanceof Error ? err.message : 'Error desconocido');
+        } finally {
+            setVehiclesLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchVehicles();
+    }, []);
 
     const handleAvatarClick = () => {
         if (isEditing && fileInputRef.current) {
@@ -58,6 +110,65 @@ export default function Profile({ profileData }: ProfileProps) {
         setTempData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setPasswordData(prev => ({ ...prev, [name]: value }));
+        if (passwordError) setPasswordError(null);
+        if (passwordSuccess) setPasswordSuccess(false);
+    };
+
+    const handlePasswordSubmit = async () => {
+        if (!passwordData.new_password || !passwordData.new_password_confirmation) {
+            setPasswordError('Por favor, rellena todos los campos.');
+            return;
+        }
+        if (passwordData.new_password.length < 8) {
+            setPasswordError('La nueva contraseña debe tener al menos 8 caracteres.');
+            return;
+        }
+        if (passwordData.new_password !== passwordData.new_password_confirmation) {
+            setPasswordError('Las contraseñas no coinciden.');
+            return;
+        }
+
+        setPasswordLoading(true);
+        setPasswordError(null);
+
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch('http://localhost:8000/api/profile/password', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(passwordData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                const message =
+                    errorData.message ||
+                    (errorData.errors ? Object.values(errorData.errors).flat().join(', ') : 'Error al cambiar la contraseña.');
+                throw new Error(message);
+            }
+
+            setPasswordSuccess(true);
+            setPasswordData({ new_password: '', new_password_confirmation: '' });
+
+            setTimeout(() => {
+                setShowPasswordSection(false);
+                setPasswordSuccess(false);
+            }, 2000);
+
+        } catch (err) {
+            setPasswordError(err instanceof Error ? err.message : 'Error desconocido');
+        } finally {
+            setPasswordLoading(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -70,10 +181,11 @@ export default function Profile({ profileData }: ProfileProps) {
             if (selectedFile) {
                 formData.append('image', selectedFile);
             }
+
             const response = await fetch(`/api/profile/me`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}` ,
+                    'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json',
                 },
                 body: formData
@@ -98,7 +210,10 @@ export default function Profile({ profileData }: ProfileProps) {
 
             setIsEditing(false);
             setSelectedFile(null);
+            setShowPasswordSection(false);
+            setPasswordData({ new_password: '', new_password_confirmation: '' });
             alert(data.message);
+
         } catch (error) {
             console.error("Error al actualizar perfil", error);
             alert("Hubo un error al guardar los cambios.");
@@ -112,9 +227,18 @@ export default function Profile({ profileData }: ProfileProps) {
         });
         setIsEditing(false);
         setSelectedFile(null);
+        setShowPasswordSection(false);
+        setPasswordData({ new_password: '', new_password_confirmation: '' });
+        setPasswordError(null);
+        setPasswordSuccess(false);
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        fetchVehicles();
     };
 
     return (
@@ -145,11 +269,7 @@ export default function Profile({ profileData }: ProfileProps) {
                         </div>
 
                         <div className="profile-rating-badge">
-                            <img
-                                src="/star.svg"
-                                alt="Estrella"
-                                className="profile-star-icon"
-                            />
+                            <img src="/star.svg" alt="Estrella" className="profile-star-icon" />
                             <span className="profile-rating-text">
                                 {tempData.rating ? `${tempData.rating} estrellas` : 'Sin valoraciones'}
                             </span>
@@ -170,13 +290,7 @@ export default function Profile({ profileData }: ProfileProps) {
                                 <div className="profile-field">
                                     <label className="profile-field-label">Nombre Completo</label>
                                     {isEditing ? (
-                                        <input
-                                            type="text"
-                                            name="fullName"
-                                            value={tempData.fullName}
-                                            onChange={handleChange}
-                                            className="profile-field-input"
-                                        />
+                                        <input type="text" name="fullName" value={tempData.fullName} onChange={handleChange} className="profile-field-input" />
                                     ) : (
                                         <p className="profile-field-value">{tempData.fullName}</p>
                                     )}
@@ -185,13 +299,7 @@ export default function Profile({ profileData }: ProfileProps) {
                                 <div className="profile-field">
                                     <label className="profile-field-label">Usuario</label>
                                     {isEditing ? (
-                                        <input
-                                            type="text"
-                                            name="username"
-                                            value={tempData.username}
-                                            onChange={handleChange}
-                                            className="profile-field-input"
-                                        />
+                                        <input type="text" name="username" value={tempData.username} onChange={handleChange} className="profile-field-input" />
                                     ) : (
                                         <p className="profile-field-value">{tempData.username}</p>
                                     )}
@@ -200,18 +308,74 @@ export default function Profile({ profileData }: ProfileProps) {
                                 <div className="profile-field">
                                     <label className="profile-field-label">Correo Electrónico</label>
                                     {isEditing ? (
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={tempData.email}
-                                            onChange={handleChange}
-                                            className="profile-field-input"
-                                        />
+                                        <input type="email" name="email" value={tempData.email} onChange={handleChange} className="profile-field-input" />
                                     ) : (
                                         <p className="profile-field-value">{tempData.email}</p>
                                     )}
                                 </div>
                             </div>
+
+                            {isEditing && (
+                                <div className="password-section">
+                                    <button
+                                        type="button"
+                                        className="profile-btn-toggle-password"
+                                        onClick={() => {
+                                            setShowPasswordSection(prev => !prev);
+                                            setPasswordError(null);
+                                            setPasswordSuccess(false);
+                                            setPasswordData({ new_password: '', new_password_confirmation: '' });
+                                        }}
+                                    >
+                                        {showPasswordSection ? 'Ocultar cambio de contraseña' : 'Cambiar contraseña'}
+                                    </button>
+
+                                    {showPasswordSection && (
+                                        <div className="password-fields">
+                                            <div className="profile-field">
+                                                <label className="profile-field-label">Nueva contraseña</label>
+                                                <input
+                                                    type="password"
+                                                    name="new_password"
+                                                    value={passwordData.new_password}
+                                                    onChange={handlePasswordChange}
+                                                    className="profile-field-input"
+                                                    placeholder="Mínimo 8 caracteres"
+                                                />
+                                            </div>
+                                            <div className="profile-field">
+                                                <label className="profile-field-label">Repetir nueva contraseña</label>
+                                                <input
+                                                    type="password"
+                                                    name="new_password_confirmation"
+                                                    value={passwordData.new_password_confirmation}
+                                                    onChange={handlePasswordChange}
+                                                    className="profile-field-input"
+                                                    placeholder="••••••••"
+                                                />
+                                            </div>
+
+                                            {passwordError && (
+                                                <div className="error-message">{passwordError}</div>
+                                            )}
+                                            {passwordSuccess && (
+                                                <div className="error-message" style={{ color: '#10b981' }}>
+                                                    ✅ Contraseña cambiada con éxito
+                                                </div>
+                                            )}
+
+                                            <button
+                                                type="button"
+                                                className="btn-register"
+                                                onClick={handlePasswordSubmit}
+                                                disabled={passwordLoading}
+                                            >
+                                                {passwordLoading ? 'Guardando...' : 'Guardar nueva contraseña'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             <div className="profile-actions">
                                 {!isEditing ? (
@@ -224,17 +388,10 @@ export default function Profile({ profileData }: ProfileProps) {
                                     </button>
                                 ) : (
                                     <>
-                                        <button
-                                            type="button"
-                                            onClick={handleCancel}
-                                            className="profile-btn profile-btn-cancel"
-                                        >
+                                        <button type="button" onClick={handleCancel} className="profile-btn profile-btn-cancel">
                                             Cancelar
                                         </button>
-                                        <button
-                                            type="submit"
-                                            className="profile-btn profile-btn-confirm"
-                                        >
+                                        <button type="submit" className="profile-btn profile-btn-confirm">
                                             Confirmar
                                         </button>
                                     </>
@@ -243,6 +400,34 @@ export default function Profile({ profileData }: ProfileProps) {
                         </form>
                     </div>
                 </div>
+
+                <h2 style={{ fontSize: 20, fontWeight: "bold" }}>Mis vehículos</h2>
+
+                <div className="vehicles-list-container">
+                    {vehiclesLoading ? (
+                        <p>Cargando vehículos...</p>
+                    ) : vehiclesError ? (
+                        <p style={{ color: 'red' }}>{vehiclesError}</p>
+                    ) : vehicles.length === 0 ? (
+                        <p>No tienes vehículos registrados.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {vehicles.map((vehicle) => (
+                                <li key={vehicle.id} className="vehicle-item">
+                                    <strong>{vehicle.brand} {vehicle.model}</strong>
+                                    <span>Matrícula: {vehicle.plate}</span>
+                                    <span>Asientos: {vehicle.total_seats}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                <button onClick={() => setIsModalOpen(true)} className="profile-btn-nuevo">
+                    Nuevo vehículo
+                </button>
+
+                <VehicleRegistrationModal isOpen={isModalOpen} onClose={handleCloseModal} />
             </div>
         </Page>
     );
