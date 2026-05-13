@@ -45,6 +45,15 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
         setError(null);
         setSuccess(false);
 
+        const normalizedPlate = formData.plate.toUpperCase().replace(/\s/g, '');
+        const plateRegex = /^\d{4}[A-Z]{3}$/;
+
+        if (!plateRegex.test(normalizedPlate)) {
+            setError('Formato de matrícula inválido. Debe ser 4 números y 3 letras. Ej: 1234ABC');
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:8000/api/vehicles', {
                 method: 'POST',
@@ -52,7 +61,7 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({ ...formData, plate: normalizedPlate }),
             });
 
             if (!response.ok) {
@@ -72,6 +81,7 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
 
                 throw new Error(errorMessage);
             }
+
             setSuccess(true);
 
             setTimeout(() => {
@@ -91,7 +101,16 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
     return (
         <div className="vehicle-modal-overlay">
             <div className="vehicle-modal-content">
-                <button className="vehicle-modal-close" onClick={onClose} aria-label="Cerrar">
+                <button
+                    className="vehicle-modal-close"
+                    onClick={() => {
+                        setFormData({ brand: '', model: '', plate: '', total_seats: 0 });
+                        setError(null);
+                        setSuccess(false);
+                        onClose();
+                    }}
+                    aria-label="Cerrar"
+                >
                     &times;
                 </button>
 
@@ -136,7 +155,8 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
                             value={formData.plate}
                             onChange={handleChange}
                             required
-                            placeholder="Ej: 1234 ABC"
+                            placeholder="Ej: 1234ABC"
+                            maxLength={8}
                         />
                     </div>
 
@@ -176,4 +196,4 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
             </div>
         </div>
     );
-};
+}

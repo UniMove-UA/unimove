@@ -66,7 +66,7 @@ input[type="datetime-local"] {
     color-scheme: light; /* Obliga al navegador a usar iconos oscuros */
 }
 
-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+.travel_input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     background-color: #f0f4f2;
     padding: 5px;
@@ -74,7 +74,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     opacity: 1;
 }
 
-input, select {
+.travel_input, select {
     width: 100%;
     padding: 0.8rem 1rem;
     border: 1px solid #d0ece1;
@@ -85,7 +85,7 @@ input, select {
     box-sizing: border-box;
 }
 
-input:focus {
+.travel_input:focus {
     outline: none;
     border-color: #31A47B;
     background: #fff;
