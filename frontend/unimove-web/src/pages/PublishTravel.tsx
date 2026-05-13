@@ -139,7 +139,8 @@ export default function PublishTravel() {
                                     <div className="form-group">
                                         <label>Punto de encuentro</label>
                                         <div className="input-with-action">
-                                            <input 
+                                            <input
+                                                className="travel_input"
                                                 type="text" 
                                                 placeholder="Ej: Crevillente, Alicante"
                                                 value={formData.origin}
@@ -158,7 +159,8 @@ export default function PublishTravel() {
 
                                     <div className="form-group">
                                         <label>Destino final</label>
-                                        <input 
+                                        <input
+                                            className="travel_input"
                                             type="text" 
                                             placeholder="Ej: Universidad de Alicante (UA)"
                                             value={formData.destination}
@@ -171,7 +173,8 @@ export default function PublishTravel() {
                                 <section className="form-section grid-2">
                                     <div className="form-group">
                                         <label>Fecha salida</label>
-                                        <input 
+                                        <input
+                                            className="travel_input"
                                             type="datetime-local" 
                                             min={new Date().toISOString().slice(0, 16)}
                                             max="2027-12-31T23:59"
@@ -196,7 +199,8 @@ export default function PublishTravel() {
                                 <section className="form-section grid-2">
                                     <div className="form-group">
                                         <label>Plazas (Máx: {maxSeats})</label>
-                                        <input 
+                                        <input
+                                            className="travel_input"
                                             type="number" 
                                             min="1" 
                                             max={maxSeats}
@@ -210,7 +214,8 @@ export default function PublishTravel() {
                                     <div className="form-group">
                                         <label>Precio por plaza (€)</label>
                                         <div className="price-input-wrapper">
-                                            <input 
+                                            <input
+                                                className="travel_input"
                                                 type="number" 
                                                 step="0.50" 
                                                 min="0"
