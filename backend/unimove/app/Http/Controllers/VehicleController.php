@@ -81,12 +81,28 @@ class VehicleController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        $request->validate([
-            'brand'       => 'string|max:255',
-            'model'       => 'string|max:255',
-            'plate'       => 'string|max:20|unique:vehicles,plate,' . $id,
-            'total_seats' => 'integer|min:1|max:9',
+        $validator = Validator::make($request->all(), [
+            'brand'       => 'sometimes|string|max:255',
+            'model'       => 'sometimes|string|max:255',
+            'plate'       => ['sometimes', 'string', 'max:20', 'unique:vehicles,plate,' . $id, 'regex:/^\d{4}[A-Z]{3}$/'],
+            'total_seats' => 'sometimes|integer|min:1|max:9',
         ]);
+
+        if ($validator->fails()) {
+            $errors = $validator->errors();
+
+            if ($errors->has('plate')) {
+                return response()->json([
+                    'message' => 'Esta matrícula ya está registrada o tiene un formato inválido. Ej: 1234ABC',
+                ], 422);
+            }
+
+            return response()->json(['message' => $errors->first()], 422);
+        }
+
+        if ($request->has('plate')) {
+            $request->merge(['plate' => strtoupper($request->plate)]);
+        }
 
         $vehicle->update($request->only(['brand', 'model', 'plate', 'total_seats']));
 
@@ -102,6 +118,14 @@ class VehicleController extends Controller
 
         if ($vehicle->user_id !== Auth::id()) {
             return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $hasTravel = \DB::table('travels')->where('vehicle_id', $id)->exists();
+
+        if ($hasTravel) {
+            return response()->json([
+                'message' => 'No puedes eliminar este vehículo porque tiene viajes asociados.',
+            ], 422);
         }
 
         $vehicle->delete();
