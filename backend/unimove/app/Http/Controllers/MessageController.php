@@ -67,6 +67,7 @@ class MessageController extends Controller
     public function startChat(Request $request)
     {
         $userId = Auth::id();
+        $authUser = Auth::user();
 
         if (!$userId) {
             return response()->json(['message' => 'No autorizado'], 403);
@@ -102,11 +103,17 @@ class MessageController extends Controller
             return response()->json(['message' => 'Ya tienes un chat con este usuario'], 200);
         }
 
-        Message::create([
+        $message= Message::create([
             'emisor_id'=> $userId,
             'receptor_id' => $otherUser->id,
             'text'=> 'Hola 👋',
             'url'=> null,
+        ]);
+
+        Notification::create([
+            'user_id' => $otherUser->id,
+            'text'    => $authUser->name . ' te ha enviado un mensaje',
+            'read'    => false,
         ]);
 
         return response()->json(['message' => 'Chat iniciado correctamente'], 201);

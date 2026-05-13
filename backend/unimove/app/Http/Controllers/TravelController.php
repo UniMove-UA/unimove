@@ -169,20 +169,26 @@ class TravelController extends Controller
     // GET /travels/me
     public function myTravels()
     {
-        $travels = Travel::with(['vehicle'])
-            ->where('driver_id', Auth::id())
+        $travels = Travel::with(['driver', 'vehicle'])
+        ->where('driver_id', Auth::id())
             ->orderBy('departure_time', 'desc')
             ->get()
             ->map(fn($t) => [
-                'origin'=> $t->origin,
-                'destination'=> $t->destination,
+                'id'             => $t->id,
+                'origin'         => $t->origin,
+                'destination'    => $t->destination,
                 'departure_time' => $t->departure_time,
-                'status'=> $t->status,
+                'status'         => $t->status,
+                'driver' => [                          
+                    'name'     => $t->driver->name,
+                    'username' => $t->driver->username,
+                    'image'    => $t->driver->image,
+                ],
                 'vehicle' => [
-                    'id'=> $t->vehicle->id,
-                    'brand'=> $t->vehicle->brand,
-                    'model'=> $t->vehicle->model,
-                    'plate'=> $t->vehicle->plate,
+                    'id'    => $t->vehicle->id,
+                    'brand' => $t->vehicle->brand,
+                    'model' => $t->vehicle->model,
+                    'plate' => $t->vehicle->plate,
                 ],
             ]);
 

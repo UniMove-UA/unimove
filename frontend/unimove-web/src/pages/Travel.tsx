@@ -80,6 +80,33 @@ export default function Travel() {
     const token = localStorage.getItem("auth_token");
 
     useEffect(() => {
+        const fetchMyTrips = async () => {
+            try {
+                const res = await fetch(`/api/travels/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+                if (!res.ok) throw new Error(`Error: ${res.statusText}`);
+                const data = await res.json();
+                const mapped = data.map((trip) => ({
+                    ...trip,
+                    fullName: trip.driver?.name || '',
+                    username: trip.driver?.username || '',
+                    profileImage: trip.driver?.image || '',
+                    departureTime: trip.departure_time,
+                }));
+                setMyTrips(mapped);
+            } catch (err) {
+                console.error("Error cargando mis viajes:", err);
+            }
+        };
+
+        fetchMyTrips();
+    }, []);
+
+    useEffect(() => {
         const fetchVmps = async () => {
             try {
                 const response = await fetch('http://localhost:8000/api/vmps', {
@@ -124,26 +151,6 @@ export default function Travel() {
             if (isNaN(lat) || isNaN(lon)) {
                 throw new Error("Formato de coordenadas inválido");
             }
-
-
-            const myTripsRes = await fetch(`/api/travels/me`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-            if (!myTripsRes.ok) {
-                throw new Error(`Error buscando tus trayectos: ${myTripsRes.statusText}`);
-            }
-            const data = await myTripsRes.json();
-            const mappedData = data.map((trip) => ({
-                ...trip,
-                fullName: trip.driver?.name || '',
-                username: trip.driver?.username || '',
-                profileImage: trip.driver?.image || '',
-                departureTime: trip.departure_time,
-            }));
-            setMyTrips(mappedData);
 
             const routeRes = await fetch(`/api/route?from=${lat},${lon}&to=${encodeURIComponent(destination)}`, {
                 headers: {
@@ -387,12 +394,14 @@ export default function Travel() {
                             myTrips.map((trip: Trip) =>
                                 <CarSharingWidget
                                     key={trip.id}
+                                    id={Number(trip.id)}
                                     profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
                                     origin={trip.origin}
                                     destination={trip.destination}
                                     departureTime={trip.departureTime}
                                     fullName={trip.fullName}
                                     username={trip.username}
+                                    clickable={false}
                                 />
                             )
                         }
