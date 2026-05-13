@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/me', [ProfileController::class, 'updateMe']);
     Route::get('/profile/@{username}', [ProfileController::class, 'showByUsername']);
     Route::get('/profile/@{username}/reviews', [ProfileController::class, 'reviewsByUsername']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
 
     Route::get('/chats/me', [MessageController::class, 'myChats']);
     Route::get('/chats/@{username}', [MessageController::class, 'conversation']);
