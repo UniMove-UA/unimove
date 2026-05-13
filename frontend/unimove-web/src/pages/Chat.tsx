@@ -7,7 +7,7 @@ interface ChatProps {
     username: string;
     name: string;
     last_message: string;
-    img?: string;
+    image?: string;
 }
 
 export default function Chat() {
@@ -111,7 +111,7 @@ export default function Chat() {
                             username={chat.username}
                             fullname={chat.name}
                             last_message={chat.last_message}
-                            img={chat.img}
+                            img={chat.image ? `http://localhost:8000/storage/${chat.image}` : undefined}
                         />
                     ))
                 )}
