@@ -44,17 +44,21 @@ const getTransportIcon = (type: string) => {
 
 export default function Travel() {
     const [searchParams] = useSearchParams();
+    const now = new Date();
 
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState(searchParams.get("destination") || "");
 
     const [publicTransportTrips, setPublicTransportTrips] = useState<Trip[]>([]);
     const [carSharingTrips, setCarSharingTrips] = useState<Trip[]>([]);
+    const [myTrips, setMyTrips] = useState<Trip[]>([]);
 
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [apiError, setApiError] = useState<string | null>(null);
+
+    const token = localStorage.getItem("auth_token");
 
     const fetchTrips = async () => {
         if (!origin || !destination) {
@@ -75,6 +79,26 @@ export default function Travel() {
                 throw new Error("Formato de coordenadas inválido");
             }
 
+
+            const myTripsRes = await fetch(`/api/travels/me`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (!myTripsRes.ok) {
+                throw new Error(`Error buscando tus trayectos: ${myTripsRes.statusText}`);
+            }
+            const data = await myTripsRes.json();
+            const mappedData = data.map((trip) => ({
+                ...trip,
+                fullName: trip.driver?.name || '',
+                username: trip.driver?.username || '',
+                profileImage: trip.driver?.image || '',
+                departureTime: trip.departure_time,
+            }));
+            setMyTrips(mappedData);
+
             const routeRes = await fetch(`/api/route?from=${lat},${lon}&to=${encodeURIComponent(destination)}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -86,7 +110,7 @@ export default function Travel() {
                 throw new Error(`Error en carsharing: ${routeRes.statusText}`);
             }
             const routeData = await routeRes.json();
-            const mappedRouteData = routeData.map((trip: any) => ({
+            const mappedRouteData = routeData.map((trip) => ({
                 ...trip,
                 fullName: trip.driver?.name || '',
                 username: trip.driver?.username || '',
@@ -304,6 +328,48 @@ export default function Travel() {
                                 ))
                         )}
                     </div>
+                </div>
+
+                <h1 className="section-title">Mis viajes</h1>
+                <div className="my-trips-container" style={{ marginBottom: '20px' }}>
+                    <div className="trips-row" style={{
+                        display: 'flex',
+                        gap: '15px',
+                        overflowX: 'auto',
+                        paddingBottom: '10px'
+                    }}>
+                        {
+                            myTrips.map((trip: Trip) =>
+                                <CarSharingWidget
+                                    key={trip.id}
+                                    profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
+                                    origin={trip.origin}
+                                    destination={trip.destination}
+                                    departureTime={trip.departureTime}
+                                    fullName={trip.fullName}
+                                    username={trip.username}
+                                    onClick={() => {}}
+                                />
+                            )
+                        }
+                    </div>
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                    <button
+                        onClick={() => {}}
+                        style={{
+                            padding: '12px 30px',
+                            backgroundColor: '#28a745',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '5px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            fontWeight: 'bold'
+                        }}
+                    >
+                        Nuevo viaje
+                    </button>
                 </div>
             </div>
         </Page>
