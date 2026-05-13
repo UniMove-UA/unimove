@@ -2,13 +2,14 @@ import { Marker, Popup } from 'react-leaflet';
 import { divIcon } from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 
-const createVmpIcon = () => {
+const createVmpIcon = (type: 'scooter' | 'bike') => {
+    const icon = type === 'bike' ? 'bike.svg' : 'vmp.svg';
     return divIcon({
         className: 'transport-marker',
         html: `
             <div class='marker'>
                 <img src='location.svg' alt='marker' class='marker-base' />
-                <img src='vmp.svg' alt='badge' width="15" height="15" class='marker-badge' />    
+                <img src='${icon}' alt='badge' width="15" height="15" class='marker-badge' />    
             </div>
         `,
         iconSize: [40, 50],
@@ -19,22 +20,34 @@ const createVmpIcon = () => {
 
 interface MarkerProps {
     position: [number, number];
+    id: number;
     name: string;
     code: string;
-    onRent?: (code: string) => void;
+    type: 'scooter' | 'bike';
+    locationName?: string | null;
+    unlockPrice?: number | null;
+    pricePerMinute?: number | null;
 }
 
-export default function VmpMarker({ position, name, code, onRent }: MarkerProps) {
+export default function VmpMarker({ position, id, name, code, type, locationName, unlockPrice, pricePerMinute }: MarkerProps) {
     const navigate = useNavigate();
+    const unlock = Math.max(0.5, Number(unlockPrice ?? 0));
+    const perMinute = Number(pricePerMinute ?? 0);
 
     return (
         <Marker
             position={position}
-            icon={createVmpIcon()}
+            icon={createVmpIcon(type)}
         >
             <Popup>
                 <div style={{ textAlign: "center" }}>
                     <span style={{ fontSize: "1rem", display: "block", marginBottom: "5px" }}><strong>{name}</strong></span>
+                    <span style={{ fontSize: "0.85rem", display: "block", marginBottom: "6px", color: "#666" }}>
+                        Disponible en: {locationName || 'Campus UA'}
+                    </span>
+                    <span style={{ fontSize: "0.85rem", display: "block", marginBottom: "8px", color: "#666" }}>
+                        {unlock.toFixed(2)}€ desbloqueo · {perMinute.toFixed(2)}€/min
+                    </span>
                     <button 
                         style={{
                             backgroundColor: "#42b883",
@@ -47,15 +60,9 @@ export default function VmpMarker({ position, name, code, onRent }: MarkerProps)
                             fontWeight: "bold",
                             marginTop: "5px"
                         }}
-                        onClick={() => {
-                            if (onRent) {
-                                onRent(code);
-                            } else {
-                                navigate('/rentvmp');
-                            }
-                        }}
+                        onClick={() => navigate(`/checkout?type=vmp&id=${id}`)}
                     >
-                        Alquilar
+                        Reservar
                     </button>
                 </div>
             </Popup>

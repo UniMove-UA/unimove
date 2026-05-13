@@ -1,0 +1,161 @@
+.publish-layout {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+    background-color: #f8faf9;
+    min-height: calc(100vh - 80px);
+}
+
+.publish-card {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(16, 59, 49, 0.08);
+    max-width: 600px;
+    width: 100%;
+}
+
+.publish-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #f0f4f2;
+    padding-bottom: 1rem;
+}
+
+.publish-header h2 {
+    color: #103B31;
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.publish-header p {
+    color: #6a8a82;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.form-section {
+    margin-bottom: 1.5rem;
+}
+
+.section-subtitle {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: #31A47B;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.publish-form label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #103B31;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Corregir visibilidad del calendario */
+input[type="datetime-local"] {
+    position: relative;
+    color-scheme: light; /* Obliga al navegador a usar iconos oscuros */
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    background-color: #f0f4f2;
+    padding: 5px;
+    border-radius: 4px;
+    opacity: 1;
+}
+
+input, select {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid #d0ece1;
+    border-radius: 8px;
+    background: #fafcfb;
+    color: #103B31;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+input:focus {
+    outline: none;
+    border-color: #31A47B;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(49, 164, 123, 0.1);
+}
+
+.input-with-action {
+    display: flex;
+    gap: 10px;
+}
+
+.location-btn {
+    white-space: nowrap;
+    padding: 0 1rem;
+    background: #195c4c;
+    color: #103B31;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.location-btn.success {
+    background: #31A47B;
+    color: white;
+    border-color: #31A47B;
+}
+
+.price-input-wrapper {
+    position: relative;
+}
+
+.error-alert {
+    background: #fff1f0;
+    border-left: 4px solid #f5222d;
+    color: #cf1322;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.confirm-btn {
+    width: 100%;
+    padding: 1.2rem;
+    background: #31A47B;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+    box-shadow: 0 4px 12px rgba(49, 164, 123, 0.3);
+    transition: 0.3s ease;
+}
+
+.confirm-btn:hover:not(:disabled) {
+    background: #1f6e50;
+    transform: translateY(-2px);
+}
+
+.confirm-btn:disabled {
+    background: #a0b2ab;
+    cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .publish-card { padding: 1.5rem; }
+}

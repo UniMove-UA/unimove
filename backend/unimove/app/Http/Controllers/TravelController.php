@@ -10,6 +10,31 @@ use Illuminate\Support\Facades\Validator;
 
 class TravelController extends Controller
 {
+    // GET /travels/all
+    public function all()
+    {
+        $travels = Travel::with(['driver', 'vehicle'])
+            ->where('status', 'active')
+            ->where('driver_id', '!=', Auth::id())
+            ->orderBy('departure_time', 'asc')
+            ->get()
+            ->map(fn($t) => [
+                'id'=> $t->id,
+                'origin'=> $t->origin,
+                'destination'=> $t->destination,
+                'departure_time'  => $t->departure_time,
+                'price'=> $t->price,
+                'status'=> $t->status,
+                'available_seats' => $t->available_seats,
+                'driver' => [
+                    'name'=> $t->driver->name,
+                    'username' => $t->driver->username,
+                    'image'=> $t->driver->image,
+                ],
+            ]);
+
+        return response()->json($travels);
+    }
     // GET /travels?lat={lat}&lon={lon}&origin={origin}&destination={destination}&date={date}
     public function index(Request $request)
     {
@@ -39,6 +64,7 @@ class TravelController extends Controller
             ->when($request->date, fn($q) => $q->whereDate('departure_time', $request->date))
             ->get()
             ->map(fn($t) => [
+                'id'=> $t->id,
                 'origin'=> $t->origin,
                 'destination'=> $t->destination,
                 'departure_time'  => $t->departure_time,
@@ -242,6 +268,7 @@ class TravelController extends Controller
         $validator = Validator::make($request->all(), [
             'lat' => 'required|numeric|between:-90,90',
             'lon' => 'required|numeric|between:-180,180',
+            'radius' => 'nullable|numeric|min:1|max:20000',
         ]);
 
         if ($validator->fails()) {
@@ -253,12 +280,14 @@ class TravelController extends Controller
 
         $lat = $request->lat;
         $lon = $request->lon;
+        $radius = $request->radius ?? 20;
 
         $travels = Travel::with(['driver', 'vehicle'])
             ->where('status', 'active')
-            ->whereRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitud)) * cos(radians(longitud) - radians(?)) + sin(radians(?)) * sin(radians(latitud)))) < 20", [$lat, $lon, $lat])
+            ->whereRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitud)) * cos(radians(longitud) - radians(?)) + sin(radians(?)) * sin(radians(latitud)))) < ?", [$lat, $lon, $lat, $radius])
             ->get()
             ->map(fn($t) => [
+                'id'=> $t->id,
                 'origin'=> $t->origin,
                 'destination'=> $t->destination,
                 'departure_time'  => $t->departure_time,
@@ -309,6 +338,7 @@ class TravelController extends Controller
             ->whereRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitud)) * cos(radians(longitud) - radians(?)) + sin(radians(?)) * sin(radians(latitud)))) < 20", [$lat, $lon, $lat])
             ->get()
             ->map(fn($t) => [
+                'id'=> $t->id,
                 'origin'=> $t->origin,
                 'destination'=> $t->destination,
                 'departure_time'  => $t->departure_time,

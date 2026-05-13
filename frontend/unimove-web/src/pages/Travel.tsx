@@ -1,9 +1,11 @@
 import Page from "../components/Page";
-import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from "react";
 import "../styles/Travel.css";
 import CarSharingWidget from "../components/CarSharingWidget.tsx";
 import PublicTransportWidget from "../components/PublicTransportWidget.tsx";
 import { useSearchParams } from 'react-router-dom';
+import CampusMobilityWidget from "../components/CampusMobilityWidget.tsx";
 
 interface Trip {
     type: string;
@@ -43,19 +45,72 @@ const getTransportIcon = (type: string) => {
 }
 
 export default function Travel() {
-    const [searchParams] = useSearchParams();
-    const now = new Date();
+    const navigate = useNavigate();
 
+    const [searchParams] = useSearchParams();
     const [origin, setOrigin] = useState("");
     const [destination, setDestination] = useState(searchParams.get("destination") || "");
 
     const [publicTransportTrips, setPublicTransportTrips] = useState<Trip[]>([]);
-    const [carSharingTrips, setCarSharingTrips] = useState<Trip[]>([]);
     const [myTrips, setMyTrips] = useState<Trip[]>([]);
 
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [carSharingTrips, setCarSharingTrips] = useState<Array<{
+        id: number;
+        profileImage: string;
+        origin: string;
+        destination: string;
+        departureTime: string;
+        fullName: string;
+        username: string;
+        price: number;
+    }>>([]);
+    const [campusVmps, setCampusVmps] = useState<Array<{
+        id: number;
+        type: 'scooter' | 'bike';
+        location_name?: string | null;
+        lat?: number | null;
+        lon?: number | null;
+        price_per_minute?: number | null;
+        unlock_price?: number | null;
+    }>>([]);
+
+    const getCampusZone = (lat?: number | null, lon?: number | null) => {
+        if (lat == null || lon == null) return 'Campus UA';
+        if (lat >= 38.3855) return 'Zona Norte (Aulario II)';
+        if (lat <= 38.3835) return 'Zona Sur (Aulario I)';
+        if (lon <= -0.5155) return 'Zona Oeste (Biblioteca)';
+        if (lon >= -0.5120) return 'Zona Este (Deportivas)';
+        return 'Zona Central (Rectorado)';
+    };
+
+    useEffect(() => {
+        const fetchVmps = async () => {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const response = await fetch('http://localhost:8000/api/vmps', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    },
+                    credentials: 'include',
+                });
+
+                if (!response.ok) {
+                    throw new Error('No se pudieron cargar los VMPs');
+                }
+
+                const data = await response.json();
+                setCampusVmps(data.vmps || []);
+            } catch (err) {
+                console.error(err);
+            }
+        };
+
+        fetchVmps();
+    }, []);
     const [apiError, setApiError] = useState<string | null>(null);
 
     const token = localStorage.getItem("auth_token");
@@ -204,7 +259,7 @@ export default function Travel() {
     return (
         <Page name="viajes">
             <div style={{margin: "3% 20%"}}>
-                <div className="search-container" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <div className="search-container">
                     <input
                         type="text"
                         placeholder="Elige tu origen"
@@ -251,7 +306,7 @@ export default function Travel() {
                     {carSharingTrips.length === 0 && !fetchLoading && !apiError ? (
                         <p>No se encontraron viajes de carsharing disponibles. Introduce un origen y destino y pulsa Buscar.</p>
                     ) : (
-                        carSharingTrips.map((trip: Trip) => (
+                        carSharingTrips.map((trip) => (
                             <CarSharingWidget
                                 key={trip.id}
                                 profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
@@ -260,7 +315,6 @@ export default function Travel() {
                                 departureTime={trip.departureTime}
                                 fullName={trip.fullName}
                                 username={trip.username}
-                                onClick={() => {}}
                             />
                         ))
                     )}
@@ -348,7 +402,6 @@ export default function Travel() {
                                     departureTime={trip.departureTime}
                                     fullName={trip.fullName}
                                     username={trip.username}
-                                    onClick={() => {}}
                                 />
                             )
                         }
@@ -356,7 +409,7 @@ export default function Travel() {
                 </div>
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
                     <button
-                        onClick={() => {}}
+                        onClick={() => {navigate('/travels/publish')}}
                         style={{
                             padding: '12px 30px',
                             backgroundColor: '#28a745',

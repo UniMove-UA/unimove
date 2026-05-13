@@ -3,6 +3,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/Map.css';
 import TransportMarker from "./TransportMarker.tsx";
+import VmpMarker from "./VmpMarker.tsx";
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useCallback } from "react";
 import { useMap } from 'react-leaflet';
@@ -22,6 +23,19 @@ interface Marker {
     id: string;
     lat: number;
     lon: number;
+}
+
+interface VmpMarkerData {
+    id: number | string;
+    vmp_id?: number;
+    name: string;
+    code: string;
+    type: 'scooter' | 'bike';
+    lat: number;
+    lon: number;
+    location_name?: string | null;
+    price_per_minute?: number | null;
+    unlock_price?: number | null;
 }
 
 interface MapProps {
@@ -50,9 +64,19 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
     const navigate = useNavigate();
     const [destination, setDestination] = useState<string>("");
     const [markers, setMarkers] = useState<Marker[]>([]);
+    const [vmpMarkers, setVmpMarkers] = useState<VmpMarkerData[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const token = localStorage.getItem('auth_token');
 
+
+    const getCampusZone = (lat?: number | null, lon?: number | null) => {
+        if (lat == null || lon == null) return 'Campus UA';
+        if (lat >= 38.3855) return 'Zona Norte (Aulario II)';
+        if (lat <= 38.3835) return 'Zona Sur (Aulario I)';
+        if (lon <= -0.5155) return 'Zona Oeste (Biblioteca)';
+        if (lon >= -0.5120) return 'Zona Este (Deportivas)';
+        return 'Zona Central (Rectorado)';
+    };
 
     const handleBoundsChange = useCallback(async (bounds: L.LatLngBounds) => {
         setLoading(true);
@@ -74,6 +98,7 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                 ...(data.travels || []),
             ];
             setMarkers(combined);
+            setVmpMarkers(data.vmps || []);
         } catch (error) {
             console.error("Error fetching markers:", error);
         } finally {
@@ -103,6 +128,20 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                             position={[marker.lat, marker.lon]}
                             name={marker.name}
                             id={marker.id}
+                        />
+                    ))}
+
+                    {vmpMarkers.map(vmp => (
+                        <VmpMarker
+                            key={`vmp-${vmp.id}`}
+                            position={[vmp.lat, vmp.lon]}
+                            name={vmp.name}
+                            code={vmp.code}
+                            id={vmp.vmp_id ?? (typeof vmp.id === 'string' ? Number(String(vmp.id).replace('vmp_', '')) : vmp.id)}
+                            type={vmp.type}
+                            locationName={vmp.location_name || getCampusZone(vmp.lat, vmp.lon)}
+                            unlockPrice={vmp.unlock_price ?? null}
+                            pricePerMinute={vmp.price_per_minute ?? null}
                         />
                     ))}
                 </MarkerClusterGroup>

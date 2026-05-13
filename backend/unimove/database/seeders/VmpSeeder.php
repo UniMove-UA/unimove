@@ -24,6 +24,7 @@ class VmpSeeder extends Seeder
                 'status' => 'available',
                 'battery_level' => rand(30, 100),
                 'price_per_minute' => 0.15,
+                'unlock_price' => 0.50,
                 'latitude' => $minLat + (rand(0, 40) / 10000), // Rango de 0.0040 para coincidir con maxLat
                 'longitude' => $minLon + (rand(0, 80) / 10000), // Rango de 0.0080 para coincidir con maxLon
             ]);

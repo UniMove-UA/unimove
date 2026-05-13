@@ -1,6 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
+import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
 
 interface ProfileData {
     fullName: string;
@@ -8,6 +9,14 @@ interface ProfileData {
     email: string;
     avatarUrl: string;
     rating?: number;
+}
+
+interface Vehicle {
+    id: number | string;
+    brand: string;
+    model: string;
+    license_plate: string;
+    total_seats: number;
 }
 
 interface ProfileProps {
@@ -27,16 +36,50 @@ const getImageUrl = (image: string | null | undefined): string => {
 export default function Profile({ profileData }: ProfileProps) {
     const [isEditing, setIsEditing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+    const [vehiclesLoading, setVehiclesLoading] = useState(false);
+    const [vehiclesError, setVehiclesError] = useState<string | null>(null);
 
     const [tempData, setTempData] = useState<ProfileData>({
         fullName: profileData.fullName || "",
         username: profileData.username || "",
         email: profileData.email || "",
         avatarUrl: getImageUrl(profileData.avatarUrl),
-        rating: profileData.rating ?? 0, // Si no viene, usa 0
+        rating: profileData.rating ?? 0,
     });
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const fetchVehicles = async () => {
+        setVehiclesLoading(true);
+        setVehiclesError(null);
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch('http://localhost:8000/api/vehicles/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error al cargar vehículos: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            setVehicles(data);
+        } catch (err) {
+            setVehiclesError(err instanceof Error ? err.message : 'Error desconocido');
+        } finally {
+            setVehiclesLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchVehicles();
+    }, []);
 
     const handleAvatarClick = () => {
         if (isEditing && fileInputRef.current) {
@@ -73,7 +116,7 @@ export default function Profile({ profileData }: ProfileProps) {
             const response = await fetch(`/api/profile/me`, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${token}` ,
+                    'Authorization': `Bearer ${token}`,
                     'Accept': 'application/json',
                 },
                 body: formData
@@ -115,6 +158,11 @@ export default function Profile({ profileData }: ProfileProps) {
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
         }
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        fetchVehicles();
     };
 
     return (
@@ -243,6 +291,31 @@ export default function Profile({ profileData }: ProfileProps) {
                         </form>
                     </div>
                 </div>
+
+                <h2>Mis vehículos</h2>
+
+                <div className="vehicles-list-container">
+                    {vehiclesLoading ? (
+                        <p>Cargando vehículos...</p>
+                    ) : vehiclesError ? (
+                        <p style={{ color: 'red' }}>{vehiclesError}</p>
+                    ) : vehicles.length === 0 ? (
+                        <p>No tienes vehículos registrados.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {vehicles.map((vehicle) => (
+                                <li key={vehicle.id} className="vehicle-item">
+                                    <strong>{vehicle.brand} {vehicle.model}</strong>
+                                    <span>Matrícula: {vehicle.license_plate}</span>
+                                    <span>Asientos: {vehicle.total_seats}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                <button onClick={() => setIsModalOpen(true)}>Nuevo vehículo</button>
+                <VehicleRegistrationModal isOpen={isModalOpen} onClose={handleCloseModal} />
             </div>
         </Page>
     );

@@ -44,7 +44,6 @@ export default function ProfileContainer() {
                     const errorText = await response.text();
                     throw new Error(`Servidor respondió con ${response.status}: ${errorText.substring(0, 100)}`);
                 }
-                //const contentType = response.headers.get("content-type");
                 const data = await response.json();
                 setProfileData({
                     fullName: data.name,

@@ -1,10 +1,18 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
-function CheckoutForm() {
+type PaymentType = 'carpool' | 'vmp'
+
+interface CheckoutFormProps {
+  paymentType: PaymentType
+  paymentId: number
+  amount: number
+}
+
+function CheckoutForm({ paymentType, paymentId, amount }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
   const [status, setStatus] = useState<string | null>(null)
@@ -18,14 +26,14 @@ function CheckoutForm() {
     setStatus(null)
 
     const token = localStorage.getItem('auth_token');
-    const resp = await fetch('/api/payments/create-intent', {
+    const resp = await fetch('http://localhost:8000/api/payments/create-intent', {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json' ,
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify({ amount: 12.50, currency: 'eur' })
+      body: JSON.stringify({ type: paymentType, id: paymentId, currency: 'eur' })
     })
 
     const data = await resp.json()
@@ -98,7 +106,7 @@ function CheckoutForm() {
           </div>
         </div>
         <button style={{ backgroundColor: '#0ea5a6', color: '#000' }} className="px-4 py-2 rounded" disabled={loading || !stripe}>
-          {loading ? 'Paying…' : 'Pay 12.50€'}
+          {loading ? 'Paying…' : `Pay ${amount.toFixed(2)}€`}
         </button>
       </form>
       {status && <p className="mt-4">{status}</p>}
@@ -106,10 +114,16 @@ function CheckoutForm() {
   )
 }
 
-export default function Checkout() {
+interface CheckoutProps {
+  paymentType: PaymentType
+  paymentId: number
+  amount: number
+}
+
+export default function Checkout({ paymentType, paymentId, amount }: CheckoutProps) {
   return (
     <Elements stripe={stripePromise}>
-      <CheckoutForm />
+      <CheckoutForm paymentType={paymentType} paymentId={paymentId} amount={amount} />
     </Elements>
   )
 }

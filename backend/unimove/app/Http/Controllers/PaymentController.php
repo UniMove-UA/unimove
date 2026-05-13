@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\Vmp;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,6 +28,8 @@ class PaymentController extends Controller
             'bookingId' => 'nullable|integer',
             'amount' => 'nullable|numeric',
             'currency' => 'nullable|string',
+            'type' => 'nullable|string', // carpool or vmp
+            'id' => 'nullable|integer',
         ]);
 
         $currency = $data['currency'] ?? 'eur';
@@ -48,15 +51,43 @@ class PaymentController extends Controller
             if ($price === null) {
                 return response()->json(['error' => 'Booking has no price configured'], 400);
             }
-            $amountCents = (int) round(floatval($price) * 100);
+            $priceToCharge = max(0.50, floatval($price));
+            $amountCents = (int) round($priceToCharge * 100);
             $metadata = ['booking_id' => $booking->id];
-            $idempotencyKey = 'pi_booking_' . $booking->id;
+            $idempotencyKey = 'pi_booking_' . $booking->id . '_' . uniqid();
         } elseif (!empty($data['amount'])) {
             $amountCents = (int) round(floatval($data['amount']) * 100);
             $metadata = [];
             // Use a per-request unique idempotency key for manual payments to
             // avoid "same key different params" errors during local testing.
             $idempotencyKey = 'pi_manual_' . ($user->id ?? 'anon') . '_' . uniqid();
+        } elseif (!empty($data['type']) && !empty($data['id'])) {
+            $type = $data['type'];
+            $entityId = $data['id'];
+            $metadata = [];
+            if ($type === 'carpool') {
+                $booking = Booking::find($entityId);
+                if (!$booking) return response()->json(['error' => 'Booking not found'], 404);
+                if ($booking->passenger_id !== $user->id) return response()->json(['error' => 'Forbidden'], 403);
+                $price = $booking->travel->price ?? null;
+                if ($price === null) return response()->json(['error' => 'Booking has no price configured'], 400);
+                $priceToCharge = max(0.50, floatval($price));
+                $amountCents = (int) round($priceToCharge * 100);
+                $metadata = ['booking_id' => $booking->id];
+                $idempotencyKey = 'pi_booking_' . $booking->id . '_' . uniqid();
+            } elseif ($type === 'vmp') {
+                $vmp = Vmp::find($entityId);
+                if (!$vmp) return response()->json(['error' => 'VMP not found'], 404);
+                // Use unlock_price if available, otherwise fall back to price_per_minute
+                $unlock = $vmp->unlock_price ?? $vmp->price_per_minute ?? 0.50;
+                // Stripe minimum charge in EUR is 0.50, enforce a floor
+                $unlock = max(0.50, floatval($unlock));
+                $amountCents = (int) round(floatval($unlock) * 100);
+                $metadata = ['vmp_id' => $vmp->id];
+                $idempotencyKey = 'pi_vmp_' . $vmp->id . '_' . uniqid();
+            } else {
+                return response()->json(['error' => 'Unknown payment type'], 400);
+            }
         } else {
             return response()->json(['error' => 'No amount or bookingId provided'], 400);
         }
