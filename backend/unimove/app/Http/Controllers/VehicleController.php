@@ -120,6 +120,14 @@ class VehicleController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
+        $hasTravel = \DB::table('travels')->where('vehicle_id', $id)->exists();
+
+        if ($hasTravel) {
+            return response()->json([
+                'message' => 'No puedes eliminar este vehículo porque tiene viajes asociados.',
+            ], 422);
+        }
+
         $vehicle->delete();
         return response()->json(['message' => 'Vehículo eliminado correctamente']);
     }

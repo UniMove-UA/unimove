@@ -73,11 +73,20 @@ export default function Profile({ profileData }: ProfileProps) {
                     'Accept': 'application/json'
                 },
             });
-            if (!response.ok) throw new Error('Error al eliminar');
+
+            const data = await response.json();
+            console.log('Status:', response.status);
+            console.log('Response body:', data);  // aquí verás el error real
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al eliminar');
+            }
+
             setDeleteConfirmId(null);
             fetchVehicles();
-        } catch {
-            setVehicleActionError('No se pudo eliminar el vehículo.');
+        } catch (err) {
+            console.error('Error completo:', err);
+            setVehicleActionError(err instanceof Error ? err.message : 'No se pudo eliminar el vehículo.');
         }
     };
 
@@ -524,14 +533,17 @@ export default function Profile({ profileData }: ProfileProps) {
                                                 {deleteConfirmId === vehicle.id ? (
                                                     <>
                                                         <button className="vehicle-btn-confirm-delete" onClick={() => handleDeleteVehicle(vehicle.id)}>Confirmar</button>
-                                                        <button className="vehicle-btn-cancel-delete" onClick={() => setDeleteConfirmId(null)}>Cancelar</button>
+                                                        <button className="vehicle-btn-cancel-delete" onClick={() => { setDeleteConfirmId(null); setVehicleActionError(null); }}>Cancelar</button>
                                                     </>
                                                 ) : (
                                                     <button
                                                         className="vehicle-btn-icon vehicle-btn-delete"
                                                         title="Eliminar"
-                                                        onClick={() => setDeleteConfirmId(vehicle.id)}
+                                                        onClick={() => { setDeleteConfirmId(vehicle.id); setVehicleActionError(null); }}
                                                     >✕</button>
+                                                )}
+                                                {deleteConfirmId === vehicle.id && vehicleActionError && (
+                                                    <p style={{ color: 'red', fontSize: 13, marginTop: 4 }}>{vehicleActionError}</p>
                                                 )}
                                             </div>
                                         </>
