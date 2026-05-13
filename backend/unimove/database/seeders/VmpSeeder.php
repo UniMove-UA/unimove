@@ -12,7 +12,6 @@ class VmpSeeder extends Seeder
      */
     public function run(): void
     {
-        // Límites aproximados del campus de la Universidad de Alicante
         $minLat = 38.3825;
         $maxLat = 38.3865;
         $minLon = -0.5175;
