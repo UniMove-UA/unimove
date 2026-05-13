@@ -59,6 +59,62 @@ export default function Profile({ profileData }: ProfileProps) {
     });
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<number | string | null>(null);
+    const [vehicleActionError, setVehicleActionError] = useState<string | null>(null);
+
+    const handleDeleteVehicle = async (id: number | string) => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`http://localhost:8000/api/vehicles/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+            });
+            if (!response.ok) throw new Error('Error al eliminar');
+            setDeleteConfirmId(null);
+            fetchVehicles();
+        } catch {
+            setVehicleActionError('No se pudo eliminar el vehículo.');
+        }
+    };
+
+    const handleUpdateVehicle = async () => {
+        if (!editingVehicle) return;
+
+        const normalizedPlate = editingVehicle.plate.toUpperCase().replace(/\s/g, '');
+        const plateRegex = /^\d{4}[A-Z]{3}$/;
+        if (!plateRegex.test(normalizedPlate)) {
+            setVehicleActionError('Formato de matrícula inválido. Ej: 1234ABC');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`http://localhost:8000/api/vehicles/${editingVehicle.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ ...editingVehicle, plate: normalizedPlate }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al actualizar');
+            }
+
+            setEditingVehicle(null);
+            setVehicleActionError(null);
+            fetchVehicles();
+        } catch (err) {
+            setVehicleActionError(err instanceof Error ? err.message : 'Error desconocido');
+        }
+    };
 
     const fetchVehicles = async () => {
         setVehiclesLoading(true);
@@ -414,9 +470,72 @@ export default function Profile({ profileData }: ProfileProps) {
                         <ul className="vehicles-list">
                             {vehicles.map((vehicle) => (
                                 <li key={vehicle.id} className="vehicle-item">
-                                    <strong>{vehicle.brand} {vehicle.model}</strong>
-                                    <span>Matrícula: {vehicle.plate}</span>
-                                    <span>Asientos: {vehicle.total_seats}</span>
+                                    {editingVehicle?.id === vehicle.id ? (
+                                        <div className="vehicle-edit-form">
+                                            <input
+                                                className="profile-field-input"
+                                                value={editingVehicle.brand}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, brand: e.target.value })}
+                                                placeholder="Marca"
+                                            />
+                                            <input
+                                                className="profile-field-input"
+                                                value={editingVehicle.model}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, model: e.target.value })}
+                                                placeholder="Modelo"
+                                            />
+                                            <input
+                                                className="profile-field-input"
+                                                value={editingVehicle.plate}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, plate: e.target.value })}
+                                                placeholder="Matrícula"
+                                                maxLength={8}
+                                            />
+                                            <input
+                                                className="profile-field-input"
+                                                type="number"
+                                                value={editingVehicle.total_seats}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, total_seats: Number(e.target.value) })}
+                                                placeholder="Asientos"
+                                                min={1}
+                                                max={9}
+                                            />
+                                            {vehicleActionError && (
+                                                <p style={{ color: 'red', fontSize: 13 }}>{vehicleActionError}</p>
+                                            )}
+                                            <div className="vehicle-edit-actions">
+                                                <button className="vehicle-btn-save" onClick={handleUpdateVehicle}>Guardar</button>
+                                                <button className="vehicle-btn-cancel" onClick={() => { setEditingVehicle(null); setVehicleActionError(null); }}>Cancelar</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="vehicle-info">
+                                                <strong>{vehicle.brand} {vehicle.model}</strong>
+                                                <span>Matrícula: {vehicle.plate}</span>
+                                                <span>Asientos: {vehicle.total_seats}</span>
+                                            </div>
+                                            <div className="vehicle-actions">
+                                                <button
+                                                    className="vehicle-btn-icon"
+                                                    title="Editar"
+                                                    onClick={() => { setEditingVehicle(vehicle); setVehicleActionError(null); }}
+                                                >✏️</button>
+                                                {deleteConfirmId === vehicle.id ? (
+                                                    <>
+                                                        <button className="vehicle-btn-confirm-delete" onClick={() => handleDeleteVehicle(vehicle.id)}>Confirmar</button>
+                                                        <button className="vehicle-btn-cancel-delete" onClick={() => setDeleteConfirmId(null)}>Cancelar</button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        className="vehicle-btn-icon vehicle-btn-delete"
+                                                        title="Eliminar"
+                                                        onClick={() => setDeleteConfirmId(vehicle.id)}
+                                                    >✕</button>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
                                 </li>
                             ))}
                         </ul>
