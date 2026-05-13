@@ -2,10 +2,10 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import '../styles/Vehicle.css';
 
 interface VehicleFormData {
-    marca: string;
-    modelo: string;
-    matricula: string;
-    asientos: number;
+    brand: string;
+    model: string;
+    plate: string;
+    total_seats: number;
 }
 
 interface VehicleRegistrationModalProps {
@@ -15,10 +15,10 @@ interface VehicleRegistrationModalProps {
 
 export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleRegistrationModalProps) {
     const [formData, setFormData] = useState<VehicleFormData>({
-        marca: '',
-        modelo: '',
-        matricula: '',
-        asientos: 0,
+        brand: '',
+        model: '',
+        plate: '',
+        total_seats: 0,
     });
 
     const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        const finalValue = name === 'asientos' ? Number(value) : value;
+        const finalValue = name === 'total_seats' ? Number(value) : value;
 
         setFormData((prev) => ({
             ...prev,
@@ -56,13 +56,26 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
             });
 
             if (!response.ok) {
-                throw new Error(`Error al registrar: ${response.statusText}`);
-            }
+                let errorMessage = `Error al registrar: ${response.statusText}`;
 
+                try {
+                    const errorData = await response.json();
+                    if (errorData.message) {
+                        errorMessage = errorData.message;
+                    } else if (errorData.errors) {
+                        const errors = Object.values(errorData.errors).flat();
+                        errorMessage = errors.join(', ');
+                    }
+                } catch (e) {
+                    console.error("El error no es JSON:", e);
+                }
+
+                throw new Error(errorMessage);
+            }
             setSuccess(true);
 
             setTimeout(() => {
-                setFormData({ marca: '', modelo: '', matricula: '', asientos: 0 });
+                setFormData({ brand: '', model: '', plate: '', total_seats: 0 });
                 onClose();
             }, 1500);
 
@@ -86,13 +99,13 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="marca" className="form-label">Marca</label>
+                        <label htmlFor="brand" className="form-label">Marca</label>
                         <input
                             type="text"
-                            id="marca"
-                            name="marca"
+                            id="brand"
+                            name="brand"
                             className="form-input"
-                            value={formData.marca}
+                            value={formData.brand}
                             onChange={handleChange}
                             required
                             placeholder="Ej: Toyota"
@@ -100,13 +113,13 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="modelo" className="form-label">Modelo</label>
+                        <label htmlFor="model" className="form-label">Modelo</label>
                         <input
                             type="text"
-                            id="modelo"
-                            name="modelo"
+                            id="model"
+                            name="model"
                             className="form-input"
-                            value={formData.modelo}
+                            value={formData.model}
                             onChange={handleChange}
                             required
                             placeholder="Ej: Corolla"
@@ -114,13 +127,13 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="matricula" className="form-label">Matrícula</label>
+                        <label htmlFor="plate" className="form-label">Matrícula</label>
                         <input
                             type="text"
-                            id="matricula"
-                            name="matricula"
+                            id="plate"
+                            name="plate"
                             className="form-input"
-                            value={formData.matricula}
+                            value={formData.plate}
                             onChange={handleChange}
                             required
                             placeholder="Ej: 1234 ABC"
@@ -128,13 +141,13 @@ export default function VehicleRegistrationModal({ isOpen, onClose }: VehicleReg
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="asientos" className="form-label">Asientos totales</label>
+                        <label htmlFor="total_seats" className="form-label">Asientos totales</label>
                         <input
                             type="number"
-                            id="asientos"
-                            name="asientos"
+                            id="total_seats"
+                            name="total_seats"
                             className="form-input"
-                            value={formData.asientos}
+                            value={formData.total_seats}
                             onChange={handleChange}
                             min="1"
                             required
