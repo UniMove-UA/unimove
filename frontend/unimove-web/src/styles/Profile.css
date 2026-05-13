@@ -208,3 +208,32 @@
     color: #f57f17;
     font-size: 0.9rem;
 }
+
+.vehicles-list-container {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+}
+
+.vehicles-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.vehicle-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.vehicle-item:last-child {
+    border-bottom: none;
+}
+
+.vehicle-item span {
+    font-size: 0.9rem;
+    color: #555;
+}
