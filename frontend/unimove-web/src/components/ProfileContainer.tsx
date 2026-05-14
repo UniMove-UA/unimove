@@ -7,6 +7,7 @@ interface ProfileData {
     username: string;
     email: string;
     avatarUrl: string;
+    rating?: number;
 }
 
 export default function ProfileContainer() {
@@ -49,7 +50,8 @@ export default function ProfileContainer() {
                     fullName: data.name,
                     username: data.username,
                     email: data.email,
-                    avatarUrl: data.image
+                    avatarUrl: data.image,
+                    rating: data.rating,
                 });
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Ocurrió un error desconocido al cargar el perfil');

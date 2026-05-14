@@ -85,7 +85,6 @@ export default function Profile({ profileData }: ProfileProps) {
     const [vehicleActionError, setVehicleActionError] = useState<string | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([])
     const [bookingsLoading, setBookingsLoading] = useState(false)
-    const [reviewedBookings, setReviewedBookings] = useState<number[]>([])
     const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
     const [ratingModal, setRatingModal] = useState({isOpen: false, travelId: 0, revieweeId: 0, name: "", bookingId: 0});
     const [myReviewTravelIds, setMyReviewTravelIds] = useState<number[]>([])
