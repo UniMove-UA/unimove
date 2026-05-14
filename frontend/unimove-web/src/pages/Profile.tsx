@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
 import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
+import {useNavigate} from "react-router-dom";
 
 interface ProfileData {
     fullName: string;
@@ -52,6 +53,7 @@ export default function Profile({ profileData }: ProfileProps) {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [vehiclesLoading, setVehiclesLoading] = useState(false);
     const [vehiclesError, setVehiclesError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const [passwordData, setPasswordData] = useState({
         new_password: '',
@@ -538,6 +540,16 @@ export default function Profile({ profileData }: ProfileProps) {
                                                 }}
                                             >
                                                 ⭐ Valorar
+                                            </button>
+                                        </div>
+                                    )}
+                                    {booking.status === 'pending' && (
+                                        <div className="vehicle-actions">
+                                            <button
+                                                className="profile-btn profile-btn-edit"
+                                                onClick={() => navigate(`/checkout?type=carpool&id=${booking.travel.id}`)}
+                                            >
+                                                Pagar
                                             </button>
                                         </div>
                                     )}

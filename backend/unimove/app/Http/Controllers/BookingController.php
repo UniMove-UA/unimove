@@ -52,8 +52,6 @@ class BookingController extends Controller
             'status'       => 'pending',
         ]);
 
-        $travel->decrement('available_seats');
-
         Notification::create([
             'user_id' => $travel->driver_id,
             'text'    => 'Tienes una nueva reserva en tu viaje de ' . $travel->origin . ' a ' . $travel->destination,
@@ -207,7 +205,7 @@ class BookingController extends Controller
         }
 
         $booking->update(['status' => 'confirmed']);
-        
+        $booking->travel->decrement('available_seats');
 
         Notification::create([
             'user_id' => $booking->travel->driver_id,

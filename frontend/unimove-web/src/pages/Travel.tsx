@@ -93,7 +93,11 @@ export default function Travel() {
                 })
                 if (!res.ok) return
                 const data = await res.json()
-                setMyBookingTravelIds(data.map((b: any) => b.travel_id))
+                setMyBookingTravelIds(
+                    data
+                        .filter((b: any) => b.status === 'confirmed')
+                        .map((b: any) => b.travel_id)
+                )
             } catch (err) {
                 console.error(err)
             }
