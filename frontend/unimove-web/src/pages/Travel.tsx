@@ -37,7 +37,7 @@ function getTransportType(stopId: string): string {
 }
 
 const getTransportIcon = (type: string) => {
-    switch(type) {
+    switch (type) {
         case 'train': return '/tren.png';
         case 'tram': return '/tram.png';
         case 'bus': return '/autobus.png';
@@ -57,7 +57,10 @@ export default function Travel() {
 
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [apiError, setApiError] = useState<string | null>(null);
+
     const [carSharingTrips, setCarSharingTrips] = useState<Array<{
         id: number;
         profileImage: string;
@@ -69,6 +72,7 @@ export default function Travel() {
         price: number;
         available_seats: number;
     }>>([]);
+
     const [campusVmps, setCampusVmps] = useState<Array<{
         id: number;
         type: 'scooter' | 'bike';
@@ -150,7 +154,7 @@ export default function Travel() {
                 });
                 if (!res.ok) throw new Error(`Error: ${res.statusText}`);
                 const data = await res.json();
-                const mapped = data.map((trip) => ({
+                const mapped = data.map((trip: any) => ({
                     ...trip,
                     fullName: trip.driver?.name || '',
                     username: trip.driver?.username || '',
@@ -162,36 +166,8 @@ export default function Travel() {
                 console.error("Error cargando mis viajes:", err);
             }
         };
-
         fetchMyTrips();
     }, []);
-
-    useEffect(() => {
-        const fetchVmps = async () => {
-            try {
-                const response = await fetch('http://localhost:8000/api/vmps', {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    credentials: 'include',
-                });
-
-                if (!response.ok) {
-                    throw new Error('No se pudieron cargar los VMPs');
-                }
-
-                const data = await response.json();
-                setCampusVmps(data.vmps || []);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        fetchVmps();
-    }, []);
-    const [apiError, setApiError] = useState<string | null>(null);
-
 
     const fetchTrips = async () => {
         if (!origin || !destination) {
@@ -200,6 +176,8 @@ export default function Travel() {
         }
 
         setFetchLoading(true);
+        setHasSearched(true);
+        setCampusVmps([]);
         setApiError(null);
 
         try {
@@ -223,7 +201,7 @@ export default function Travel() {
                 throw new Error(`Error en carsharing: ${routeRes.statusText}`);
             }
             const routeData = await routeRes.json();
-            const mappedRouteData = routeData.map((trip) => ({
+            const mappedRouteData = routeData.map((trip: any) => ({
                 ...trip,
                 fullName: trip.driver?.name || '',
                 username: trip.driver?.username || '',
@@ -232,6 +210,24 @@ export default function Travel() {
                 available_seats: trip.available_seats,
             }));
             setCarSharingTrips(mappedRouteData);
+
+            try {
+                const delta = 0.003
+                const fromBox = `${lat - delta},${lon - delta}`
+                const toBox = `${lat + delta},${lon + delta}`
+                const markersRes = await fetch(`http://localhost:8000/api/markers?from=${encodeURIComponent(fromBox)}&to=${encodeURIComponent(toBox)}`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                })
+                if (markersRes.ok) {
+                    const markersData = await markersRes.json()
+                    setCampusVmps(markersData.vmps || [])
+                } else {
+                    setCampusVmps([])
+                }
+            } catch {
+                setCampusVmps([])
+            }
 
             const stopsRes = await fetch(`/api/stops/near?lat=${lat}&lon=${lon}`);
             const stopsData = await stopsRes.json();
@@ -317,7 +313,7 @@ export default function Travel() {
 
     return (
         <Page name="viajes">
-            <div style={{margin: "3% 20%"}}>
+            <div style={{ margin: "3% 20%" }}>
                 <div className="search-container">
                     <input
                         type="text"
@@ -358,7 +354,7 @@ export default function Travel() {
                 {error && <div className="error-message">{error}</div>}
                 {loading && <div className="loading-indicator">Obteniendo tu ubicación...</div>}
                 {fetchLoading && <div className="loading-indicator">Buscando viajes disponibles...</div>}
-                {apiError && <div className="error-message" style={{color: '#d32f2f'}}>{apiError}</div>}
+                {apiError && <div className="error-message" style={{ color: '#d32f2f' }}>{apiError}</div>}
 
                 <h1 className="section-title">Encuentra viajes cerca de ti</h1>
                 <div className="nearby-trips-container">
@@ -428,7 +424,7 @@ export default function Travel() {
                     </div>
                     <div className="transport-column">
                         <h2>Dentro del campus</h2>
-                        {publicTransportTrips.filter(t => t.type === "campus").length === 0 && !fetchLoading ? (
+                        {publicTransportTrips.filter(t => t.type === "campus").length === 0 && campusVmps.length === 0 && !fetchLoading ? (
                             <p>No hay transporte dentro del campus cercano.</p>
                         ) : (
                             publicTransportTrips
@@ -444,6 +440,22 @@ export default function Travel() {
                                         onClick={() => {}}
                                     />
                                 ))
+                        )}
+                        {hasSearched && !fetchLoading && campusVmps.length === 0 && (
+                            <p>No hay patinetes disponibles cerca.</p>
+                        )}
+                        {hasSearched && campusVmps.length > 0 && (
+                            <div style={{ marginTop: '12px' }}>
+                                {campusVmps.map((v) => (
+                                    <CampusMobilityWidget
+                                        key={`campus-vmp-${v.id}`}
+                                        id={typeof v.id === 'number' ? v.id : Number(v.id)}
+                                        type={(v.type as 'scooter' | 'bike') || 'scooter'}
+                                        locationName={v.location_name ?? undefined}
+                                        priceText={v.unlock_price ? `${Number(v.unlock_price).toFixed(2)}€` : v.price_per_minute ? `${Number(v.price_per_minute).toFixed(2)}€/min` : 'Precio no disponible'}
+                                    />
+                                ))}
+                            </div>
                         )}
                     </div>
                 </div>
@@ -507,16 +519,17 @@ export default function Travel() {
                                         color: trip.status === 'completed' ? '#28a745' : '#dc2626',
                                         flexShrink: 0
                                     }}>
-                        {trip.status === 'completed' ? 'Completado' : 'Cancelado'}
-                    </span>
+                                        {trip.status === 'completed' ? 'Completado' : 'Cancelado'}
+                                    </span>
                                 )}
                             </div>
                         ))}
                     </div>
                 </div>
+
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
                     <button
-                        onClick={() => {navigate('/travels/publish')}}
+                        onClick={() => { navigate('/travels/publish') }}
                         style={{
                             padding: '12px 30px',
                             backgroundColor: '#28a745',
