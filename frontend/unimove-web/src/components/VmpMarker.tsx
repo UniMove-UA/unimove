@@ -3,7 +3,7 @@ import { divIcon } from 'leaflet';
 import { useNavigate } from 'react-router-dom';
 
 const createVmpIcon = (type: 'scooter' | 'bike') => {
-    const icon = type === 'bike' ? 'bike.svg' : 'vmp.svg';
+    const icon = type === 'bike' ? 'bike.svg' : 'vmp_map.svg';
     return divIcon({
         className: 'transport-marker',
         html: `

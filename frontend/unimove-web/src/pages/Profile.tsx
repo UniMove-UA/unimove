@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
 import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
+import RatingModal from "../components/RatingModal.tsx";
+import {useNavigate} from "react-router-dom";
 
 interface ProfileData {
     fullName: string;
@@ -17,6 +19,24 @@ interface Vehicle {
     model: string;
     plate: string;
     total_seats: number;
+}
+
+interface Booking {
+    id: number;
+    status: string;
+    travel: {
+        id: number;
+        origin: string;
+        destination: string;
+        departure_time: string;
+        price: string;
+        status: string;
+        driver: {
+            id: number;
+            name: string;
+            username: string;
+        };
+    };
 }
 
 interface ProfileProps {
@@ -40,6 +60,7 @@ export default function Profile({ profileData }: ProfileProps) {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [vehiclesLoading, setVehiclesLoading] = useState(false);
     const [vehiclesError, setVehiclesError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const [passwordData, setPasswordData] = useState({
         new_password: '',
@@ -59,6 +80,129 @@ export default function Profile({ profileData }: ProfileProps) {
     });
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+    const [deleteConfirmId, setDeleteConfirmId] = useState<number | string | null>(null);
+    const [vehicleActionError, setVehicleActionError] = useState<string | null>(null);
+    const [bookings, setBookings] = useState<Booking[]>([])
+    const [bookingsLoading, setBookingsLoading] = useState(false)
+    const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
+    const [ratingModal, setRatingModal] = useState({isOpen: false, travelId: 0, revieweeId: 0, name: "", bookingId: 0});
+    const [myReviewTravelIds, setMyReviewTravelIds] = useState<number[]>([])
+    const [myRatings, setMyRatings] = useState<any[]>([])
+    const [ratingsLoading, setRatingsLoading] = useState(false)
+
+    const fetchMyRatings = async () => {
+        setRatingsLoading(true)
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch(`http://localhost:8000/api/profile/@${tempData.username}/reviews`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            setMyRatings(data)
+        } catch {
+            //
+        } finally {
+            setRatingsLoading(false)
+        }
+    }
+
+    const fetchMyReviews = async () => {
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch('http://localhost:8000/api/reviews/me', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            setMyReviewTravelIds(data.map((r: any) => r.travel_id))
+        }
+        catch {
+            //
+        }
+    }
+
+    const handleCancelBooking = async (bookingId: number) => {
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch(`http://localhost:8000/api/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            })
+            if (!res.ok) throw new Error()
+            setBookings(prev => prev.filter(b => b.id !== bookingId))
+        } catch {
+            alert('No se pudo cancelar la reserva.')
+        } finally {
+            setCancellingBookingId(null)
+        }
+    }
+
+    const handleDeleteVehicle = async (id: number | string) => {
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`http://localhost:8000/api/vehicles/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                },
+            });
+
+            const data = await response.json();
+            console.log('Status:', response.status);
+            console.log('Response body:', data);  // aquí verás el error real
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Error al eliminar');
+            }
+
+            setDeleteConfirmId(null);
+            fetchVehicles();
+        } catch (err) {
+            console.error('Error completo:', err);
+            setVehicleActionError(err instanceof Error ? err.message : 'No se pudo eliminar el vehículo.');
+        }
+    };
+
+    const handleUpdateVehicle = async () => {
+        if (!editingVehicle) return;
+
+        const normalizedPlate = editingVehicle.plate.toUpperCase().replace(/\s/g, '');
+        const plateRegex = /^\d{4}[A-Z]{3}$/;
+        if (!plateRegex.test(normalizedPlate)) {
+            setVehicleActionError('Formato de matrícula inválido. Ej: 1234ABC');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('auth_token');
+            const response = await fetch(`http://localhost:8000/api/vehicles/${editingVehicle.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ ...editingVehicle, plate: normalizedPlate }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al actualizar');
+            }
+
+            setEditingVehicle(null);
+            setVehicleActionError(null);
+            fetchVehicles();
+        } catch (err) {
+            setVehicleActionError(err instanceof Error ? err.message : 'Error desconocido');
+        }
+    };
 
     const fetchVehicles = async () => {
         setVehiclesLoading(true);
@@ -86,9 +230,31 @@ export default function Profile({ profileData }: ProfileProps) {
         }
     };
 
+    const fetchBookings = async () => {
+        setBookingsLoading(true)
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch('http://localhost:8000/api/bookings/me', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) throw new Error()
+            const data = await res.json()
+            setBookings(data)
+        }
+        catch {
+            //
+        }
+        finally {
+            setBookingsLoading(false)
+        }
+    }
+
     useEffect(() => {
-        fetchVehicles();
-    }, []);
+        fetchVehicles()
+        fetchBookings()
+        fetchMyReviews()
+        fetchMyRatings()
+    }, [])
 
     const handleAvatarClick = () => {
         if (isEditing && fileInputRef.current) {
@@ -401,6 +567,122 @@ export default function Profile({ profileData }: ProfileProps) {
                     </div>
                 </div>
 
+                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis reservas</h2>
+                <div className="vehicles-list-container">
+                    {bookingsLoading ? (
+                        <p>Cargando reservas...</p>
+                    ) : bookings.length === 0 ? (
+                        <p>No tienes reservas.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {bookings.map((booking) => (
+                                <li key={booking.id} className="vehicle-item">
+                                    <div className="vehicle-info">
+                                        <strong>{booking.travel?.origin} → {booking.travel?.destination}</strong>
+                                        <span>{booking.travel?.departure_time}</span>
+                                        <span style={{
+                                            color: booking.status === 'confirmed' ? '#10b981'
+                                                : booking.status === 'cancelled' ? '#dc2626'
+                                                    : booking.status === 'completed' ? '#6366f1'
+                                                        : '#f59e0b',
+                                            fontWeight: 500
+                                        }}>
+                            {booking.status === 'confirmed' ? 'Confirmada'
+                                : booking.status === 'cancelled' ? 'Cancelada'
+                                    : booking.status === 'completed' ? 'Completada'
+                                        : 'Pendiente'}
+                        </span>
+                                        <span>{booking.travel?.price}€</span>
+                                    </div>
+                                    {booking.status === 'confirmed' && booking.travel?.status === 'completed' && !myReviewTravelIds.includes(booking.travel.id) && (
+                                        <div className="vehicle-actions">
+                                            <button
+                                                className="profile-btn profile-btn-edit"
+                                                onClick={() => {
+                                                    setRatingModal({
+                                                        isOpen: true,
+                                                        travelId: booking.travel.id,
+                                                        revieweeId: booking.travel.driver.id,
+                                                        name: booking.travel.driver.name,
+                                                        bookingId: booking.id
+                                                    });
+                                                }}
+                                            >
+                                                Valorar
+                                            </button>
+                                        </div>
+                                    )}
+                                    {booking.status === 'pending' && (
+                                        <div className="vehicle-actions">
+                                            <button
+                                                className="profile-btn profile-btn-edit"
+                                                onClick={() => navigate(`/checkout?type=carpool&id=${booking.travel.id}`)}
+                                            >
+                                                Pagar
+                                            </button>
+                                            {cancellingBookingId === booking.id ? (
+                                                <>
+                                                    <button
+                                                        className="vehicle-btn-confirm-delete"
+                                                        onClick={() => handleCancelBooking(booking.id)}
+                                                    >
+                                                        Confirmar
+                                                    </button>
+                                                    <button
+                                                        className="vehicle-btn-cancel-delete"
+                                                        onClick={() => setCancellingBookingId(null)}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    className="vehicle-btn-icon vehicle-btn-delete"
+                                                    title="Cancelar reserva"
+                                                    onClick={() => setCancellingBookingId(booking.id)}
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                    {myReviewTravelIds.includes(booking.travel.id) && (
+                                        <span style={{ color: '#10b981', fontSize: 13 }}>Valorado</span>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis valoraciones</h2>
+                <div className="vehicles-list-container">
+                    {ratingsLoading ? (
+                        <p>Cargando valoraciones...</p>
+                    ) : myRatings.length === 0 ? (
+                        <p>Aún no tienes valoraciones.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {myRatings.map((review, index) => (
+                                <li key={index} className="vehicle-item">
+                                    <div className="vehicle-info">
+                                        <strong>{review.author}</strong>
+                                        <span style={{ color: '#f59e0b' }}>
+                            {'⭐'.repeat(review.rating)} {review.rating}/5
+                        </span>
+                                        {review.comment && (
+                                            <span style={{ color: '#555', fontStyle: 'italic' }}>
+                                "{review.comment}"
+                            </span>
+                                        )}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+
                 <h2 style={{ fontSize: 20, fontWeight: "bold" }}>Mis vehículos</h2>
 
                 <div className="vehicles-list-container">
@@ -414,14 +696,81 @@ export default function Profile({ profileData }: ProfileProps) {
                         <ul className="vehicles-list">
                             {vehicles.map((vehicle) => (
                                 <li key={vehicle.id} className="vehicle-item">
-                                    <strong>{vehicle.brand} {vehicle.model}</strong>
-                                    <span>Matrícula: {vehicle.plate}</span>
-                                    <span>Asientos: {vehicle.total_seats}</span>
+                                    {editingVehicle?.id === vehicle.id ? (
+                                        <div className="vehicle-edit-form">
+                                            <input
+                                                className="profile-field-input"
+                                                value={editingVehicle.brand}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, brand: e.target.value })}
+                                                placeholder="Marca"
+                                            />
+                                            <input
+                                                className="profile-field-input"
+                                                value={editingVehicle.model}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, model: e.target.value })}
+                                                placeholder="Modelo"
+                                            />
+                                            <input
+                                                className="profile-field-input"
+                                                value={editingVehicle.plate}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, plate: e.target.value })}
+                                                placeholder="Matrícula"
+                                                maxLength={8}
+                                            />
+                                            <input
+                                                className="profile-field-input"
+                                                type="number"
+                                                value={editingVehicle.total_seats}
+                                                onChange={e => setEditingVehicle({ ...editingVehicle, total_seats: Number(e.target.value) })}
+                                                placeholder="Asientos"
+                                                min={1}
+                                                max={9}
+                                            />
+                                            {vehicleActionError && (
+                                                <p style={{ color: 'red', fontSize: 13 }}>{vehicleActionError}</p>
+                                            )}
+                                            <div className="vehicle-edit-actions">
+                                                <button className="vehicle-btn-save" onClick={handleUpdateVehicle}>Guardar</button>
+                                                <button className="vehicle-btn-cancel" onClick={() => { setEditingVehicle(null); setVehicleActionError(null); }}>Cancelar</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="vehicle-info">
+                                                <strong>{vehicle.brand} {vehicle.model}</strong>
+                                                <span>Matrícula: {vehicle.plate}</span>
+                                                <span>Asientos: {vehicle.total_seats}</span>
+                                            </div>
+                                            <div className="vehicle-actions">
+                                                <button
+                                                    className="vehicle-btn-icon"
+                                                    title="Editar"
+                                                    onClick={() => { setEditingVehicle(vehicle); setVehicleActionError(null); }}
+                                                >✏️</button>
+                                                {deleteConfirmId === vehicle.id ? (
+                                                    <>
+                                                        <button className="vehicle-btn-confirm-delete" onClick={() => handleDeleteVehicle(vehicle.id)}>Confirmar</button>
+                                                        <button className="vehicle-btn-cancel-delete" onClick={() => { setDeleteConfirmId(null); setVehicleActionError(null); }}>Cancelar</button>
+                                                    </>
+                                                ) : (
+                                                    <button
+                                                        className="vehicle-btn-icon vehicle-btn-delete"
+                                                        title="Eliminar"
+                                                        onClick={() => { setDeleteConfirmId(vehicle.id); setVehicleActionError(null); }}
+                                                    >✕</button>
+                                                )}
+                                                {deleteConfirmId === vehicle.id && vehicleActionError && (
+                                                    <p style={{ color: 'red', fontSize: 13, marginTop: 4 }}>{vehicleActionError}</p>
+                                                )}
+                                            </div>
+                                        </>
+                                    )}
                                 </li>
                             ))}
                         </ul>
                     )}
                 </div>
+
 
                 <button onClick={() => setIsModalOpen(true)} className="profile-btn-nuevo">
                     Nuevo vehículo
@@ -429,6 +778,17 @@ export default function Profile({ profileData }: ProfileProps) {
 
                 <VehicleRegistrationModal isOpen={isModalOpen} onClose={handleCloseModal} />
             </div>
+            <RatingModal 
+                isOpen={ratingModal.isOpen} 
+                onClose={() => setRatingModal({ ...ratingModal, isOpen: false })}
+                travelId={ratingModal.travelId}
+                revieweeId={ratingModal.revieweeId}
+                revieweeName={ratingModal.name}
+                onSuccess={() => {
+                    setMyReviewTravelIds(prev => [...prev, ratingModal.travelId])
+                    fetchBookings()
+                }}
+            />
         </Page>
     );
 }

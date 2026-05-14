@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Notification;
 use App\Models\Travel;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
 
 class BookingController extends Controller
 {
@@ -37,6 +40,7 @@ class BookingController extends Controller
 
         $exists = Booking::where('travel_id', $request->travel_id)
             ->where('passenger_id', Auth::id())
+            ->where('status', '!=', 'cancelled')
             ->exists();
 
         if ($exists) {
@@ -48,8 +52,6 @@ class BookingController extends Controller
             'passenger_id' => Auth::id(),
             'status'       => 'pending',
         ]);
-
-        $travel->decrement('available_seats');
 
         Notification::create([
             'user_id' => $travel->driver_id,
@@ -82,7 +84,7 @@ class BookingController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        if (in_array($booking->status, ['pending', 'confirmed'])) {
+        if ($booking->status === 'confirmed') {
             $booking->travel->increment('available_seats');
         }
 
@@ -165,5 +167,56 @@ class BookingController extends Controller
         ]);
 
         return response()->json(['message' => 'Reserva rechazada correctamente']);
+    }
+
+    //POST /bookings/paid
+    public function storeAfterPayment(Request $request)
+    {
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'booking_id'        => 'required|exists:bookings,id',
+            'payment_intent_id' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->first()], 422);
+        }
+
+        $booking = Booking::with('travel')->findOrFail($request->booking_id);
+
+        if ($booking->passenger_id !== Auth::id()) {
+            return response()->json(['message' => 'No autorizado'], 403);
+        }
+
+        $secret = config('services.stripe.secret') ?? env('STRIPE_SECRET');
+        if (empty($secret)) {
+            return response()->json(['message' => 'Pasarela de pago no configurada'], 500);
+        }
+        \Stripe\Stripe::setApiKey($secret);
+        try {
+            $pi = \Stripe\PaymentIntent::retrieve($request->payment_intent_id);
+
+            if ($pi->status !== 'succeeded') {
+                return response()->json(['message' => 'El pago no se ha completado: ' . $pi->status], 422);
+            }
+            if (($pi->metadata['booking_id'] ?? null) != $booking->id) {
+                return response()->json(['message' => 'El pago no corresponde a esta reserva'], 422);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'No se pudo verificar el pago: ' . $e->getMessage()], 500);
+        }
+
+        $booking->update(['status' => 'confirmed']);
+        $booking->travel->decrement('available_seats');
+
+        Notification::create([
+            'user_id' => $booking->travel->driver_id,
+            'text'    => 'Tienes una nueva reserva pagada en tu viaje de ' . $booking->travel->origin . ' a ' . $booking->travel->destination,
+            'read'    => false,
+        ]);
+
+        return response()->json([
+            'message' => 'Reserva confirmada correctamente',
+            'data'    => $booking->load(['travel', 'passenger']),
+        ], 200);
     }
 }

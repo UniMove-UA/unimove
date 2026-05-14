@@ -3,9 +3,18 @@ import Page from "../components/Page";
 import { useNavigate } from "react-router-dom";
 import "../styles/PublishTravel.css";
 
+interface Vehicle {
+    id: number | string;
+    brand: string;
+    model: string;
+    plate: string;
+    total_seats: number;
+}
+
+
 export default function PublishTravel() {
     const navigate = useNavigate();
-    const [vehicles, setVehicles] = useState<any[]>([]);
+    const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string[]>>({});
     const [locating, setLocating] = useState(false);
@@ -43,9 +52,8 @@ export default function PublishTravel() {
         fetchVehicles();
     }, []);
 
-    // Lógica de plazas máximas blindada contra NaN
     const selectedVehicle = vehicles.find(v => v.id.toString() === formData.vehicle_id);
-    const maxSeats = selectedVehicle && !isNaN(selectedVehicle.seats) ? (parseInt(selectedVehicle.seats) - 1) : 4;
+    const maxSeats = selectedVehicle?.total_seats ?? 0;
 
     const handleGetLocation = () => {
         setLocating(true);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import Checkout from '../components/Checkout'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 
 type PaymentType = 'carpool' | 'vmp'
 
@@ -17,6 +18,7 @@ export default function CheckoutPage() {
   const [summary, setSummary] = useState<CheckoutSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     const typeParam = searchParams.get('type')
@@ -114,39 +116,39 @@ export default function CheckoutPage() {
   }, [searchParams])
 
   return (
-    <div className="p-6">
-      <button
-        onClick={() => navigate('/travel')}
-        style={{
-          position: 'fixed',
-          bottom: '1.5rem',
-          left: '1.5rem',
-          background: 'rgba(255,255,255,0.95)',
-          border: '1px solid rgba(0,0,0,0.08)',
-          borderRadius: '8px',
-          color: '#111',
-          fontSize: '0.9rem',
-          padding: '0.5rem 1rem',
-          cursor: 'pointer',
-          backdropFilter: 'blur(4px)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          zIndex: 1000,
-          boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
-        }}
-      >
-        ← Volver atrás
-      </button>
-      <h1 className="text-2xl mb-4">Checkout</h1>
-      {loading && <p>Preparando pago...</p>}
-      {error && <p className="text-red-600">{error}</p>}
-      {summary && !loading && (
-        <>
-          <p className="mb-4">{summary.label}</p>
-          <Checkout paymentType={summary.type} paymentId={summary.id} amount={summary.amount} />
-        </>
-      )}
-    </div>
+      <div className="p-6">
+        <button
+            onClick={() => navigate(-1)}
+            style={{
+              position: 'fixed',
+              bottom: '1.5rem',
+              left: '1.5rem',
+              background: 'rgba(255,255,255,0.95)',
+              border: '1px solid rgba(0,0,0,0.08)',
+              borderRadius: '8px',
+              color: '#111',
+              fontSize: '0.9rem',
+              padding: '0.5rem 1rem',
+              cursor: 'pointer',
+              backdropFilter: 'blur(4px)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              zIndex: 1000,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.08)'
+            }}
+        >
+          ← Volver atrás
+        </button>
+        <h1 className="text-2xl mb-4">Checkout</h1>
+        {loading && <p>Preparando pago...</p>}
+        {error && <p className="text-red-600">{error}</p>}
+        {summary && !loading && (
+            <>
+              <p className="mb-4">{summary.label}</p>
+              <Checkout paymentType={summary.type} paymentId={summary.id} amount={summary.amount} />
+            </>
+        )}
+      </div>
   )
 }

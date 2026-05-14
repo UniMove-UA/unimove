@@ -766,21 +766,23 @@ export default function AdminPanel() {
                 </table>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 10, marginTop: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginTop: 12 }}>
                 <button
                   disabled={schedulePage === 1}
                   onClick={() => setSchedulePage(p => p - 1)}
+                  style={{ background: '#fff', color: '#103B31', border: '1px solid #d5ece3', padding: '6px 12px', borderRadius: '8px', opacity: schedulePage === 1 ? 0.5 : 1 }}
                 >
                   ← Anterior
                 </button>
 
-                <span>
+                <span style={{ color: '#103B31', fontWeight: 600, fontSize: '0.85rem' }}>
                   Página {schedulePage} de {scheduleLastPage}
                 </span>
 
                 <button
                   disabled={schedulePage === scheduleLastPage}
                   onClick={() => setSchedulePage(p => p + 1)}
+                  style={{ background: '#fff', color: '#103B31', border: '1px solid #d5ece3', padding: '6px 12px', borderRadius: '8px', opacity: schedulePage === scheduleLastPage ? 0.5 : 1 }}
                 >
                   Siguiente →
                 </button>

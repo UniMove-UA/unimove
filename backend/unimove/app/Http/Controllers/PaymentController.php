@@ -73,7 +73,7 @@ class PaymentController extends Controller
                 if ($price === null) return response()->json(['error' => 'Booking has no price configured'], 400);
                 $priceToCharge = max(0.50, floatval($price));
                 $amountCents = (int) round($priceToCharge * 100);
-                $metadata = ['booking_id' => $booking->id];
+                $metadata = ['booking_id' => $booking->id, 'travel_id'  => $booking->travel_id,];
                 $idempotencyKey = 'pi_booking_' . $booking->id . '_' . uniqid();
             } elseif ($type === 'vmp') {
                 $vmp = Vmp::find($entityId);

@@ -7,15 +7,19 @@ interface CarSharingWidgetProps {
     profileImage: string;
     origin: string;
     destination: string;
-    departureTime: string; // Formato HH:mm
+    departureTime: string;
     fullName: string;
     username: string;
+    clickable?: boolean;
+    availableSeats?: number;
+    alreadyBooked?: boolean;
 }
 
-export default function CarSharingWidget({id, price, profileImage, origin, destination, departureTime, fullName, username}: CarSharingWidgetProps) {
+export default function CarSharingWidget({ id, price, profileImage, origin, destination, departureTime, fullName, username, clickable = true, availableSeats, alreadyBooked = false}: CarSharingWidgetProps) {
     const navigate = useNavigate();
 
     const handleClick = () => {
+        if (!clickable) return;
         if (id) {
             navigate(`/checkout?type=carpool&id=${id}`);
         } else {
@@ -27,6 +31,8 @@ export default function CarSharingWidget({id, price, profileImage, origin, desti
         <button
             className="car-sharing-widget"
             onClick={handleClick}
+            disabled={!clickable}
+            style={!clickable ? { cursor: 'default', opacity: 1 } : {}}
             aria-label={`Viaje compartido de ${fullName} desde ${origin} a ${destination}`}
         >
             <div className="widget-profile">
@@ -51,12 +57,24 @@ export default function CarSharingWidget({id, price, profileImage, origin, desti
                     <span className="driver-username">@{username}</span>
                 </div>
 
-                {price !== undefined && (
-                    <div className="price-info">
-                        <strong>{price}€</strong>
-                    </div>
-                )}
+                <div className="price-seats-row">
+                    {price !== undefined && (
+                        <div className="price-info">
+                            <strong>{price}€</strong>
+                        </div>
+                    )}
+                    {availableSeats !== undefined && (
+                        <div className={`seats-info ${availableSeats === 0 ? 'seats-full' : ''}`}>
+                            {availableSeats === 0 ? 'Sin plazas' : `${availableSeats} plaza${availableSeats !== 1 ? 's' : ''}`}
+                        </div>
+                    )}
+                    {alreadyBooked && (
+                        <div className="seats-info" style={{ color: '#f59e0b' }}>
+                            Ya reservado
+                        </div>
+                    )}
+                </div>
             </div>
         </button>
     );
-};
+}

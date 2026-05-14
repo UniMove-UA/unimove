@@ -169,20 +169,26 @@ class TravelController extends Controller
     // GET /travels/me
     public function myTravels()
     {
-        $travels = Travel::with(['vehicle'])
-            ->where('driver_id', Auth::id())
+        $travels = Travel::with(['driver', 'vehicle'])
+        ->where('driver_id', Auth::id())
             ->orderBy('departure_time', 'desc')
             ->get()
             ->map(fn($t) => [
-                'origin'=> $t->origin,
-                'destination'=> $t->destination,
+                'id'             => $t->id,
+                'origin'         => $t->origin,
+                'destination'    => $t->destination,
                 'departure_time' => $t->departure_time,
-                'status'=> $t->status,
+                'status'         => $t->status,
+                'driver' => [
+                    'name'     => $t->driver->name,
+                    'username' => $t->driver->username,
+                    'image'    => $t->driver->image,
+                ],
                 'vehicle' => [
-                    'id'=> $t->vehicle->id,
-                    'brand'=> $t->vehicle->brand,
-                    'model'=> $t->vehicle->model,
-                    'plate'=> $t->vehicle->plate,
+                    'id'    => $t->vehicle->id,
+                    'brand' => $t->vehicle->brand,
+                    'model' => $t->vehicle->model,
+                    'plate' => $t->vehicle->plate,
                 ],
             ]);
 
@@ -234,6 +240,33 @@ class TravelController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
+        $hasConfirmed = Booking::where('travel_id', $travel->id)
+            ->where('status', 'confirmed')
+            ->exists();
+
+        if ($hasConfirmed) {
+            return response()->json([
+                'message' => 'No puedes cancelar el viaje porque tienes reservas confirmadas con pago realizado. Contacta con soporte si necesitas cancelarlo.'
+            ], 422);
+        }
+
+        $bookings = Booking::where('travel_id', $travel->id)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->get();
+
+        foreach ($bookings as $booking) {
+            if ($booking->status === 'confirmed') {
+                $travel->increment('available_seats');
+            }
+            $booking->update(['status' => 'cancelled']);
+
+            Notification::create([
+                'user_id' => $booking->passenger_id,
+                'text'    => 'El viaje de ' . $travel->origin . ' a ' . $travel->destination . ' ha sido cancelado por el conductor',
+                'read'    => false,
+            ]);
+        }
+
         $travel->update(['status' => 'cancelled']);
         return response()->json(['message' => 'Viaje cancelado correctamente']);
     }
@@ -250,11 +283,21 @@ class TravelController extends Controller
         $bookings = Booking::where('travel_id', $travel->id)->get();
 
         foreach ($bookings as $booking) {
-            Notification::create([
-                'user_id' => $booking->passenger_id,
-                'text'=> 'Tu viaje de ' . $travel->origin . ' a ' . $travel->destination . ' ha finalizado',
-                'read'=> false,
-            ]);
+            if ($booking->status === 'confirmed') {
+                $booking->update(['status' => 'completed']);
+                Notification::create([
+                    'user_id' => $booking->passenger_id,
+                    'text'    => 'Tu viaje de ' . $travel->origin . ' a ' . $travel->destination . ' ha finalizado',
+                    'read'    => false,
+                ]);
+            } elseif ($booking->status === 'pending') {
+                $booking->update(['status' => 'cancelled']);
+                Notification::create([
+                    'user_id' => $booking->passenger_id,
+                    'text'    => 'Tu reserva pendiente en el viaje de ' . $travel->origin . ' a ' . $travel->destination . ' ha sido cancelada porque el viaje ha finalizado',
+                    'read'    => false,
+                ]);
+            }
         }
 
         $travel->update(['status' => 'completed']);
@@ -335,6 +378,7 @@ class TravelController extends Controller
         $travels = Travel::with(['driver', 'vehicle'])
             ->where('status', 'active')
             ->where('destination', 'like', "%{$request->to}%")
+            ->where('driver_id', '!=', Auth::id())
             ->whereRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitud)) * cos(radians(longitud) - radians(?)) + sin(radians(?)) * sin(radians(latitud)))) < 20", [$lat, $lon, $lat])
             ->get()
             ->map(fn($t) => [

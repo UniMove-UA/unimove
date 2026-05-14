@@ -317,3 +317,20 @@
         font-size: 0.75rem;
     }
 }
+
+.price-seats-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.seats-info {
+    font-size: 13px;
+    color: #31A47B;
+    font-weight: 500;
+}
+
+.seats-full {
+    color: #dc2626;
+}
