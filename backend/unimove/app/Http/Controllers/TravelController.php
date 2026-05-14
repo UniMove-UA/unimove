@@ -284,7 +284,6 @@ class TravelController extends Controller
 
         foreach ($bookings as $booking) {
             if ($booking->status === 'confirmed') {
-                $booking->update(['status' => 'completed']);
                 Notification::create([
                     'user_id' => $booking->passenger_id,
                     'text'    => 'Tu viaje de ' . $travel->origin . ' a ' . $travel->destination . ' ha finalizado',
