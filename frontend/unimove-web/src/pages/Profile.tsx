@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
 import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
+import RatingModal from "../components/RatingModal.tsx";
 import {useNavigate} from "react-router-dom";
 
 interface ProfileData {
@@ -30,6 +31,11 @@ interface Booking {
         departure_time: string;
         price: string;
         status: string;
+        driver: {
+            id: number;
+            name: string;
+            username: string;
+        };
     };
 }
 
@@ -81,6 +87,7 @@ export default function Profile({ profileData }: ProfileProps) {
     const [bookingsLoading, setBookingsLoading] = useState(false)
     const [reviewedBookings, setReviewedBookings] = useState<number[]>([])
     const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
+    const [ratingModal, setRatingModal] = useState({isOpen: false, travelId: 0, revieweeId: 0, name: "", bookingId: 0});
 
     const handleCancelBooking = async (bookingId: number) => {
         try {
@@ -556,7 +563,13 @@ export default function Profile({ profileData }: ProfileProps) {
                                             <button
                                                 className="profile-btn profile-btn-edit"
                                                 onClick={() => {
-                                                    setReviewedBookings(prev => [...prev, booking.id])
+                                                    setRatingModal({
+                                                        isOpen: true,
+                                                        travelId: booking.travel.id,
+                                                        revieweeId: booking.travel.driver.id,
+                                                        name: booking.travel.driver.name,
+                                                        bookingId: booking.id
+                                                    });
                                                 }}
                                             >
                                                 Valorar
@@ -700,6 +713,18 @@ export default function Profile({ profileData }: ProfileProps) {
 
                 <VehicleRegistrationModal isOpen={isModalOpen} onClose={handleCloseModal} />
             </div>
+            <RatingModal 
+                isOpen={ratingModal.isOpen} 
+                onClose={() => setRatingModal({ ...ratingModal, isOpen: false })}
+                travelId={ratingModal.travelId}
+                revieweeId={ratingModal.revieweeId}
+                revieweeName={ratingModal.name}
+                onSuccess={() => {
+                    // Añadimos a la lista de revisados localmente para ocultar el botón
+                    setReviewedBookings(prev => [...prev, ratingModal.bookingId]);
+                    fetchBookings(); // Refrescamos las reservas
+                }}
+            />
         </Page>
     );
 }
