@@ -78,8 +78,43 @@ export default function Travel() {
         unlock_price?: number | null;
     }>>([]);
 
-    const token = localStorage.getItem("auth_token");
+    // token se lee dentro de `fetchTrips` cuando es necesario
     const [apiError, setApiError] = useState<string | null>(null);
+
+    // Cargar siempre mis viajes
+    useEffect(() => {
+        const loadMyTrips = async () => {
+            try {
+                const token = localStorage.getItem('auth_token');
+                const myTripsRes = await fetch(`/api/travels/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                if (!myTripsRes.ok) {
+                    setMyTrips([]);
+                    return;
+                }
+
+                const data = await myTripsRes.json();
+                const mappedData = data.map((trip: any) => ({
+                    ...trip,
+                    fullName: trip.driver?.name || '',
+                    username: trip.driver?.username || '',
+                    profileImage: trip.driver?.image || '',
+                    departureTime: trip.departure_time,
+                }));
+                setMyTrips(mappedData);
+            } catch (err) {
+                console.error('Error cargando mis viajes:', err);
+                setMyTrips([]);
+            }
+        };
+
+        loadMyTrips();
+    }, []);
 
 
     const fetchTrips = async () => {
@@ -114,7 +149,7 @@ export default function Travel() {
                 throw new Error(`Error buscando tus trayectos: ${myTripsRes.statusText}`);
             }
             const data = await myTripsRes.json();
-            const mappedData = data.map((trip) => ({
+            const mappedData = data.map((trip: any) => ({
                 ...trip,
                 fullName: trip.driver?.name || '',
                 username: trip.driver?.username || '',
@@ -134,7 +169,7 @@ export default function Travel() {
                 throw new Error(`Error en carsharing: ${routeRes.statusText}`);
             }
             const routeData = await routeRes.json();
-            const mappedRouteData = routeData.map((trip) => ({
+            const mappedRouteData = routeData.map((trip: any) => ({
                 ...trip,
                 fullName: trip.driver?.name || '',
                 username: trip.driver?.username || '',
@@ -359,22 +394,24 @@ export default function Travel() {
                     </div>
                     <div className="transport-column">
                         <h2>Dentro del campus</h2>
-                        {publicTransportTrips.filter(t => t.type === "campus").length === 0 && !fetchLoading ? (
+                        {publicTransportTrips.filter(t => t.type === "campus").length === 0 && campusVmps.length === 0 && !fetchLoading ? (
                             <p>No hay transporte dentro del campus cercano.</p>
                         ) : (
-                            publicTransportTrips
-                                .filter(t => t.type === "campus")
-                                .map((trip) => (
-                                    <PublicTransportWidget
-                                        key={trip.id}
-                                        profileImage={getTransportIcon(trip.type)}
-                                        origin={trip.origin}
-                                        destination={trip.destination}
-                                        lineName={trip.lineName}
-                                        departureTime={trip.departureTime}
-                                        onClick={() => {}}
-                                    />
-                                ))
+                            <>
+                                {publicTransportTrips
+                                    .filter(t => t.type === "campus")
+                                    .map((trip) => (
+                                        <PublicTransportWidget
+                                            key={trip.id}
+                                            profileImage={getTransportIcon(trip.type)}
+                                            origin={trip.origin}
+                                            destination={trip.destination}
+                                            lineName={trip.lineName}
+                                            departureTime={trip.departureTime}
+                                            onClick={() => {}}
+                                        />
+                                    ))}
+                            </>
                         )}
                         {/* Campus VMPs (scooters/bikes) fetched via markers bbox on search */}
                         {hasSearched && !fetchLoading && campusVmps.length === 0 && (
