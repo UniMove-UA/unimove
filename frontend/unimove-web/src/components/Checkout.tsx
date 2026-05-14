@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js'
 
@@ -16,7 +15,7 @@ interface CheckoutFormProps {
 function CheckoutForm({ paymentType, paymentId, amount }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
-  const navigate = useNavigate()
+  // navigation redirect uses window.location.href below; remove unused navigate
   const [status, setStatus] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [cardBrand, setCardBrand] = useState<string>('')

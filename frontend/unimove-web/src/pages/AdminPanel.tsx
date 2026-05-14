@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import '../styles/Admin.css';
 import {
   IconDashboard, IconUsers, IconCar, IconStar, IconScooter, IconCard, IconClock,
-  IconBell, IconPower, IconSearch, IconChevronLeft, IconChevronRight,
+  IconBell, IconPower, IconChevronLeft, IconChevronRight,
   IconTrash, IconArrowRight, IconCheck, IconX, IconInfo, IconWarn, IconChart,
 } from '../components/admin/AdminIcons';
 
