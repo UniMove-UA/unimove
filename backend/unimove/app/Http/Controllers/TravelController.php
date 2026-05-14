@@ -179,7 +179,7 @@ class TravelController extends Controller
                 'destination'    => $t->destination,
                 'departure_time' => $t->departure_time,
                 'status'         => $t->status,
-                'driver' => [                          
+                'driver' => [
                     'name'     => $t->driver->name,
                     'username' => $t->driver->username,
                     'image'    => $t->driver->image,
@@ -341,6 +341,7 @@ class TravelController extends Controller
         $travels = Travel::with(['driver', 'vehicle'])
             ->where('status', 'active')
             ->where('destination', 'like', "%{$request->to}%")
+            ->where('driver_id', '!=', Auth::id())
             ->whereRaw("(6371 * acos(cos(radians(?)) * cos(radians(latitud)) * cos(radians(longitud) - radians(?)) + sin(radians(?)) * sin(radians(latitud)))) < 20", [$lat, $lon, $lat])
             ->get()
             ->map(fn($t) => [
