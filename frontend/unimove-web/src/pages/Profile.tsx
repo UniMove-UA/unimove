@@ -88,6 +88,25 @@ export default function Profile({ profileData }: ProfileProps) {
     const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
     const [ratingModal, setRatingModal] = useState({isOpen: false, travelId: 0, revieweeId: 0, name: "", bookingId: 0});
     const [myReviewTravelIds, setMyReviewTravelIds] = useState<number[]>([])
+    const [myRatings, setMyRatings] = useState<any[]>([])
+    const [ratingsLoading, setRatingsLoading] = useState(false)
+
+    const fetchMyRatings = async () => {
+        setRatingsLoading(true)
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch(`http://localhost:8000/api/profile/@${tempData.username}/reviews`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            setMyRatings(data)
+        } catch {
+            //
+        } finally {
+            setRatingsLoading(false)
+        }
+    }
 
     const fetchMyReviews = async () => {
         try {
@@ -234,6 +253,7 @@ export default function Profile({ profileData }: ProfileProps) {
         fetchVehicles()
         fetchBookings()
         fetchMyReviews()
+        fetchMyRatings()
     }, [])
 
     const handleAvatarClick = () => {
@@ -717,6 +737,33 @@ export default function Profile({ profileData }: ProfileProps) {
                                             </div>
                                         </>
                                     )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis valoraciones</h2>
+                <div className="vehicles-list-container">
+                    {ratingsLoading ? (
+                        <p>Cargando valoraciones...</p>
+                    ) : myRatings.length === 0 ? (
+                        <p>Aún no tienes valoraciones.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {myRatings.map((review, index) => (
+                                <li key={index} className="vehicle-item">
+                                    <div className="vehicle-info">
+                                        <strong>{review.author}</strong>
+                                        <span style={{ color: '#f59e0b' }}>
+                            {'⭐'.repeat(review.rating)} {review.rating}/5
+                        </span>
+                                        {review.comment && (
+                                            <span style={{ color: '#555', fontStyle: 'italic' }}>
+                                "{review.comment}"
+                            </span>
+                                        )}
+                                    </div>
                                 </li>
                             ))}
                         </ul>
