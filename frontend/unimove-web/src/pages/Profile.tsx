@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
 import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
+import {useNavigate} from "react-router-dom";
 
 interface ProfileData {
     fullName: string;
@@ -17,6 +18,19 @@ interface Vehicle {
     model: string;
     plate: string;
     total_seats: number;
+}
+
+interface Booking {
+    id: number;
+    status: string;
+    travel: {
+        id: number;
+        origin: string;
+        destination: string;
+        departure_time: string;
+        price: string;
+        status: string;
+    };
 }
 
 interface ProfileProps {
@@ -40,6 +54,7 @@ export default function Profile({ profileData }: ProfileProps) {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
     const [vehiclesLoading, setVehiclesLoading] = useState(false);
     const [vehiclesError, setVehiclesError] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const [passwordData, setPasswordData] = useState({
         new_password: '',
@@ -62,6 +77,29 @@ export default function Profile({ profileData }: ProfileProps) {
     const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | string | null>(null);
     const [vehicleActionError, setVehicleActionError] = useState<string | null>(null);
+    const [bookings, setBookings] = useState<Booking[]>([])
+    const [bookingsLoading, setBookingsLoading] = useState(false)
+    const [reviewedBookings, setReviewedBookings] = useState<number[]>([])
+    const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
+
+    const handleCancelBooking = async (bookingId: number) => {
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch(`http://localhost:8000/api/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            })
+            if (!res.ok) throw new Error()
+            setBookings(prev => prev.filter(b => b.id !== bookingId))
+        } catch {
+            alert('No se pudo cancelar la reserva.')
+        } finally {
+            setCancellingBookingId(null)
+        }
+    }
 
     const handleDeleteVehicle = async (id: number | string) => {
         try {
@@ -151,9 +189,29 @@ export default function Profile({ profileData }: ProfileProps) {
         }
     };
 
+    const fetchBookings = async () => {
+        setBookingsLoading(true)
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch('http://localhost:8000/api/bookings/me', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) throw new Error()
+            const data = await res.json()
+            setBookings(data)
+        }
+        catch {
+            //
+        }
+        finally {
+            setBookingsLoading(false)
+        }
+    }
+
     useEffect(() => {
-        fetchVehicles();
-    }, []);
+        fetchVehicles()
+        fetchBookings()
+    }, [])
 
     const handleAvatarClick = () => {
         if (isEditing && fileInputRef.current) {
@@ -464,6 +522,88 @@ export default function Profile({ profileData }: ProfileProps) {
                             </div>
                         </form>
                     </div>
+                </div>
+
+                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis reservas</h2>
+                <div className="vehicles-list-container">
+                    {bookingsLoading ? (
+                        <p>Cargando reservas...</p>
+                    ) : bookings.length === 0 ? (
+                        <p>No tienes reservas.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {bookings.map((booking) => (
+                                <li key={booking.id} className="vehicle-item">
+                                    <div className="vehicle-info">
+                                        <strong>{booking.travel?.origin} → {booking.travel?.destination}</strong>
+                                        <span>{booking.travel?.departure_time}</span>
+                                        <span style={{
+                                            color: booking.status === 'confirmed' ? '#10b981'
+                                                : booking.status === 'cancelled' ? '#dc2626'
+                                                    : booking.status === 'completed' ? '#6366f1'
+                                                        : '#f59e0b',
+                                            fontWeight: 500
+                                        }}>
+                            {booking.status === 'confirmed' ? 'Confirmada'
+                                : booking.status === 'cancelled' ? 'Cancelada'
+                                    : booking.status === 'completed' ? 'Completada'
+                                        : 'Pendiente'}
+                        </span>
+                                        <span>{booking.travel?.price}€</span>
+                                    </div>
+                                    {booking.status === 'confirmed' && booking.travel?.status === 'completed' && !reviewedBookings.includes(booking.id) && (
+                                        <div className="vehicle-actions">
+                                            <button
+                                                className="profile-btn profile-btn-edit"
+                                                onClick={() => {
+                                                    setReviewedBookings(prev => [...prev, booking.id])
+                                                }}
+                                            >
+                                                Valorar
+                                            </button>
+                                        </div>
+                                    )}
+                                    {booking.status === 'pending' && (
+                                        <div className="vehicle-actions">
+                                            <button
+                                                className="profile-btn profile-btn-edit"
+                                                onClick={() => navigate(`/checkout?type=carpool&id=${booking.travel.id}`)}
+                                            >
+                                                Pagar
+                                            </button>
+                                            {cancellingBookingId === booking.id ? (
+                                                <>
+                                                    <button
+                                                        className="vehicle-btn-confirm-delete"
+                                                        onClick={() => handleCancelBooking(booking.id)}
+                                                    >
+                                                        Confirmar
+                                                    </button>
+                                                    <button
+                                                        className="vehicle-btn-cancel-delete"
+                                                        onClick={() => setCancellingBookingId(null)}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    className="vehicle-btn-icon vehicle-btn-delete"
+                                                    title="Cancelar reserva"
+                                                    onClick={() => setCancellingBookingId(booking.id)}
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                    {reviewedBookings.includes(booking.id) && (
+                                        <span style={{ color: '#10b981', fontSize: 13 }}>✓ Valorado</span>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
 
                 <h2 style={{ fontSize: 20, fontWeight: "bold" }}>Mis vehículos</h2>
