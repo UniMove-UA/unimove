@@ -40,6 +40,7 @@ class BookingController extends Controller
 
         $exists = Booking::where('travel_id', $request->travel_id)
             ->where('passenger_id', Auth::id())
+            ->where('status', '!=', 'cancelled')
             ->exists();
 
         if ($exists) {
@@ -83,7 +84,7 @@ class BookingController extends Controller
             return response()->json(['message' => 'No autorizado'], 403);
         }
 
-        if (in_array($booking->status, ['pending', 'confirmed'])) {
+        if ($booking->status === 'confirmed') {
             $booking->travel->increment('available_seats');
         }
 

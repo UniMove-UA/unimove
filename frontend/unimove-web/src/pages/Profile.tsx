@@ -29,6 +29,7 @@ interface Booking {
         destination: string;
         departure_time: string;
         price: string;
+        status: string;
     };
 }
 
@@ -79,6 +80,26 @@ export default function Profile({ profileData }: ProfileProps) {
     const [bookings, setBookings] = useState<Booking[]>([])
     const [bookingsLoading, setBookingsLoading] = useState(false)
     const [reviewedBookings, setReviewedBookings] = useState<number[]>([])
+    const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
+
+    const handleCancelBooking = async (bookingId: number) => {
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch(`http://localhost:8000/api/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            })
+            if (!res.ok) throw new Error()
+            setBookings(prev => prev.filter(b => b.id !== bookingId))
+        } catch {
+            alert('No se pudo cancelar la reserva.')
+        } finally {
+            setCancellingBookingId(null)
+        }
+    }
 
     const handleDeleteVehicle = async (id: number | string) => {
         try {
@@ -530,16 +551,15 @@ export default function Profile({ profileData }: ProfileProps) {
                         </span>
                                         <span>{booking.travel?.price}€</span>
                                     </div>
-                                    {booking.status === 'completed' && !reviewedBookings.includes(booking.id) && (
+                                    {booking.status === 'confirmed' && booking.travel?.status === 'completed' && !reviewedBookings.includes(booking.id) && (
                                         <div className="vehicle-actions">
                                             <button
                                                 className="profile-btn profile-btn-edit"
                                                 onClick={() => {
-                                                    // aquí abrirás el modal de valoración
                                                     setReviewedBookings(prev => [...prev, booking.id])
                                                 }}
                                             >
-                                                ⭐ Valorar
+                                                Valorar
                                             </button>
                                         </div>
                                     )}
@@ -551,6 +571,30 @@ export default function Profile({ profileData }: ProfileProps) {
                                             >
                                                 Pagar
                                             </button>
+                                            {cancellingBookingId === booking.id ? (
+                                                <>
+                                                    <button
+                                                        className="vehicle-btn-confirm-delete"
+                                                        onClick={() => handleCancelBooking(booking.id)}
+                                                    >
+                                                        Confirmar
+                                                    </button>
+                                                    <button
+                                                        className="vehicle-btn-cancel-delete"
+                                                        onClick={() => setCancellingBookingId(null)}
+                                                    >
+                                                        Cancelar
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <button
+                                                    className="vehicle-btn-icon vehicle-btn-delete"
+                                                    title="Cancelar reserva"
+                                                    onClick={() => setCancellingBookingId(booking.id)}
+                                                >
+                                                    ✕
+                                                </button>
+                                            )}
                                         </div>
                                     )}
                                     {reviewedBookings.includes(booking.id) && (
