@@ -424,7 +424,7 @@ export default function Travel() {
                     </div>
                     <div className="transport-column">
                         <h2>Dentro del campus</h2>
-                        {publicTransportTrips.filter(t => t.type === "campus").length === 0 && !fetchLoading ? (
+                        {publicTransportTrips.filter(t => t.type === "campus").length === 0 && campusVmps.length === 0 && !fetchLoading ? (
                             <p>No hay transporte dentro del campus cercano.</p>
                         ) : (
                             publicTransportTrips
