@@ -154,8 +154,6 @@ export default function Profile({ profileData }: ProfileProps) {
             });
 
             const data = await response.json();
-            console.log('Status:', response.status);
-            console.log('Response body:', data);  // aquí verás el error real
 
             if (!response.ok) {
                 throw new Error(data.message || 'Error al eliminar');
