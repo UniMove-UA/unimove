@@ -17,6 +17,7 @@ interface Trip {
     departureTime: string;
     fullName: string;
     username: string;
+    status?: string;
 }
 
 function getTransportType(stopId: string): string {
@@ -81,6 +82,39 @@ export default function Travel() {
     const token = localStorage.getItem("auth_token");
 
     const [myBookingTravelIds, setMyBookingTravelIds] = useState<number[]>([])
+    const [updatingTravelId, setUpdatingTravelId] = useState<number | null>(null)
+
+    const handleUpdateTravelStatus = async (travelId: number, status: 'completed' | 'cancelled') => {
+        setUpdatingTravelId(travelId)
+        try {
+            const url = status === 'completed'
+                ? `http://localhost:8000/api/travels/${travelId}/complete`
+                : `http://localhost:8000/api/travels/${travelId}`
+
+            const res = await fetch(url, {
+                method: status === 'completed' ? 'PUT' : 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            })
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                alert(data.message || 'No se pudo actualizar el viaje.')
+                return
+            }
+
+            setMyTrips(prev => prev.map(t =>
+                Number(t.id) === travelId ? { ...t, status } : t
+            ))
+        } catch {
+            alert('No se pudo actualizar el viaje.')
+        } finally {
+            setUpdatingTravelId(null)
+        }
+    }
 
     useEffect(() => {
         const fetchMyBookings = async () => {
@@ -416,16 +450,11 @@ export default function Travel() {
 
                 <h1 className="section-title">Mis viajes</h1>
                 <div className="my-trips-container" style={{ marginBottom: '20px' }}>
-                    <div className="trips-row" style={{
-                        display: 'flex',
-                        gap: '15px',
-                        overflowX: 'auto',
-                        paddingBottom: '10px'
-                    }}>
-                        {
-                            myTrips.map((trip: Trip) =>
+                    <div className="trips-row" style={{ display: 'flex', flexDirection: 'column', gap: '15px', paddingBottom: '10px' }}>
+                        {myTrips.length === 0 && <p>No tienes viajes publicados.</p>}
+                        {myTrips.map((trip: Trip) => (
+                            <div key={trip.id} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <CarSharingWidget
-                                    key={trip.id}
                                     id={Number(trip.id)}
                                     profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
                                     origin={trip.origin}
@@ -435,8 +464,54 @@ export default function Travel() {
                                     username={trip.username}
                                     clickable={false}
                                 />
-                            )
-                        }
+                                {trip.status === 'active' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
+                                        <button
+                                            onClick={() => handleUpdateTravelStatus(Number(trip.id), 'completed')}
+                                            disabled={updatingTravelId === Number(trip.id)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                backgroundColor: '#28a745',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                fontWeight: 500
+                                            }}
+                                        >
+                                            Completar
+                                        </button>
+                                        <button
+                                            onClick={() => handleUpdateTravelStatus(Number(trip.id), 'cancelled')}
+                                            disabled={updatingTravelId === Number(trip.id)}
+                                            style={{
+                                                padding: '6px 12px',
+                                                backgroundColor: '#dc2626',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '6px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                fontWeight: 500
+                                            }}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    </div>
+                                )}
+                                {trip.status !== 'active' && (
+                                    <span style={{
+                                        fontSize: 13,
+                                        fontWeight: 500,
+                                        color: trip.status === 'completed' ? '#28a745' : '#dc2626',
+                                        flexShrink: 0
+                                    }}>
+                        {trip.status === 'completed' ? 'Completado' : 'Cancelado'}
+                    </span>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>

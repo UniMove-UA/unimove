@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import Page from "../components/Page";
 import '../styles/Profile.css';
 import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
+import RatingModal from "../components/RatingModal.tsx";
 import {useNavigate} from "react-router-dom";
 
 interface ProfileData {
@@ -30,6 +31,11 @@ interface Booking {
         departure_time: string;
         price: string;
         status: string;
+        driver: {
+            id: number;
+            name: string;
+            username: string;
+        };
     };
 }
 
@@ -79,8 +85,43 @@ export default function Profile({ profileData }: ProfileProps) {
     const [vehicleActionError, setVehicleActionError] = useState<string | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([])
     const [bookingsLoading, setBookingsLoading] = useState(false)
-    const [reviewedBookings, setReviewedBookings] = useState<number[]>([])
     const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
+    const [ratingModal, setRatingModal] = useState({isOpen: false, travelId: 0, revieweeId: 0, name: "", bookingId: 0});
+    const [myReviewTravelIds, setMyReviewTravelIds] = useState<number[]>([])
+    const [myRatings, setMyRatings] = useState<any[]>([])
+    const [ratingsLoading, setRatingsLoading] = useState(false)
+
+    const fetchMyRatings = async () => {
+        setRatingsLoading(true)
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch(`http://localhost:8000/api/profile/@${tempData.username}/reviews`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            setMyRatings(data)
+        } catch {
+            //
+        } finally {
+            setRatingsLoading(false)
+        }
+    }
+
+    const fetchMyReviews = async () => {
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch('http://localhost:8000/api/reviews/me', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            setMyReviewTravelIds(data.map((r: any) => r.travel_id))
+        }
+        catch {
+            //
+        }
+    }
 
     const handleCancelBooking = async (bookingId: number) => {
         try {
@@ -211,6 +252,8 @@ export default function Profile({ profileData }: ProfileProps) {
     useEffect(() => {
         fetchVehicles()
         fetchBookings()
+        fetchMyReviews()
+        fetchMyRatings()
     }, [])
 
     const handleAvatarClick = () => {
@@ -551,12 +594,18 @@ export default function Profile({ profileData }: ProfileProps) {
                         </span>
                                         <span>{booking.travel?.price}€</span>
                                     </div>
-                                    {booking.status === 'confirmed' && booking.travel?.status === 'completed' && !reviewedBookings.includes(booking.id) && (
+                                    {booking.status === 'confirmed' && booking.travel?.status === 'completed' && !myReviewTravelIds.includes(booking.travel.id) && (
                                         <div className="vehicle-actions">
                                             <button
                                                 className="profile-btn profile-btn-edit"
                                                 onClick={() => {
-                                                    setReviewedBookings(prev => [...prev, booking.id])
+                                                    setRatingModal({
+                                                        isOpen: true,
+                                                        travelId: booking.travel.id,
+                                                        revieweeId: booking.travel.driver.id,
+                                                        name: booking.travel.driver.name,
+                                                        bookingId: booking.id
+                                                    });
                                                 }}
                                             >
                                                 Valorar
@@ -597,8 +646,8 @@ export default function Profile({ profileData }: ProfileProps) {
                                             )}
                                         </div>
                                     )}
-                                    {reviewedBookings.includes(booking.id) && (
-                                        <span style={{ color: '#10b981', fontSize: 13 }}>✓ Valorado</span>
+                                    {myReviewTravelIds.includes(booking.travel.id) && (
+                                        <span style={{ color: '#10b981', fontSize: 13 }}>Valorado</span>
                                     )}
                                 </li>
                             ))}
@@ -694,12 +743,50 @@ export default function Profile({ profileData }: ProfileProps) {
                     )}
                 </div>
 
+                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis valoraciones</h2>
+                <div className="vehicles-list-container">
+                    {ratingsLoading ? (
+                        <p>Cargando valoraciones...</p>
+                    ) : myRatings.length === 0 ? (
+                        <p>Aún no tienes valoraciones.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {myRatings.map((review, index) => (
+                                <li key={index} className="vehicle-item">
+                                    <div className="vehicle-info">
+                                        <strong>{review.author}</strong>
+                                        <span style={{ color: '#f59e0b' }}>
+                            {'⭐'.repeat(review.rating)} {review.rating}/5
+                        </span>
+                                        {review.comment && (
+                                            <span style={{ color: '#555', fontStyle: 'italic' }}>
+                                "{review.comment}"
+                            </span>
+                                        )}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
                 <button onClick={() => setIsModalOpen(true)} className="profile-btn-nuevo">
                     Nuevo vehículo
                 </button>
 
                 <VehicleRegistrationModal isOpen={isModalOpen} onClose={handleCloseModal} />
             </div>
+            <RatingModal 
+                isOpen={ratingModal.isOpen} 
+                onClose={() => setRatingModal({ ...ratingModal, isOpen: false })}
+                travelId={ratingModal.travelId}
+                revieweeId={ratingModal.revieweeId}
+                revieweeName={ratingModal.name}
+                onSuccess={() => {
+                    setMyReviewTravelIds(prev => [...prev, ratingModal.travelId])
+                    fetchBookings()
+                }}
+            />
         </Page>
     );
 }

@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\Review;
 use App\Models\Booking;
 use App\Models\Travel;
@@ -49,6 +50,12 @@ class ReviewController extends Controller
             'reviewee_id' => $request->reviewee_id,
             'rating'      => $request->rating,
             'comment'     => $request->comment,
+        ]);
+
+        Notification::create([
+            'user_id' => $request->reviewee_id,
+            'text'=> Auth::user()->name . ' te ha dejado una valoración de ' . $request->rating . ' estrellas en el viaje de ' . $travel->origin . ' a ' . $travel->destination,
+            'read'=> false,
         ]);
 
         return response()->json([
