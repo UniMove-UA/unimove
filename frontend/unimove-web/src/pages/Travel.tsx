@@ -98,7 +98,14 @@ export default function Travel() {
                     'Content-Type': 'application/json',
                 }
             })
-            if (!res.ok) throw new Error()
+
+            const data = await res.json()
+
+            if (!res.ok) {
+                alert(data.message || 'No se pudo actualizar el viaje.')
+                return
+            }
+
             setMyTrips(prev => prev.map(t =>
                 Number(t.id) === travelId ? { ...t, status } : t
             ))
