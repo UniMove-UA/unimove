@@ -84,7 +84,8 @@ export default function Travel() {
         unlock_price?: number | null;
     }>>([]);
 
-    const token = localStorage.getItem("auth_token");
+    // token se lee dentro de `fetchTrips` cuando es necesario
+    const [apiError, setApiError] = useState<string | null>(null);
 
     const [myBookingTravelIds, setMyBookingTravelIds] = useState<number[]>([])
     const [updatingTravelId, setUpdatingTravelId] = useState<number | null>(null)
@@ -361,7 +362,7 @@ export default function Travel() {
                 <div className="nearby-trips-container">
                     {carSharingTrips.length === 0 && !fetchLoading && !apiError ? (
                         <p>No se encontraron viajes de carsharing disponibles. Introduce un origen y destino y pulsa Buscar.</p>
-                    ) : (
+                        ) : (
                         carSharingTrips.map((trip) => (
                             <CarSharingWidget
                                 key={trip.id}
@@ -428,19 +429,39 @@ export default function Travel() {
                         {publicTransportTrips.filter(t => t.type === "campus").length === 0 && campusVmps.length === 0 && !fetchLoading ? (
                             <p>No hay transporte dentro del campus cercano.</p>
                         ) : (
-                            publicTransportTrips
-                                .filter(t => t.type === "campus")
-                                .map((trip) => (
-                                    <PublicTransportWidget
-                                        key={trip.id}
-                                        profileImage={getTransportIcon(trip.type)}
-                                        origin={trip.origin}
-                                        destination={trip.destination}
-                                        lineName={trip.lineName}
-                                        departureTime={trip.departureTime}
-                                        onClick={() => {}}
+                            <>
+                                {publicTransportTrips
+                                    .filter(t => t.type === "campus")
+                                    .map((trip) => (
+                                        <PublicTransportWidget
+                                            key={trip.id}
+                                            profileImage={getTransportIcon(trip.type)}
+                                            origin={trip.origin}
+                                            destination={trip.destination}
+                                            lineName={trip.lineName}
+                                            departureTime={trip.departureTime}
+                                            onClick={() => {}}
+                                        />
+                                    ))}
+                            </>
+                        )}
+                        {/* Campus VMPs (scooters/bikes) fetched via markers bbox on search */}
+                        {hasSearched && !fetchLoading && campusVmps.length === 0 && (
+                            <p>No hay patinetes/bicis disponibles cerca.</p>
+                        )}
+
+                        {hasSearched && campusVmps.length > 0 && (
+                            <div style={{ marginTop: '12px' }}>
+                                {campusVmps.map((v) => (
+                                    <CampusMobilityWidget
+                                        key={`campus-vmp-${v.id}`}
+                                        id={typeof v.id === 'number' ? v.id : Number(v.id)}
+                                        type={(v.type as 'scooter' | 'bike') || 'scooter'}
+                                        locationName={v.location_name ?? undefined}
+                                        priceText={v.unlock_price ? `${Number(v.unlock_price).toFixed(2)}€` : v.price_per_minute ? `${Number(v.price_per_minute).toFixed(2)}€/min` : 'Precio no disponible'}
                                     />
-                                ))
+                                ))}
+                            </div>
                         )}
                         {hasSearched && !fetchLoading && campusVmps.length === 0 && (
                             <p>No hay patinetes disponibles cerca.</p>

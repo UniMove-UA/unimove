@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import Checkout from '../components/Checkout'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 
@@ -13,6 +14,7 @@ interface CheckoutSummary {
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [summary, setSummary] = useState<CheckoutSummary | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
