@@ -75,6 +75,7 @@ export default function Travel() {
 
     const [campusVmps, setCampusVmps] = useState<Array<{
         id: number;
+        vmp_id: number;
         type: 'scooter' | 'bike';
         location_name?: string | null;
         lat?: number | null;
@@ -449,7 +450,7 @@ export default function Travel() {
                                 {campusVmps.map((v) => (
                                     <CampusMobilityWidget
                                         key={`campus-vmp-${v.id}`}
-                                        id={typeof v.id === 'number' ? v.id : Number(v.id)}
+                                        id={v.vmp_id}
                                         type={(v.type as 'scooter' | 'bike') || 'scooter'}
                                         locationName={v.location_name ?? undefined}
                                         priceText={v.unlock_price ? `${Number(v.unlock_price).toFixed(2)}€` : v.price_per_minute ? `${Number(v.price_per_minute).toFixed(2)}€/min` : 'Precio no disponible'}

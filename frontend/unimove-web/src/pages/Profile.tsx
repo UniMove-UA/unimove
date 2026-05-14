@@ -655,6 +655,34 @@ export default function Profile({ profileData }: ProfileProps) {
                     )}
                 </div>
 
+                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis valoraciones</h2>
+                <div className="vehicles-list-container">
+                    {ratingsLoading ? (
+                        <p>Cargando valoraciones...</p>
+                    ) : myRatings.length === 0 ? (
+                        <p>Aún no tienes valoraciones.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {myRatings.map((review, index) => (
+                                <li key={index} className="vehicle-item">
+                                    <div className="vehicle-info">
+                                        <strong>{review.author}</strong>
+                                        <span style={{ color: '#f59e0b' }}>
+                            {'⭐'.repeat(review.rating)} {review.rating}/5
+                        </span>
+                                        {review.comment && (
+                                            <span style={{ color: '#555', fontStyle: 'italic' }}>
+                                "{review.comment}"
+                            </span>
+                                        )}
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
+
+
                 <h2 style={{ fontSize: 20, fontWeight: "bold" }}>Mis vehículos</h2>
 
                 <div className="vehicles-list-container">
@@ -743,32 +771,6 @@ export default function Profile({ profileData }: ProfileProps) {
                     )}
                 </div>
 
-                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis valoraciones</h2>
-                <div className="vehicles-list-container">
-                    {ratingsLoading ? (
-                        <p>Cargando valoraciones...</p>
-                    ) : myRatings.length === 0 ? (
-                        <p>Aún no tienes valoraciones.</p>
-                    ) : (
-                        <ul className="vehicles-list">
-                            {myRatings.map((review, index) => (
-                                <li key={index} className="vehicle-item">
-                                    <div className="vehicle-info">
-                                        <strong>{review.author}</strong>
-                                        <span style={{ color: '#f59e0b' }}>
-                            {'⭐'.repeat(review.rating)} {review.rating}/5
-                        </span>
-                                        {review.comment && (
-                                            <span style={{ color: '#555', fontStyle: 'italic' }}>
-                                "{review.comment}"
-                            </span>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
 
                 <button onClick={() => setIsModalOpen(true)} className="profile-btn-nuevo">
                     Nuevo vehículo
