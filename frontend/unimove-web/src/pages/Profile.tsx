@@ -88,6 +88,22 @@ export default function Profile({ profileData }: ProfileProps) {
     const [reviewedBookings, setReviewedBookings] = useState<number[]>([])
     const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
     const [ratingModal, setRatingModal] = useState({isOpen: false, travelId: 0, revieweeId: 0, name: "", bookingId: 0});
+    const [myReviewTravelIds, setMyReviewTravelIds] = useState<number[]>([])
+
+    const fetchMyReviews = async () => {
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch('http://localhost:8000/api/reviews/me', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) return
+            const data = await res.json()
+            setMyReviewTravelIds(data.map((r: any) => r.travel_id))
+        }
+        catch {
+            //
+        }
+    }
 
     const handleCancelBooking = async (bookingId: number) => {
         try {
@@ -218,6 +234,7 @@ export default function Profile({ profileData }: ProfileProps) {
     useEffect(() => {
         fetchVehicles()
         fetchBookings()
+        fetchMyReviews()
     }, [])
 
     const handleAvatarClick = () => {
@@ -558,7 +575,7 @@ export default function Profile({ profileData }: ProfileProps) {
                         </span>
                                         <span>{booking.travel?.price}€</span>
                                     </div>
-                                    {booking.status === 'confirmed' && booking.travel?.status === 'completed' && !reviewedBookings.includes(booking.id) && (
+                                    {booking.status === 'confirmed' && booking.travel?.status === 'completed' && !myReviewTravelIds.includes(booking.travel.id) && (
                                         <div className="vehicle-actions">
                                             <button
                                                 className="profile-btn profile-btn-edit"
@@ -610,8 +627,8 @@ export default function Profile({ profileData }: ProfileProps) {
                                             )}
                                         </div>
                                     )}
-                                    {reviewedBookings.includes(booking.id) && (
-                                        <span style={{ color: '#10b981', fontSize: 13 }}>✓ Valorado</span>
+                                    {myReviewTravelIds.includes(booking.travel.id) && (
+                                        <span style={{ color: '#10b981', fontSize: 13 }}>Valorado</span>
                                     )}
                                 </li>
                             ))}
@@ -720,9 +737,8 @@ export default function Profile({ profileData }: ProfileProps) {
                 revieweeId={ratingModal.revieweeId}
                 revieweeName={ratingModal.name}
                 onSuccess={() => {
-                    // Añadimos a la lista de revisados localmente para ocultar el botón
-                    setReviewedBookings(prev => [...prev, ratingModal.bookingId]);
-                    fetchBookings(); // Refrescamos las reservas
+                    setMyReviewTravelIds(prev => [...prev, ratingModal.travelId])
+                    fetchBookings()
                 }}
             />
         </Page>
