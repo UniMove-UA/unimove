@@ -56,6 +56,7 @@ export default function Travel() {
 
     const [loading, setLoading] = useState(false);
     const [fetchLoading, setFetchLoading] = useState(false);
+    const [hasSearched, setHasSearched] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [carSharingTrips, setCarSharingTrips] = useState<Array<{
         id: number;
@@ -78,31 +79,6 @@ export default function Travel() {
     }>>([]);
 
     const token = localStorage.getItem("auth_token");
-
-    useEffect(() => {
-        const fetchVmps = async () => {
-            try {
-                const response = await fetch('http://localhost:8000/api/vmps', {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Authorization: `Bearer ${token}`,
-                    },
-                    credentials: 'include',
-                });
-
-                if (!response.ok) {
-                    throw new Error('No se pudieron cargar los VMPs');
-                }
-
-                const data = await response.json();
-                setCampusVmps(data.vmps || []);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        fetchVmps();
-    }, []);
     const [apiError, setApiError] = useState<string | null>(null);
 
 
@@ -113,6 +89,8 @@ export default function Travel() {
         }
 
         setFetchLoading(true);
+        setHasSearched(true);
+        setCampusVmps([]);
         setApiError(null);
 
         try {
@@ -164,6 +142,30 @@ export default function Travel() {
                 departureTime: trip.departure_time,
             }));
             setCarSharingTrips(mappedRouteData);
+
+            // Fetch nearby VMPs around the origin using the markers endpoint (small bbox)
+            try {
+                const delta = 0.003; // ~300m box
+                const fromBox = `${lat - delta},${lon - delta}`;
+                const toBox = `${lat + delta},${lon + delta}`;
+                const markersRes = await fetch(`http://localhost:8000/api/markers?from=${encodeURIComponent(fromBox)}&to=${encodeURIComponent(toBox)}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                });
+
+                if (markersRes.ok) {
+                    const markersData = await markersRes.json();
+                    setCampusVmps(markersData.vmps || []);
+                } else {
+                    setCampusVmps([]);
+                }
+            } catch (err) {
+                console.error('Error fetching campus VMPs:', err);
+                setCampusVmps([]);
+            }
 
             const stopsRes = await fetch(`/api/stops/near?lat=${lat}&lon=${lon}`);
             const stopsData = await stopsRes.json();
@@ -296,10 +298,12 @@ export default function Travel() {
                 <div className="nearby-trips-container">
                     {carSharingTrips.length === 0 && !fetchLoading && !apiError ? (
                         <p>No se encontraron viajes de carsharing disponibles. Introduce un origen y destino y pulsa Buscar.</p>
-                    ) : (
+                        ) : (
                         carSharingTrips.map((trip) => (
                             <CarSharingWidget
                                 key={trip.id}
+                                id={typeof trip.id === 'number' ? trip.id : Number(trip.id)}
+                                price={(trip as any).price ?? undefined}
                                 profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
                                 origin={trip.origin}
                                 destination={trip.destination}
@@ -372,6 +376,24 @@ export default function Travel() {
                                     />
                                 ))
                         )}
+                        {/* Campus VMPs (scooters/bikes) fetched via markers bbox on search */}
+                        {hasSearched && !fetchLoading && campusVmps.length === 0 && (
+                            <p>No hay patinetes/bicis disponibles cerca.</p>
+                        )}
+
+                        {hasSearched && campusVmps.length > 0 && (
+                            <div style={{ marginTop: '12px' }}>
+                                {campusVmps.map((v) => (
+                                    <CampusMobilityWidget
+                                        key={`campus-vmp-${v.id}`}
+                                        id={typeof v.id === 'number' ? v.id : Number(v.id)}
+                                        type={(v.type as 'scooter' | 'bike') || 'scooter'}
+                                        locationName={v.location_name ?? undefined}
+                                        priceText={v.unlock_price ? `${Number(v.unlock_price).toFixed(2)}€` : v.price_per_minute ? `${Number(v.price_per_minute).toFixed(2)}€/min` : 'Precio no disponible'}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -387,6 +409,7 @@ export default function Travel() {
                             myTrips.map((trip: Trip) =>
                                 <CarSharingWidget
                                     key={trip.id}
+                                    id={typeof trip.id === 'number' ? trip.id : Number(trip.id)}
                                     profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
                                     origin={trip.origin}
                                     destination={trip.destination}
