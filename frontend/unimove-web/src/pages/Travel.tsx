@@ -66,6 +66,7 @@ export default function Travel() {
         fullName: string;
         username: string;
         price: number;
+        available_seats: number;
     }>>([]);
     const [campusVmps, setCampusVmps] = useState<Array<{
         id: number;
@@ -78,6 +79,27 @@ export default function Travel() {
     }>>([]);
 
     const token = localStorage.getItem("auth_token");
+
+    const [myBookingTravelIds, setMyBookingTravelIds] = useState<number[]>([])
+
+    useEffect(() => {
+        const fetchMyBookings = async () => {
+            try {
+                const res = await fetch('http://localhost:8000/api/bookings/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    }
+                })
+                if (!res.ok) return
+                const data = await res.json()
+                setMyBookingTravelIds(data.map((b: any) => b.travel_id))
+            } catch (err) {
+                console.error(err)
+            }
+        }
+        fetchMyBookings()
+    }, [])
 
     useEffect(() => {
         const fetchMyTrips = async () => {
@@ -169,6 +191,7 @@ export default function Travel() {
                 username: trip.driver?.username || '',
                 profileImage: trip.driver?.image || '',
                 departureTime: trip.departure_time,
+                available_seats: trip.available_seats,
             }));
             setCarSharingTrips(mappedRouteData);
 
@@ -307,12 +330,17 @@ export default function Travel() {
                         carSharingTrips.map((trip) => (
                             <CarSharingWidget
                                 key={trip.id}
+                                id={trip.id}
                                 profileImage={trip.profileImage ? `http://localhost:8000/storage/${trip.profileImage}` : "/avatar.png"}
                                 origin={trip.origin}
                                 destination={trip.destination}
                                 departureTime={trip.departureTime}
                                 fullName={trip.fullName}
                                 username={trip.username}
+                                availableSeats={trip.available_seats}
+                                price={trip.price}
+                                clickable={trip.available_seats > 0 && !myBookingTravelIds.includes(trip.id)}
+                                alreadyBooked={myBookingTravelIds.includes(trip.id)}
                             />
                         ))
                     )}

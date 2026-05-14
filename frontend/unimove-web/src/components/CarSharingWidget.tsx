@@ -11,9 +11,11 @@ interface CarSharingWidgetProps {
     fullName: string;
     username: string;
     clickable?: boolean;
+    availableSeats?: number;
+    alreadyBooked?: boolean;
 }
 
-export default function CarSharingWidget({id, price, profileImage, origin, destination, departureTime, fullName, username, clickable = true}: CarSharingWidgetProps) {
+export default function CarSharingWidget({ id, price, profileImage, origin, destination, departureTime, fullName, username, clickable = true, availableSeats, alreadyBooked = false}: CarSharingWidgetProps) {
     const navigate = useNavigate();
 
     const handleClick = () => {
@@ -55,12 +57,24 @@ export default function CarSharingWidget({id, price, profileImage, origin, desti
                     <span className="driver-username">@{username}</span>
                 </div>
 
-                {price !== undefined && (
-                    <div className="price-info">
-                        <strong>{price}€</strong>
-                    </div>
-                )}
+                <div className="price-seats-row">
+                    {price !== undefined && (
+                        <div className="price-info">
+                            <strong>{price}€</strong>
+                        </div>
+                    )}
+                    {availableSeats !== undefined && (
+                        <div className={`seats-info ${availableSeats === 0 ? 'seats-full' : ''}`}>
+                            {availableSeats === 0 ? 'Sin plazas' : `${availableSeats} plaza${availableSeats !== 1 ? 's' : ''}`}
+                        </div>
+                    )}
+                    {alreadyBooked && (
+                        <div className="seats-info" style={{ color: '#f59e0b' }}>
+                            Ya reservado
+                        </div>
+                    )}
+                </div>
             </div>
         </button>
     );
-};
+}
