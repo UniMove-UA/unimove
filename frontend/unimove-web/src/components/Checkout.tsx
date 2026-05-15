@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardNumberElement, CardExpiryElement, CardCvcElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { useNavigate } from 'react-router-dom'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
@@ -15,7 +16,7 @@ interface CheckoutFormProps {
 function CheckoutForm({ paymentType, paymentId, amount }: CheckoutFormProps) {
   const stripe = useStripe()
   const elements = useElements()
-  // navigation redirect uses window.location.href below; remove unused navigate
+  const navigate = useNavigate()
   const [status, setStatus] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [cardBrand, setCardBrand] = useState<string>('')
@@ -78,6 +79,12 @@ function CheckoutForm({ paymentType, paymentId, amount }: CheckoutFormProps) {
     }
 
     if (confirm.paymentIntent?.status === 'succeeded') {
+      if (paymentType === 'vmp') {
+        navigate(`/vmp-success/${paymentId}`)
+        setLoading(false)
+        return
+      }
+
       if (paymentType === 'carpool') {
         try {
           const bookingResp = await fetch('http://localhost:8000/api/bookings/paid', {
@@ -99,14 +106,14 @@ function CheckoutForm({ paymentType, paymentId, amount }: CheckoutFormProps) {
           }
 
           setStatus('¡Pago y reserva completados con éxito!')
-          setTimeout(() => { window.location.href = '/travel' }, 2000)
+          setTimeout(() => { navigate('/travel') }, 2000)
 
         } catch {
           setStatus('Pago realizado pero no se pudo confirmar la reserva. Contacta con soporte.')
         }
       } else {
         setStatus('¡Pago completado con éxito!')
-        setTimeout(() => { window.location.href = '/travel' }, 2000)
+        setTimeout(() => { navigate('/travel') }, 2000)
       }
     } else {
       setStatus('El pago está siendo procesado')

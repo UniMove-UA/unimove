@@ -4,6 +4,7 @@ import '../styles/Profile.css';
 import VehicleRegistrationModal from "../components/VehicleRegistrationModal.tsx";
 import RatingModal from "../components/RatingModal.tsx";
 import {useNavigate} from "react-router-dom";
+import QRCode from 'react-qr-code'
 
 interface ProfileData {
     fullName: string;
@@ -37,6 +38,22 @@ interface Booking {
             username: string;
         };
     };
+}
+
+interface VmpQrItem {
+    id: number;
+    payment_intent_id: string;
+    status: string;
+    created_at: string | null;
+    vmp_id: number | null;
+    title: string | null;
+    qr_value: string | null;
+    vmp: {
+        id: number;
+        code: string;
+        location_name: string | null;
+        type: string;
+    } | null;
 }
 
 interface ProfileProps {
@@ -86,6 +103,8 @@ export default function Profile({ profileData }: ProfileProps) {
     const [bookings, setBookings] = useState<Booking[]>([])
     const [bookingsLoading, setBookingsLoading] = useState(false)
     const [cancellingBookingId, setCancellingBookingId] = useState<number | null>(null)
+    const [vmpQrs, setVmpQrs] = useState<VmpQrItem[]>([])
+    const [vmpQrsLoading, setVmpQrsLoading] = useState(false)
     const [ratingModal, setRatingModal] = useState({isOpen: false, travelId: 0, revieweeId: 0, name: "", bookingId: 0});
     const [myReviewTravelIds, setMyReviewTravelIds] = useState<number[]>([])
     const [myRatings, setMyRatings] = useState<any[]>([])
@@ -249,9 +268,27 @@ export default function Profile({ profileData }: ProfileProps) {
         }
     }
 
+    const fetchMyVmpQrs = async () => {
+        setVmpQrsLoading(true)
+        try {
+            const token = localStorage.getItem('auth_token')
+            const res = await fetch('http://localhost:8000/api/payments/vmp/me', {
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' }
+            })
+            if (!res.ok) throw new Error()
+            const data = await res.json()
+            setVmpQrs(Array.isArray(data) ? data : [])
+        } catch {
+            setVmpQrs([])
+        } finally {
+            setVmpQrsLoading(false)
+        }
+    }
+
     useEffect(() => {
         fetchVehicles()
         fetchBookings()
+        fetchMyVmpQrs()
         fetchMyReviews()
         fetchMyRatings()
     }, [])
@@ -651,6 +688,47 @@ export default function Profile({ profileData }: ProfileProps) {
                                     )}
                                 </li>
                             ))}
+                        </ul>
+                    )}
+                </div>
+
+                <h2 style={{ fontSize: 20, fontWeight: "bold", marginTop: 32 }}>Mis QR</h2>
+                <div className="vehicles-list-container">
+                    {vmpQrsLoading ? (
+                        <p>Cargando QR...</p>
+                    ) : vmpQrs.length === 0 ? (
+                        <p>Aún no tienes QR de VMP.</p>
+                    ) : (
+                        <ul className="vehicles-list">
+                            {vmpQrs
+                                .filter((x) => !!x?.qr_value)
+                                .map((item) => (
+                                    <li key={item.id} className="vehicle-item">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                            <div style={{ background: '#fff', padding: 10, borderRadius: 12, border: '1px solid rgba(0,0,0,0.08)' }}>
+                                                <QRCode value={item.qr_value as string} size={84} />
+                                            </div>
+                                            <div className="vehicle-info" style={{ flex: 1 }}>
+                                                <strong>{item.title || item.vmp?.location_name || item.vmp?.code || (item.vmp_id ? `VMP #${item.vmp_id}` : 'VMP')}</strong>
+                                                {item.vmp_id && <span>ID VMP: {item.vmp_id}</span>}
+                                                {item.created_at && <span>{new Date(item.created_at).toLocaleString()}</span>}
+                                                <span style={{ color: item.status === 'succeeded' ? '#10b981' : item.status === 'failed' ? '#dc2626' : '#f59e0b', fontWeight: 500 }}>
+                                                    {item.status === 'succeeded' ? 'Pagado' : item.status === 'failed' ? 'Fallido' : 'Pendiente'}
+                                                </span>
+                                            </div>
+                                            {item.vmp_id && (
+                                                <div className="vehicle-actions">
+                                                    <button
+                                                        className="profile-btn profile-btn-edit"
+                                                        onClick={() => navigate(`/vmp-success/${item.vmp_id}`, { state: { returnTo: '/profile/me', returnLabel: 'Volver al perfil' } })}
+                                                    >
+                                                        Ver grande
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </li>
+                                ))}
                         </ul>
                     )}
                 </div>

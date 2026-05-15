@@ -18,6 +18,7 @@ interface ModalState { open: boolean; title: string; desc: string; target: strin
 interface Booking { id: number; status: string; created_at: string; passenger?: { name: string; username: string }; travel?: { origin: string; destination: string; departure_time: string }; }
 interface AdminNotif { id: number; text: string; read: boolean; created_at: string; user?: { name: string; username: string }; user_id: number; }
 interface Vehicle { id: number; brand: string; model: string; plate: string; total_seats: number; created_at: string; owner?: { name: string; username: string }; }
+interface Payment { id: number; payment_intent_id: string; amount: number; status: string; created_at: string; }
 
 type SectionKey = 'dashboard' | 'users' | 'travels' | 'reviews' | 'vehicles' | 'payments' | 'schedules' | 'bookings' | 'notifications';
 
@@ -79,6 +80,7 @@ export default function AdminPanel() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [adminNotifs, setAdminNotifs] = useState<AdminNotif[]>([]);
   const [notifText, setNotifText] = useState('');
   const [notifUserId, setNotifUserId] = useState<string>('');
@@ -212,6 +214,18 @@ export default function AdminPanel() {
         .catch(() => toast('Error cargando vehículos', 'error'))
         .finally(() => setLoading(false));
     }
+    if (section === 'payments') {
+      setLoading(true);
+      fetch(`${API}/admin/payments`, { headers: authHeaders() })
+        .then(async (r) => {
+          const data = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(data?.message ?? 'Error cargando pagos');
+          return data;
+        })
+        .then(d => setPayments(Array.isArray(d) ? d : d.data ?? []))
+        .catch((e) => toast(e?.message ?? 'Error cargando pagos', 'error'))
+        .finally(() => setLoading(false));
+    }
   }, [section, authChecked, schedulePage]);
 
   // ─── Actions ─────────────────────────────────────────────────────────────────
@@ -304,6 +318,32 @@ export default function AdminPanel() {
       if (r.ok) { setVehicles(p => p.filter(x => x.id !== v.id)); toast('Vehículo eliminado'); }
       else { const d = await r.json(); toast(d.message ?? 'Error al eliminar el vehículo', 'error'); }
       closeModal();
+    },
+  });
+
+  const handleRefund = (payment: Payment) => openModal({
+    title: 'Reembolsar pago',
+    desc: '¿Seguro que deseas reembolsar este pago? Esta acción no se puede deshacer.',
+    target: `#${payment.id} · ${(payment.amount / 100).toFixed(2)}€`,
+    confirmLabel: 'Reembolsar',
+    type: 'warning',
+    onConfirm: async () => {
+      try {
+        const r = await fetch(`${API}/admin/payments/${payment.id}/refund`, {
+          method: 'POST',
+          headers: authHeaders(),
+        });
+
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(d?.message ?? 'No se pudo reembolsar');
+
+        setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, status: 'refunded' } : p));
+        toast('Reembolso realizado correctamente', 'success');
+      } catch (e: any) {
+        toast(e?.message ?? 'Error al reembolsar', 'error');
+      } finally {
+        closeModal();
+      }
     },
   });
 
@@ -1001,18 +1041,65 @@ export default function AdminPanel() {
           )}
 
           {/* ── COMING SOON ────────────────────────────── */}
-          {section === 'payments' && (() => {
-            const cfg = {
-              payments: { Icon: IconCard, title: 'Gestión de Pagos y Reembolsos', desc: 'Podrás ver el historial de pagos, gestionar reembolsos y cancelar transacciones. Requiere integración con el sistema de pagos.' },
-            }[section as 'payments'];
-            return (
-              <div className="admin-coming-soon">
-                <div className="cs-icon"><cfg.Icon size={36} /></div>
-                <h3>{cfg.title}</h3>
-                <p>{cfg.desc}</p>
+          {section === 'payments' && (
+            <div className="admin-table-card">
+              <div className="admin-filter-bar" style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                <span className="admin-filter-label">Pagos</span>
+                <span style={{ color: '#7ba696', fontSize: '0.8rem' }}>{payments.length} registros</span>
               </div>
-            );
-          })()}
+
+              <div className="admin-table-scroll">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Cantidad</th>
+                      <th>Estado</th>
+                      <th>Fecha</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading && (
+                      <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: '#7ba696' }}>Cargando pagos…</td></tr>
+                    )}
+
+                    {!loading && payments.length === 0 && (
+                      <tr><td colSpan={5}>
+                        <div className="admin-empty-state">
+                          <div className="admin-empty-icon"><IconCard size={32} /></div>
+                          <p>No hay pagos para mostrar.</p>
+                        </div>
+                      </td></tr>
+                    )}
+
+                    {!loading && payments.map(p => (
+                      <tr key={p.id}>
+                        <td style={{ color: '#a7d7c5', fontWeight: 700 }}>#{p.id}</td>
+                        <td style={{ fontWeight: 800, color: '#103B31' }}>{(p.amount / 100).toFixed(2)}€</td>
+                        <td>
+                          <Badge
+                            label={p.status === 'succeeded' ? 'succeeded' : p.status === 'refunded' ? 'refunded' : 'pending'}
+                            color={p.status === 'succeeded' ? 'green' : p.status === 'refunded' ? 'yellow' : 'grey'}
+                          />
+                        </td>
+                        <td style={{ color: '#7ba696', fontSize: '0.8rem' }}>{p.created_at ? new Date(p.created_at).toLocaleString('es-ES') : '—'}</td>
+                        <td>
+                          {p.status === 'succeeded' ? (
+                            <button className="admin-action-btn warning" onClick={() => handleRefund(p)}>
+                              <IconX size={14} /> Reembolsar
+                            </button>
+                          ) : (
+                            <span style={{ color: '#a7d7c5' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
         </div>{/* /admin-content */}
       </div>{/* /admin-main */}
