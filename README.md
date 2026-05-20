@@ -28,7 +28,7 @@ Para utilizar la integración con Stripe:
 ```sh
 stripe login
 stripe listen --forward-to localhost:8000/api/stripe/webhook```
-
+```
 ```sh
 php composer install
 php artisan migrate:all --fresh --seed
