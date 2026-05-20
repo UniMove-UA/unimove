@@ -153,4 +153,65 @@ class PaymentController extends Controller
             return response()->json(['error' => 'Could not create payment intent'], 500);
         }
     }
+
+    /**
+     * List authenticated user's VMP payments.
+     * Used by the frontend to render "Mis QR" in the profile.
+     */
+    public function myVmpPayments(Request $request)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['error' => 'Unauthenticated'], 401);
+        }
+
+        $payments = Payment::query()
+            ->where('user_id', $user->id)
+            ->whereNotNull('metadata->vmp_id')
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get();
+
+        $vmpIds = $payments
+            ->map(fn($p) => $p->metadata['vmp_id'] ?? null)
+            ->filter(fn($id) => !empty($id))
+            ->unique()
+            ->values();
+
+        $vmps = Vmp::query()
+            ->whereIn('id', $vmpIds)
+            ->get()
+            ->keyBy('id');
+
+        $items = $payments->map(function ($p) use ($vmps) {
+            $vmpId = $p->metadata['vmp_id'] ?? null;
+            $vmpIdInt = $vmpId !== null ? (int) $vmpId : null;
+            $vmp = $vmpIdInt !== null ? $vmps->get($vmpIdInt) : null;
+
+            $title = null;
+            if ($vmp) {
+                $title = $vmp->location_name ?: ($vmp->code ?: ('VMP #' . $vmp->id));
+            } elseif ($vmpIdInt !== null) {
+                $title = 'VMP #' . $vmpIdInt;
+            }
+
+            return [
+                'id' => $p->id,
+                'payment_intent_id' => $p->payment_intent_id,
+                'status' => $p->status,
+                'created_at' => optional($p->created_at)->toISOString(),
+                'vmp_id' => $vmpIdInt,
+                'title' => $title,
+                'qr_value' => $vmpIdInt !== null ? (string) $vmpIdInt : null,
+                'vmp' => $vmp ? [
+                    'id' => $vmp->id,
+                    'code' => $vmp->code,
+                    'location_name' => $vmp->location_name,
+                    'type' => $vmp->type ?? 'scooter',
+                ] : null,
+            ];
+        });
+
+        return response()->json($items);
+    }
 }

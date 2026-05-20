@@ -217,12 +217,29 @@ export default function Travel() {
                 const fromBox = `${lat - delta},${lon - delta}`
                 const toBox = `${lat + delta},${lon + delta}`
                 const markersRes = await fetch(`http://localhost:8000/api/markers?from=${encodeURIComponent(fromBox)}&to=${encodeURIComponent(toBox)}`, {
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    headers: { ...(token ? { 'Authorization': `Bearer ${token}` } : {}), 'Content-Type': 'application/json' },
                     credentials: 'include',
                 })
                 if (markersRes.ok) {
                     const markersData = await markersRes.json()
-                    setCampusVmps(markersData.vmps || [])
+                    let vmps = markersData.vmps || [];
+                    // duplicate scooters as bikes client-side so search shows both
+                    const bikeDuplicates = vmps.map((v: any) => ({
+                        ...v,
+                        id: typeof v.id === 'string' ? `bike_${v.id}` : `bike_${String(v.id)}`,
+                        // Keep numeric vmp_id so checkout can use it
+                        vmp_id: v.vmp_id,
+                        name: v.name ? v.name.replace(/Patinete/i, 'Bicicleta') : (v.name || 'Bicicleta'),
+                        code: v.code ? `${v.code}-bike` : undefined,
+                        type: 'bike',
+                        unlock_price: v.unlock_price ?? null,
+                        price_per_minute: v.price_per_minute ?? null,
+                    }));
+                    vmps = [...vmps, ...bikeDuplicates];
+                    // debug: log counts to help verify in browser console
+                    // eslint-disable-next-line no-console
+                    console.log('Markers VMPS (after duplication):', vmps.length, vmps.slice(0,6).map((x: any) => ({ id: x.id, type: x.type })));
+                    setCampusVmps(vmps || [])
                 } else {
                     setCampusVmps([])
                 }
@@ -270,7 +287,7 @@ export default function Travel() {
         }
 
         setLoading(true);
-        setError(null);
+        setApiError(null);
         setApiError(null);
 
         navigator.geolocation.getCurrentPosition(

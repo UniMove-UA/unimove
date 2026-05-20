@@ -72,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vmp/{id}', [VmpController::class, 'show']);
 
     Route::post('/payments/create-intent', [PaymentController::class, 'createIntent']);
+    Route::get('/payments/vmp/me', [PaymentController::class, 'myVmpPayments']);
 
     Route::prefix('admin')->group(function () {
         Route::get('/stats',[AdminController::class, 'stats']);
@@ -96,6 +97,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/vehicles',[AdminController::class, 'adminVehicles']);
         Route::delete('/vehicles/{id}',[AdminController::class, 'adminDeleteVehicle']);
+
+        Route::get('/payments', [AdminController::class, 'getPayments']);
+        Route::post('/payments/{id}/refund', [AdminController::class, 'refundPayment']);
 
         Route::get('/notifications',[AdminController::class, 'adminNotifications']);
         Route::post('/notifications',[AdminController::class, 'sendNotification']);

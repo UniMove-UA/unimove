@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Notification;
+use App\Models\Payment;
 use App\Models\Review;
 use App\Models\Travel;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
 
 class AdminController extends Controller
 {
@@ -316,6 +320,113 @@ class AdminController extends Controller
         $this->ensureAdmin();
         Notification::findOrFail($id)->delete();
         return response()->json(['message' => 'Notificación eliminada correctamente']);
+    }
+
+    // ── Payments & refunds ─────────────────────────────────────────────────
+    public function getPayments()
+    {
+        $this->ensureAdmin();
+
+        $payments = Payment::with([
+                'user:id,name,username,email',
+                'booking',
+            ])
+            ->orderByDesc('created_at')
+            ->limit(200)
+            ->get();
+
+        // Keep local DB status in sync with Stripe when webhooks are not configured (common in local dev).
+        $secret = config('services.stripe.secret') ?? env('STRIPE_SECRET');
+        if (!empty($secret) && $payments->count() > 0) {
+            try {
+                Stripe::setApiKey($secret);
+
+                foreach ($payments as $payment) {
+                    if (empty($payment->payment_intent_id)) {
+                        continue;
+                    }
+
+                    // Only sync statuses that are likely stale.
+                    if (in_array($payment->status, ['succeeded', 'refunded', 'failed'], true)) {
+                        continue;
+                    }
+
+                    try {
+                        $pi = PaymentIntent::retrieve($payment->payment_intent_id);
+                        $stripeStatus = $pi->status ?? null;
+                        if ($stripeStatus && $stripeStatus !== $payment->status) {
+                            $payment->status = $stripeStatus;
+                            $payment->save();
+                        }
+                    } catch (\Exception $e) {
+                        // Ignore per-payment sync failures; still return what we have.
+                        Log::warning('Stripe status sync failed for payment_intent ' . $payment->payment_intent_id . ': ' . $e->getMessage());
+                    }
+                }
+
+                // Refresh collection to include latest DB state
+                $payments = Payment::with([
+                        'user:id,name,username,email',
+                        'booking',
+                    ])
+                    ->orderByDesc('created_at')
+                    ->limit(200)
+                    ->get();
+            } catch (\Exception $e) {
+                Log::warning('Stripe sync skipped: ' . $e->getMessage());
+            }
+        }
+
+        return response()->json($payments);
+    }
+
+    public function refundPayment($id)
+    {
+        $this->ensureAdmin();
+
+        $payment = Payment::find($id);
+        if (!$payment) {
+            return response()->json(['message' => 'Pago no encontrado'], 404);
+        }
+
+        $secret = config('services.stripe.secret') ?? env('STRIPE_SECRET');
+        if (empty($secret)) {
+            Log::error('Stripe secret key not configured');
+            return response()->json(['message' => 'Pasarela de pago no configurada'], 500);
+        }
+
+        try {
+            Stripe::setApiKey($secret);
+
+            // If DB status is stale (e.g., webhooks not running), re-check with Stripe.
+            if ($payment->status !== 'succeeded') {
+                try {
+                    $pi = PaymentIntent::retrieve($payment->payment_intent_id);
+                    if (($pi->status ?? null) === 'succeeded') {
+                        $payment->status = 'succeeded';
+                        $payment->save();
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Stripe status re-check failed: ' . $e->getMessage());
+                }
+            }
+
+            if ($payment->status !== 'succeeded') {
+                return response()->json(['message' => 'Solo se pueden reembolsar pagos en estado succeeded'], 422);
+            }
+
+            \Stripe\Refund::create([
+                'payment_intent' => $payment->payment_intent_id,
+            ]);
+
+            $payment->status = 'refunded';
+            $payment->save();
+
+            return response()->json(['message' => 'Reembolso realizado correctamente', 'payment' => $payment]);
+        } catch (\Exception $e) {
+            Log::error('Stripe refund error: ' . $e->getMessage());
+            return response()->json(['message' => 'No se pudo realizar el reembolso'], 500);
+        }
     }
 
     // ── Schedules ─────────────────────────────────────────────────────────────

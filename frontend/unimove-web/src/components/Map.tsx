@@ -27,9 +27,9 @@ interface Marker {
 
 interface VmpMarkerData {
     id: number | string;
-    vmp_id?: number;
+    vmp_id?: number | string;
     name: string;
-    code: string;
+    code?: string;
     type: 'scooter' | 'bike';
     lat: number;
     lon: number;
@@ -41,6 +41,9 @@ interface VmpMarkerData {
 interface MapProps {
     center?: [number, number];
     zoom?: number;
+    showOnly?: 'all' | 'vmp';
+    onRentVmp?: (code: string) => void | Promise<void>;
+    refreshTrigger?: unknown;
 }
 
 function MapFetcher({ onFetch }: { onFetch: (bounds: L.LatLngBounds) => void }) {
@@ -65,6 +68,7 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
     const [destination, setDestination] = useState<string>("");
     const [markers, setMarkers] = useState<Marker[]>([]);
     const [vmpMarkers, setVmpMarkers] = useState<VmpMarkerData[]>([]);
+    const [vmpGroups, setVmpGroups] = useState<Array<{ id: string; lat: number; lon: number; items: VmpMarkerData[] }>>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const token = localStorage.getItem('auth_token');
 
@@ -98,7 +102,38 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                 ...(data.travels || []),
             ];
             setMarkers(combined);
-            setVmpMarkers(data.vmps || []);
+            let vmps: VmpMarkerData[] = data.vmps || [];
+            // --- DUPLICATE SCOOTERS AS BIKES (client-side) ---
+            // If backend doesn't provide bikes, duplicate scooters as bikes so
+            // both variants appear and group together on the map.
+            const bikeDuplicates = (vmps || []).map(v => ({
+                ...v,
+                id: typeof v.id === 'string' ? `bike_${v.id}` : `bike_${String(v.id)}`,
+                // Keep numeric vmp_id so checkout can use it (avoid id=NaN)
+                vmp_id: v.vmp_id,
+                name: v.name ? v.name.replace(/Patinete/i, 'Bicicleta') : (v.name || 'Bicicleta'),
+                code: v.code ? `${v.code}-bike` : undefined,
+                type: 'bike' as const,
+                // keep same prices
+                unlock_price: v.unlock_price ?? null,
+                price_per_minute: v.price_per_minute ?? null,
+            }));
+            vmps = [...vmps, ...bikeDuplicates];
+
+            setVmpMarkers(vmps);
+
+            // group vmps by exact lat/lon so they show as a single marker
+            const groups: Record<string, VmpMarkerData[]> = {};
+            vmps.forEach(v => {
+                const key = `${Number(v.lat).toFixed(6)}_${Number(v.lon).toFixed(6)}`;
+                groups[key] = groups[key] || [];
+                groups[key].push(v);
+            });
+            const groupArray = Object.entries(groups).map(([key, items], idx) => {
+                const [latStr, lonStr] = key.split('_');
+                return { id: `group-${idx}`, lat: Number(latStr), lon: Number(lonStr), items };
+            });
+            setVmpGroups(groupArray);
         } catch (error) {
             console.error("Error fetching markers:", error);
         } finally {
@@ -131,13 +166,20 @@ export default function Map({ center = [38.385, -0.513], zoom = 16 }: MapProps) 
                         />
                     ))}
 
-                    {vmpMarkers.map(vmp => (
+                    {vmpGroups.length > 0 ? vmpGroups.map((g, idx) => (
+                        <VmpMarker
+                            key={`vmp-group-${g.id}-${idx}`}
+                            position={[g.lat, g.lon]}
+                            name={g.items[0]?.name || 'VMP'}
+                            variants={g.items}
+                        />
+                    )) : vmpMarkers.map(vmp => (
                         <VmpMarker
                             key={`vmp-${vmp.id}`}
                             position={[vmp.lat, vmp.lon]}
                             name={vmp.name}
                             code={vmp.code}
-                            id={vmp.vmp_id ?? (typeof vmp.id === 'string' ? Number(String(vmp.id).replace('vmp_', '')) : vmp.id)}
+                            id={(vmp.vmp_id ?? vmp.id) as number | string}
                             type={vmp.type}
                             locationName={vmp.location_name || getCampusZone(vmp.lat, vmp.lon)}
                             unlockPrice={vmp.unlock_price ?? null}
