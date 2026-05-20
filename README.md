@@ -27,7 +27,7 @@ Se necesitarán los archivos `.env` tanto del backend como del frontend.
 Para utilizar la integración con Stripe:
 ```sh
 stripe login
-stripe listen --forward-to localhost:8000/api/stripe/webhook```
+stripe listen --forward-to localhost:8000/api/stripe/webhook
 ```
 ```sh
 php composer install
