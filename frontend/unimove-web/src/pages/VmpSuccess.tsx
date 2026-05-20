@@ -50,6 +50,7 @@ export default function VmpSuccess() {
             type="button"
             onClick={() => navigate(returnTo)}
             className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300"
+            style={{backgroundColor:"green"}}
           >
             {returnLabel}
           </button>
