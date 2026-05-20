@@ -15,8 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+            $table->string('username')->unique();
+            $table->string('correo_institucional')->nullable();
             $table->string('password');
+            $table->string('phone')->nullable();
+            $table->enum('role', ['admin', 'student', 'staff', 'external'])->default('external');
+            $table->boolean('is_university_member')->default(false);
+            $table->string('image')->nullable();
+
+            $table->decimal('rating_avg', 3, 2)->default(0.00);
             $table->rememberToken();
             $table->timestamps();
         });

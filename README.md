@@ -16,3 +16,28 @@
 * **Frontend:** React / Dashboard Web
 * **Backend:** PHP con Laravel
 * **Mapas:** Integración con OpenStreetMap
+
+---
+
+### Instalación local
+
+Se necesitarán los archivos `.env` tanto del backend como del frontend.
+
+#### Backend
+Para utilizar la integración con Stripe:
+```sh
+stripe login
+stripe listen --forward-to localhost:8000/api/stripe/webhook```
+```
+```sh
+php composer install
+php artisan migrate:all --fresh --seed
+php artisan serve
+```
+
+#### Frontend
+
+```sh
+npm install
+npm run dev
+```

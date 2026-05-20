@@ -1,35 +1,44 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Routes, Route } from 'react-router-dom';
+import Travel from './pages/Travel.tsx';
+import Chat from './pages/Chat.tsx';
+import Login from './pages/Login.tsx';
+import Register from './pages/Register.tsx';
+import UniversityAuth from "./pages/UniversityAuth.tsx";
+import Main from "./pages/Main.tsx";
+import ChatContent from "./pages/ChatContent.tsx";
+import ProfileContainer from "./components/ProfileContainer.tsx";
+import AdminPanel from "./pages/AdminPanel.tsx";
+import CheckoutPage from './pages/CheckoutPage.tsx';
+import PublishTravel from "./pages/PublishTravel";
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import GoogleCallback from './pages/GoogleCallback';
+import VmpSuccess from './pages/VmpSuccess.tsx';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <Routes>
+        <Route path='/' element={<Main />} />
+        <Route path='/home' element={<Main />} />
+        <Route path='/travel' element={<Travel />} />
+        <Route path='/checkout' element={<CheckoutPage />} />
+        <Route path='/vmp-success/:id' element={<VmpSuccess />} />
+        <Route path='/chat' element={<Chat />} />
+        <Route path='/login' element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path='/auth-universidad' element={<UniversityAuth />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/google/callback" element={<GoogleCallback />} />
+        {/* Rutas dinámicas */}
+        <Route path='/profile/:id' element={<ProfileContainer />} />
+        <Route path='/chat/:id' element={<ChatContent />} />
+        <Route path='/admin' element={<AdminPanel />} />
+        <Route path="/travels/publish" element={<PublishTravel />} />
+      </Routes>
     </>
   )
 }
 
-export default App
+export default App;

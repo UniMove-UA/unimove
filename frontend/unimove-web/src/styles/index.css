@@ -1,16 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-algae-dark: #1d3531;
+  --color-algae-soft: #7ba696;
+  --color-algae-seafoam: #a7d7c5;
+  --color-algae-sand: #f4f2ee;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Default to a light theme; prefers-color-scheme media query still applies */
+  color: #213547;
+  background-color: #ffffff;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+
+  --bg-color: #ffffff;
+  --text-color: #213547;
 }
 
 a {
@@ -24,15 +38,19 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  display: block;
+  place-items: stretch;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
+  margin: 2rem;
+
 }
 
 button {
@@ -54,6 +72,14 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+.leaflet-popup-content-wrapper {
+  background-color: var(--bg-color);
+}
+
+.leaflet-popup-close-button {
+  display: none;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
@@ -65,4 +91,18 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+  .leaflet-popup-content-wrapper {
+    background-color: #213547;
+  }
+  
+}
+
+
+main {
+  position: absolute;
+  top: 60px;
+  width: 100%;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding-bottom: 150px;
 }
