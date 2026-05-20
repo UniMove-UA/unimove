@@ -13,6 +13,7 @@ import PublishTravel from "./pages/PublishTravel";
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import GoogleCallback from './pages/GoogleCallback';
+import VmpSuccess from './pages/VmpSuccess.tsx';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path='/home' element={<Main />} />
         <Route path='/travel' element={<Travel />} />
         <Route path='/checkout' element={<CheckoutPage />} />
+        <Route path='/vmp-success/:id' element={<VmpSuccess />} />
         <Route path='/chat' element={<Chat />} />
         <Route path='/login' element={<Login />} />
         <Route path="/register" element={<Register />} />

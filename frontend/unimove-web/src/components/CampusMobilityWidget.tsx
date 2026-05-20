@@ -11,7 +11,8 @@ interface CampusMobilityWidgetProps {
 export default function CampusMobilityWidget({ id, type, locationName, priceText }: CampusMobilityWidgetProps) {
     const navigate = useNavigate();
 
-    const icon = type === 'bike' ? 'bike.svg' : 'vmp.svg';
+    // Use absolute paths so assets resolve correctly regardless of current route.
+    const icon = type === 'bike' ? '/bike.svg' : '/vmp.svg';
     const title = type === 'bike' ? 'Bicicleta disponible' : 'Patinete disponible';
 
     return (

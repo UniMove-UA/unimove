@@ -6,7 +6,7 @@ import Notification from "./Notification.tsx";
 import { useNavigate } from "react-router-dom";
 
 interface PageProps {
-    page: 'inicio' | 'viajes' | 'mensajes' | 'perfil';
+    page: 'inicio' | 'viajes' | 'mensajes' | 'perfil' | 'vmp';
 }
 
 interface Notification {

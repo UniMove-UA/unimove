@@ -75,6 +75,14 @@ class StripeWebhookController extends Controller
                         DB::commit();
                     }
                     break;
+
+                case 'charge.refunded':
+                    $paymentIntentId = $event->data->object->payment_intent ?? null;
+                    if ($paymentIntentId) {
+                        Payment::where('payment_intent_id', $paymentIntentId)
+                            ->update(['status' => 'refunded']);
+                    }
+                    break;
             }
         } catch (\Exception $e) {
             DB::rollBack();
