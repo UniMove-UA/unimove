@@ -31,6 +31,7 @@ stripe listen --forward-to localhost:8000/api/stripe/webhook```
 ```
 ```sh
 php composer install
+php artisan gtfs:download 
 php artisan migrate:all --fresh --seed
 php artisan serve
 ```
